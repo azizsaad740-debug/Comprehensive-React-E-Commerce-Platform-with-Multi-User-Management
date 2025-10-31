@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ColumnDef } from "@tanstack/react-table";
 import { Order } from '@/types';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Eye, XCircle, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getMockOrders } from '@/utils/orderUtils';
+import { getMockOrders, updateMockOrderStatus, cancelOrder } from '@/utils/orderUtils';
 import { useAuthStore } from '@/stores/authStore';
+import { useToast } from '@/hooks/use-toast';
 
 const getStatusBadge = (status: Order['status']) => {
   switch (status) {
@@ -30,7 +31,12 @@ const getStatusBadge = (status: Order['status']) => {
   }
 };
 
-const columns: ColumnDef<Order>[] = [
+interface OrderActions {
+  onConfirm: (orderId: string) => void;
+  onCancel: (orderId: string) => void;
+}
+
+const columns = (actions: OrderActions): ColumnDef<Order>[] => [
   {
     accessorKey: "id",
     header: ({ column }) => (
@@ -91,18 +97,31 @@ const columns: ColumnDef<Order>[] = [
     cell: ({ row }) => {
       const navigate = useNavigate();
       const order = row.original;
+      
+      const isCancellable = order.status !== 'cancelled' && order.status !== 'delivered';
+
       return (
         <div className="flex space-x-2">
           <Button variant="outline" size="sm" onClick={() => navigate(`/admin/orders/${order.id}`)}>
             <Eye className="h-4 w-4" />
           </Button>
           {order.status === 'pending' && (
-            <Button variant="default" size="sm" title="Confirm Order">
+            <Button 
+              variant="default" 
+              size="sm" 
+              title="Confirm Order"
+              onClick={() => actions.onConfirm(order.id)}
+            >
               <CheckCircle className="h-4 w-4" />
             </Button>
           )}
-          {order.status !== 'cancelled' && (
-            <Button variant="destructive" size="sm" title="Cancel Order">
+          {isCancellable && (
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              title="Cancel Order"
+              onClick={() => actions.onCancel(order.id)}
+            >
               <XCircle className="h-4 w-4" />
             </Button>
           )}
@@ -114,7 +133,41 @@ const columns: ColumnDef<Order>[] = [
 
 const OrderManagementPage = () => {
   const { user } = useAuthStore();
-  const allOrders = getMockOrders();
+  const { toast } = useToast();
+  
+  // Use state for orders to trigger re-renders upon status change
+  const [allOrders, setAllOrders] = useState<Order[]>(getMockOrders());
+
+  const updateOrderState = (updatedOrder: Order) => {
+    setAllOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+  };
+
+  const handleConfirmOrder = (orderId: string) => {
+    const updatedOrder = updateMockOrderStatus(orderId, 'confirmed');
+    if (updatedOrder) {
+      updateOrderState(updatedOrder);
+      toast({ title: "Order Confirmed", description: `Order #${orderId} is now confirmed.` });
+    } else {
+      toast({ title: "Error", description: "Failed to confirm order.", variant: "destructive" });
+    }
+  };
+
+  const handleCancelOrder = (orderId: string) => {
+    const updatedOrder = cancelOrder(orderId);
+    if (updatedOrder) {
+      updateOrderState(updatedOrder);
+      toast({ title: "Order Cancelled", description: `Order #${orderId} has been cancelled.`, variant: "destructive" });
+    } else {
+      toast({ title: "Error", description: "Failed to cancel order.", variant: "destructive" });
+    }
+  };
+
+  const orderActions: OrderActions = {
+    onConfirm: handleConfirmOrder,
+    onCancel: handleCancelOrder,
+  };
+
+  const orderColumns = useMemo(() => columns(orderActions), [orderActions]);
 
   const orders = useMemo(() => {
     if (user?.role === 'admin') {
@@ -123,7 +176,6 @@ const OrderManagementPage = () => {
     }
     if (user?.role === 'reseller') {
       // Reseller sees only orders associated with their ID (mocked as 'u2' for demonstration)
-      // NOTE: In a real app, user.id would be used here. We use 'u2' to match the mock data structure.
       const resellerId = user.id; 
       return allOrders.filter(order => order.resellerId === resellerId);
     }
@@ -142,7 +194,7 @@ const OrderManagementPage = () => {
         </p>
 
         <DataTable 
-          columns={columns} 
+          columns={orderColumns} 
           data={orders} 
           filterColumnId="id"
           filterPlaceholder="Filter by Order ID..."
