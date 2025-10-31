@@ -23,6 +23,7 @@ import CommissionTrackingPage from "@/pages/reseller/CommissionTrackingPage.tsx"
 import OrderManagementPage from "./pages/admin/OrderManagementPage.tsx";
 import ResellerDashboard from "./pages/reseller/ResellerDashboard.tsx";
 import PromoCodeManagementPage from "./pages/admin/PromoCodeManagementPage.tsx";
+import AdminOrderDetailPage from "./pages/admin/AdminOrderDetailPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -39,8 +40,25 @@ const App = () => (
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders/confirmation" element={<OrderConfirmationPage />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/orders/:id" element={<OrderDetailPage />} />
+          
+          {/* Customer Order Routes (Protected) */}
+          <Route 
+            path="/orders" 
+            element={
+              <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                <OrdersPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/orders/:id" 
+            element={
+              <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                <OrderDetailPage />
+              </ProtectedRoute>
+            } 
+          />
+          
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
@@ -83,6 +101,14 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={['admin', 'reseller']}>
                 <OrderManagementPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/orders/:id" 
+            element={
+              <ProtectedRoute allowedRoles={['admin', 'reseller']}>
+                <AdminOrderDetailPage />
               </ProtectedRoute>
             } 
           />
