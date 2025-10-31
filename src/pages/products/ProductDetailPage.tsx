@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,11 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Heart, ShoppingCart, ArrowLeft, Palette, Type } from 'lucide-react';
+import { Star, Heart, ShoppingCart, ArrowLeft, Palette } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import { Product, ProductCustomization } from '@/types';
+import ProductCustomizationForm from '@/components/products/ProductCustomizationForm.tsx';
 
 // Mock product data - in real app, this would come from API
 const mockProduct: Product = {
@@ -74,15 +75,21 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
-  // Customization state
-  const [customization, setCustomization] = useState<ProductCustomization>({
+  // Initialize customization state based on product options
+  const initialCustomization: ProductCustomization = {
     texts: [''],
-    font: mockProduct.customizationOptions.fonts[0],
-    startDesign: mockProduct.customizationOptions.startDesigns[0],
-    endDesign: mockProduct.customizationOptions.endDesigns[0],
+    font: mockProduct.customizationOptions.fonts[0] || '',
+    startDesign: mockProduct.customizationOptions.startDesigns[0] || undefined,
+    endDesign: mockProduct.customizationOptions.endDesigns[0] || undefined,
     previewImage: '',
     svgFile: ''
-  });
+  };
+
+  const [customization, setCustomization] = useState<ProductCustomization>(initialCustomization);
+
+  const handleCustomizationChange = useCallback((newCustomization: ProductCustomization) => {
+    setCustomization(newCustomization);
+  }, []);
 
   const price = selectedVariant?.price || mockProduct.basePrice;
   const hasDiscount = mockProduct.discountedPrice && mockProduct.discountedPrice < mockProduct.basePrice;
@@ -94,25 +101,6 @@ const ProductDetailPage = () => {
       title: "Added to cart",
       description: `${mockProduct.name} has been added to your cart`,
     });
-  };
-
-  const handleTextChange = (index: number, value: string) => {
-    const newTexts = [...customization.texts];
-    newTexts[index] = value;
-    setCustomization(prev => ({ ...prev, texts: newTexts }));
-  };
-
-  const addTextField = () => {
-    if (customization.texts.length < 3) {
-      setCustomization(prev => ({ ...prev, texts: [...prev.texts, ''] }));
-    }
-  };
-
-  const removeTextField = (index: number) => {
-    if (customization.texts.length > 1) {
-      const newTexts = customization.texts.filter((_, i) => i !== index);
-      setCustomization(prev => ({ ...prev, texts: newTexts }));
-    }
   };
 
   return (
@@ -300,115 +288,12 @@ const ProductDetailPage = () => {
                     Add your personal touch with custom text, fonts, and designs
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Text Inputs */}
-                  <div>
-                    <Label className="text-base font-medium">Custom Text</Label>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Maximum {mockProduct.customizationOptions.maxCharacters} characters per line
-                    </p>
-                    <div className="space-y-3">
-                      {customization.texts.map((text, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                          <Input
-                            placeholder={`Line ${index + 1} text...`}
-                            value={text}
-                            onChange={(e) => handleTextChange(index, e.target.value)}
-                            maxLength={mockProduct.customizationOptions.maxCharacters}
-                          />
-                          {customization.texts.length > 1 && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => removeTextField(index)}
-                            >
-                              Remove
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      {customization.texts.length < 3 && (
-                        <Button variant="outline" onClick={addTextField}>
-                          Add Another Line
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Font Selection */}
-                  <div>
-                    <Label className="text-base font-medium">Font Style</Label>
-                    <Select 
-                      value={customization.font} 
-                      onValueChange={(value) => setCustomization(prev => ({ ...prev, font: value }))}
-                    >
-                      <SelectTrigger className="w-full mt-2">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockProduct.customizationOptions.fonts.map(font => (
-                          <SelectItem key={font} value={font} style={{ fontFamily: font }}>
-                            {font}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Design Selection */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <Label className="text-base font-medium">Start Design</Label>
-                      <Select 
-                        value={customization.startDesign} 
-                        onValueChange={(value) => setCustomization(prev => ({ ...prev, startDesign: value }))}
-                      >
-                        <SelectTrigger className="w-full mt-2">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mockProduct.customizationOptions.startDesigns.map(design => (
-                            <SelectItem key={design} value={design}>
-                              {design}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label className="text-base font-medium">End Design</Label>
-                      <Select 
-                        value={customization.endDesign} 
-                        onValueChange={(value) => setCustomization(prev => ({ ...prev, endDesign: value }))}
-                      >
-                        <SelectTrigger className="w-full mt-2">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mockProduct.customizationOptions.endDesigns.map(design => (
-                            <SelectItem key={design} value={design}>
-                              {design}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  {/* Preview Area */}
-                  <div className="border rounded-lg p-6 bg-gray-50">
-                    <h4 className="font-medium mb-3">Live Preview</h4>
-                    <div className="bg-white p-4 rounded border text-center min-h-[200px] flex items-center justify-center">
-                      <div className="text-center">
-                        {customization.texts.filter(text => text.trim()).map((text, index) => (
-                          <div key={index} style={{ fontFamily: customization.font }} className="mb-2">
-                            {text || 'Your text here'}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                <CardContent>
+                  <ProductCustomizationForm
+                    product={mockProduct}
+                    initialCustomization={initialCustomization}
+                    onCustomizationChange={handleCustomizationChange}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
