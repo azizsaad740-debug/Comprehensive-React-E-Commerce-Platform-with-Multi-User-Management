@@ -21,6 +21,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const role = user?.role || 'guest';
 
+  const ordersPath = hasRole(['admin', 'reseller']) ? '/admin/orders' : '/orders';
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -82,7 +84,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <p className="text-gray-500 mb-4">Placeholder for recent orders or commission updates.</p>
-              <Button variant="link" onClick={() => navigate('/orders')} className="p-0">
+              <Button variant="link" onClick={() => navigate(ordersPath)} className="p-0">
                 View All Orders <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </CardContent>
@@ -93,11 +95,18 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="space-y-2">
               {hasRole(['admin', 'reseller']) && (
+                <Button className="w-full" onClick={() => navigate('/admin/orders')}>
+                  Manage Orders
+                </Button>
+              )}
+              {hasRole(['admin', 'reseller']) && (
                 <Button className="w-full" onClick={() => navigate('/reseller/commissions')}>
                   View Commissions
                 </Button>
               )}
-              <Button className="w-full" onClick={() => navigate('/admin/products')}>Manage Products</Button>
+              {role === 'admin' && (
+                <Button className="w-full" onClick={() => navigate('/admin/products')}>Manage Products</Button>
+              )}
               <Button className="w-full" variant="outline">View Reports</Button>
               {role === 'admin' && (
                 <Button className="w-full" onClick={() => navigate('/admin/users')}>
