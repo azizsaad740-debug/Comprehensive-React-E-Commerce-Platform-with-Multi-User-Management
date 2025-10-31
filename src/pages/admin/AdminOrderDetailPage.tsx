@@ -11,11 +11,13 @@ import { Order } from '@/types';
 import { getMockOrderById, cancelOrder } from '@/utils/orderUtils';
 import { useToast } from '@/hooks/use-toast';
 import OrderStatusUpdater from '@/components/admin/OrderStatusUpdater';
+import { useAuthStore } from '@/stores/authStore';
 
 const AdminOrderDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuthStore();
   
   const [order, setOrder] = useState<Order | undefined>(undefined);
 
@@ -85,6 +87,8 @@ const AdminOrderDetailPage = () => {
   };
 
   const isCancellable = order.status !== 'cancelled' && order.status !== 'delivered';
+  
+  const backButtonText = user?.role === 'reseller' ? 'Back to My Referred Orders' : 'Back to Order Management';
 
   return (
     <AdminLayout>
@@ -93,7 +97,7 @@ const AdminOrderDetailPage = () => {
           <h1 className="text-3xl font-bold">Order #{order.id}</h1>
           <Button variant="outline" onClick={() => navigate('/admin/orders')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Order Management
+            {backButtonText}
           </Button>
         </div>
 
