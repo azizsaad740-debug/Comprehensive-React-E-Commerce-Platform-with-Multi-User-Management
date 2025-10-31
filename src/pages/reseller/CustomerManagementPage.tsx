@@ -42,6 +42,24 @@ const columns: ColumnDef<User>[] = [
     },
   },
   {
+    accessorKey: "totalSales",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Total Sales
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const sales = row.original.totalSales || 0;
+      return <div className="font-bold text-right">${sales.toFixed(2)}</div>;
+    },
+  },
+  {
     accessorKey: "isActive",
     header: "Status",
     cell: ({ row }) => {

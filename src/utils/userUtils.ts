@@ -8,13 +8,13 @@ export const mockUsers: User[] = [
     id: 'u2', email: 'reseller1@example.com', name: 'Bob Reseller', role: 'reseller', isActive: true, createdAt: new Date(), updatedAt: new Date(), commissionRate: 15, totalEarnings: 5000,
   },
   {
-    id: 'u3', email: 'customer1@example.com', name: 'Charlie Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), resellerId: 'u2', // Referred by Bob
+    id: 'u3', email: 'customer1@example.com', name: 'Charlie Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), resellerId: 'u2', totalSales: 1250.50, // Referred by Bob
   },
   {
     id: 'u4', email: 'inactive@example.com', name: 'Diana Dormant', role: 'customer', isActive: false, createdAt: new Date(), updatedAt: new Date(),
   },
   {
-    id: 'u5', email: 'customer2@example.com', name: 'Eve Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), resellerId: 'u2', // Referred by Bob
+    id: 'u5', email: 'customer2@example.com', name: 'Eve Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), resellerId: 'u2', totalSales: 890.00, // Referred by Bob
   },
   {
     id: 'u6', email: 'customer3@example.com', name: 'Frank Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(),

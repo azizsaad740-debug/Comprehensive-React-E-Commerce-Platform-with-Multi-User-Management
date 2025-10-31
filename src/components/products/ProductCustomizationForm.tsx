@@ -65,7 +65,7 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
     }));
   };
 
-  const printPaths = product.customizationOptions.printPaths || 1;
+  const printPaths = product.printPaths || 1;
   const textInputs = useMemo(() => Array.from({ length: printPaths }, (_, i) => i), [printPaths]);
 
   return (
