@@ -9,7 +9,7 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, resellerId?: string) => Promise<void>;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
   setLoading: (loading: boolean) => void;
@@ -25,22 +25,47 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
 
-      login: async (email: string, password: string) => {
+      login: async (email: string, password: string, resellerId?: string) => {
         set({ isLoading: true });
         try {
           // Mock login - replace with real API call
+          
+          let role: User['role'] = 'customer';
+          let id = 'u' + Math.floor(Math.random() * 10000);
+          let name = 'Customer User';
+          let commissionRate = undefined;
+          let totalEarnings = undefined;
+
+          if (email === 'admin@example.com') {
+            role = 'admin';
+            id = 'u1';
+            name = 'Alice Admin';
+          } else if (email === 'reseller1@example.com') {
+            role = 'reseller';
+            id = 'u2';
+            name = 'Bob Reseller';
+            commissionRate = 15;
+            totalEarnings = 5000;
+          } else if (email === 'customer1@example.com') {
+            // Existing customer mock
+            role = 'customer';
+            id = 'u3';
+            name = 'Charlie Customer';
+          }
+
           const mockUser: User = {
-            id: '1',
+            id,
             email,
-            name: 'Admin User',
+            name,
             phone: '+1234567890',
             whatsapp: '+1234567890',
-            role: 'admin',
+            role,
             isActive: true,
             createdAt: new Date(),
             updatedAt: new Date(),
-            commissionRate: 10,
-            totalEarnings: 15000,
+            commissionRate,
+            totalEarnings,
+            resellerId: resellerId || undefined, // Apply referral ID if present
           };
 
           const mockToken = 'mock-jwt-token-' + Date.now();

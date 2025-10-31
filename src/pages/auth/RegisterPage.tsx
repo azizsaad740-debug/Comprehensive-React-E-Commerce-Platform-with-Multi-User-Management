@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,6 +28,10 @@ function RegisterPage() {
   const { login } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const query = new URLSearchParams(location.search);
+  const referralId = query.get('ref');
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -58,7 +62,9 @@ function RegisterPage() {
 
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await login(formData.email, formData.password);
+      
+      // Pass the captured referralId during the simulated login/registration step
+      await login(formData.email, formData.password, referralId || undefined);
       
       toast({
         title: "Success",
