@@ -137,3 +137,48 @@ export const createMockOrder = (data: OrderCreationData): Order => {
   currentMockOrders.push(newOrder);
   return newOrder;
 };
+
+interface RevenueData {
+  date: string;
+  revenue: number;
+}
+
+export const getResellerMonthlySales = (resellerId: string): RevenueData[] => {
+  const resellerOrders = currentMockOrders.filter(order => 
+    order.resellerId === resellerId && 
+    order.status !== 'cancelled'
+  );
+
+  const monthlySalesMap = new Map<string, number>();
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  resellerOrders.forEach(order => {
+    const monthIndex = order.createdAt.getMonth();
+    const year = order.createdAt.getFullYear();
+    const key = `${monthNames[monthIndex]} ${year}`;
+    
+    const currentRevenue = monthlySalesMap.get(key) || 0;
+    monthlySalesMap.set(key, currentRevenue + order.totalAmount);
+  });
+
+  // Generate data for the last 7 months for consistency
+  const today = new Date();
+  const data: RevenueData[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const monthName = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    const key = `${monthName} ${year}`;
+    
+    // Use only the month name for the chart label
+    const dateLabel = monthName; 
+    
+    data.push({
+      date: dateLabel,
+      revenue: monthlySalesMap.get(`${monthName} ${year}`) || 0,
+    });
+  }
+
+  return data;
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Users, ArrowRight, TrendingUp, Percent, Tag } from 'lucide-react';
@@ -12,16 +12,7 @@ import RevenueChart from '@/components/admin/RevenueChart';
 import { getCustomersByResellerId } from '@/utils/userUtils';
 import { getPromoCodesByResellerId } from '@/utils/promoCodeUtils';
 import ResellerCodeDisplay from '@/components/reseller/ResellerCodeDisplay';
-
-const mockSalesData = [
-  { date: 'Jan', revenue: 1500 },
-  { date: 'Feb', revenue: 1800 },
-  { date: 'Mar', revenue: 2500 },
-  { date: 'Apr', revenue: 2200 },
-  { date: 'May', revenue: 3000 },
-  { date: 'Jun', revenue: 3500 },
-  { date: 'Jul', revenue: 4000 },
-];
+import { getResellerMonthlySales } from '@/utils/orderUtils';
 
 const ResellerDashboard = () => {
   const { user } = useAuthStore();
@@ -44,6 +35,14 @@ const ResellerDashboard = () => {
     : 0;
     
   const totalEarnings = user?.totalEarnings || 0;
+  
+  // Fetch dynamic sales data
+  const monthlySalesData = useMemo(() => {
+    if (resellerId) {
+      return getResellerMonthlySales(resellerId);
+    }
+    return [];
+  }, [resellerId]);
 
   return (
     <AdminLayout>
@@ -119,7 +118,7 @@ const ResellerDashboard = () => {
             </CardHeader>
             <CardContent>
               <RevenueChart 
-                data={mockSalesData} 
+                data={monthlySalesData} 
                 dataKey="Monthly Sales" 
                 title="Last 7 Months Sales" 
               />
