@@ -10,6 +10,7 @@ import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
+import { getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
 
 const CartPage = () => {
   const { 
@@ -21,6 +22,9 @@ const CartPage = () => {
   } = useCartStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const mockStartDesigns = getAllMockStartDesigns();
+  const mockEndDesigns = getAllMockEndDesigns();
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -88,109 +92,129 @@ const CartPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {items.map((item, index) => (
-              <Card key={`${item.productId}-${item.variantId || 'default'}-${index}`}>
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-4">
-                    {/* Product Image */}
-                    <div className="w-24 h-24 bg-gray-100 rounded-md flex-shrink-0">
-                      {item.product.images[0] ? (
-                        <img 
-                          src={item.product.images[0]} 
-                          alt={item.product.name}
-                          className="w-full h-full object-cover rounded-md"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 rounded-md" />
-                      )}
-                    </div>
+            {items.map((item, index) => {
+              const customization = item.customization;
+              const hasCustomization = customization && (
+                customization.texts.some(text => text.trim()) ||
+                customization.font ||
+                customization.startDesign ||
+                customization.endDesign
+              );
 
-                    {/* Product Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-lg font-medium text-gray-900">
-                            {item.product.name}
-                          </h3>
-                          {item.variantId && (
-                            <p className="text-sm text-gray-500">
-                              {item.product.variants.find(v => v.id === item.variantId)?.name}
-                            </p>
-                          )}
-                          <p className="text-sm text-gray-600 mt-1">
-                            {item.product.description}
-                          </p>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveItem(item.productId, item.variantId)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+              return (
+                <Card key={`${item.productId}-${item.variantId || 'default'}-${index}`}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start space-x-4">
+                      {/* Product Image */}
+                      <div className="w-24 h-24 bg-gray-100 rounded-md flex-shrink-0">
+                        {item.product.images[0] ? (
+                          <img 
+                            src={item.product.images[0]} 
+                            alt={item.product.name}
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 rounded-md" />
+                        )}
                       </div>
-                      
-                      {/* Customization Preview */}
-                      {item.customization.texts.some(text => text.trim()) && (
-                        <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                          <p className="text-xs text-blue-700 font-medium mb-1">Customization:</p>
-                          {item.customization.texts.filter(text => text.trim()).map((text, idx) => (
-                            <p key={idx} className="text-xs text-blue-600">
-                              "{text}"
-                            </p>
-                          ))}
-                          {item.customization.font && (
-                            <p className="text-xs text-blue-600">
-                              Font: {item.customization.font}
-                            </p>
-                          )}
-                        </div>
-                      )}
 
-                      <div className="flex items-center justify-between mt-4">
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleQuantityChange(
-                              item.productId, 
-                              item.variantId, 
-                              item.quantity - 1
+                      {/* Product Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="text-lg font-medium text-gray-900">
+                              {item.product.name}
+                            </h3>
+                            {item.variantId && (
+                              <p className="text-sm text-gray-500">
+                                {item.product.variants.find(v => v.id === item.variantId)?.name}
+                              </p>
                             )}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="text-sm font-medium w-8 text-center">
-                            {item.quantity}
-                          </span>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {item.product.description}
+                            </p>
+                          </div>
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            onClick={() => handleQuantityChange(
-                              item.productId, 
-                              item.variantId, 
-                              item.quantity + 1
-                            )}
+                            onClick={() => handleRemoveItem(item.productId, item.variantId)}
+                            className="text-red-600 hover:text-red-700"
                           >
-                            <Plus className="h-3 w-3" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                         
-                        <div className="text-right">
-                          <span className="text-lg font-medium">
-                            ${((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
-                          </span>
-                          <p className="text-sm text-gray-500">
-                            ${(item.product.discountedPrice || item.product.basePrice).toFixed(2)} each
-                          </p>
+                        {/* Customization Preview */}
+                        {hasCustomization && customization && (
+                          <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                            <p className="text-xs text-blue-700 font-medium mb-1">Customization:</p>
+                            {customization.texts.filter(text => text.trim()).map((text, idx) => (
+                              <p key={idx} className="text-xs text-blue-600">
+                                Text {idx + 1}: "{text}"
+                              </p>
+                            ))}
+                            {customization.font && (
+                              <p className="text-xs text-blue-600">
+                                Font: {customization.font}
+                              </p>
+                            )}
+                            {customization.startDesign && (
+                              <p className="text-xs text-blue-600">
+                                Start Design: {mockStartDesigns.find(d => d.id === customization.startDesign)?.name}
+                              </p>
+                            )}
+                            {customization.endDesign && (
+                              <p className="text-xs text-blue-600">
+                                End Design: {mockEndDesigns.find(d => d.id === customization.endDesign)?.name}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between mt-4">
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleQuantityChange(
+                                item.productId, 
+                                item.variantId, 
+                                item.quantity - 1
+                              )}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="text-sm font-medium w-8 text-center">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleQuantityChange(
+                                item.productId, 
+                                item.variantId, 
+                                item.quantity + 1
+                              )}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          
+                          <div className="text-right">
+                            <span className="text-lg font-medium">
+                              ${((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
+                            </span>
+                            <p className="text-sm text-gray-500">
+                              ${(item.product.discountedPrice || item.product.basePrice).toFixed(2)} each
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
 
             {/* Clear Cart Button */}
             <div className="flex justify-end">

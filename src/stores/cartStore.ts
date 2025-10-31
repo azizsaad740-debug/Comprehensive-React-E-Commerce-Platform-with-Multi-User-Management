@@ -26,12 +26,20 @@ export const useCartStore = create<CartState>()(
       addItem: (product: Product, variantId?: string, quantity = 1, customization?: ProductCustomization) => {
         const { items } = get();
         
+        // Normalize customization for comparison
+        const normalizedCustomization = customization || {
+          texts: [],
+          font: '',
+          previewImage: '',
+          svgFile: ''
+        };
+
         // Find if item already exists (same product, variant, and customization)
         const existingItemIndex = items.findIndex(
           item => 
             item.productId === product.id && 
             item.variantId === variantId &&
-            JSON.stringify(item.customization) === JSON.stringify(customization)
+            JSON.stringify(item.customization) === JSON.stringify(normalizedCustomization)
         );
 
         if (existingItemIndex >= 0) {
@@ -45,12 +53,7 @@ export const useCartStore = create<CartState>()(
             productId: product.id,
             variantId,
             quantity,
-            customization: customization || {
-              texts: [],
-              font: '',
-              previewImage: '',
-              svgFile: ''
-            },
+            customization: normalizedCustomization,
             product
           };
           set({ items: [...items, newItem] });

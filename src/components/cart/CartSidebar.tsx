@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Separator } from '@/components/ui/separator';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
+import { getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
 
 const CartSidebar = () => {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ const CartSidebar = () => {
     clearCart
   } = useCartStore();
   const { toast } = useToast();
+
+  const mockStartDesigns = getAllMockStartDesigns();
+  const mockEndDesigns = getAllMockEndDesigns();
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -77,98 +81,118 @@ const CartSidebar = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {items.map((item, index) => (
-                  <div key={`${item.productId}-${item.variantId || 'default'}-${index}`} className="border rounded-lg p-4">
-                    <div className="flex items-start space-x-3">
-                      {/* Product Image */}
-                      <div className="w-16 h-16 bg-gray-100 rounded-md flex-shrink-0">
-                        {item.product.images[0] ? (
-                          <img 
-                            src={item.product.images[0]} 
-                            alt={item.product.name}
-                            className="w-full h-full object-cover rounded-md"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 rounded-md" />
-                        )}
-                      </div>
+                {items.map((item, index) => {
+                  const customization = item.customization;
+                  const hasCustomization = customization && (
+                    customization.texts.some(text => text.trim()) ||
+                    customization.font ||
+                    customization.startDesign ||
+                    customization.endDesign
+                  );
 
-                      {/* Product Details */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-medium text-gray-900 truncate">
-                          {item.product.name}
-                        </h3>
-                        {item.variantId && (
-                          <p className="text-sm text-gray-500">
-                            {item.product.variants.find(v => v.id === item.variantId)?.name}
-                          </p>
-                        )}
-                        
-                        {/* Customization Preview */}
-                        {item.customization.texts.some(text => text.trim()) && (
-                          <div className="mt-1 p-2 bg-blue-50 rounded border border-blue-200">
-                            <p className="text-xs text-blue-700 font-medium mb-1">Customization:</p>
-                            {item.customization.texts.filter(text => text.trim()).map((text, idx) => (
-                              <p key={idx} className="text-xs text-blue-600">
-                                "{text}"
-                              </p>
-                            ))}
-                            {item.customization.font && (
-                              <p className="text-xs text-blue-600">
-                                Font: {item.customization.font}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleQuantityChange(
-                                item.productId, 
-                                item.variantId, 
-                                item.quantity - 1
+                  return (
+                    <div key={`${item.productId}-${item.variantId || 'default'}-${index}`} className="border rounded-lg p-4">
+                      <div className="flex items-start space-x-3">
+                        {/* Product Image */}
+                        <div className="w-16 h-16 bg-gray-100 rounded-md flex-shrink-0">
+                          {item.product.images[0] ? (
+                            <img 
+                              src={item.product.images[0]} 
+                              alt={item.product.name}
+                              className="w-full h-full object-cover rounded-md"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 rounded-md" />
+                          )}
+                        </div>
+
+                        {/* Product Details */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-medium text-gray-900 truncate">
+                            {item.product.name}
+                          </h3>
+                          {item.variantId && (
+                            <p className="text-sm text-gray-500">
+                              {item.product.variants.find(v => v.id === item.variantId)?.name}
+                            </p>
+                          )}
+                          
+                          {/* Customization Preview */}
+                          {hasCustomization && customization && (
+                            <div className="mt-1 p-2 bg-blue-50 rounded border border-blue-200">
+                              <p className="text-xs text-blue-700 font-medium mb-1">Customization:</p>
+                              {customization.texts.filter(text => text.trim()).map((text, idx) => (
+                                <p key={idx} className="text-xs text-blue-600">
+                                  Text {idx + 1}: "{text}"
+                                </p>
+                              ))}
+                              {customization.font && (
+                                <p className="text-xs text-blue-600">
+                                  Font: {customization.font}
+                                </p>
                               )}
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="text-sm font-medium w-8 text-center">
-                              {item.quantity}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleQuantityChange(
-                                item.productId, 
-                                item.variantId, 
-                                item.quantity + 1
+                              {customization.startDesign && (
+                                <p className="text-xs text-blue-600">
+                                  Start Design: {mockStartDesigns.find(d => d.id === customization.startDesign)?.name}
+                                </p>
                               )}
+                              {customization.endDesign && (
+                                <p className="text-xs text-blue-600">
+                                  End Design: {mockEndDesigns.find(d => d.id === customization.endDesign)?.name}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleQuantityChange(
+                                  item.productId, 
+                                  item.variantId, 
+                                  item.quantity - 1
+                                )}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <span className="text-sm font-medium w-8 text-center">
+                                {item.quantity}
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleQuantityChange(
+                                  item.productId, 
+                                  item.variantId, 
+                                  item.quantity + 1
+                                )}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveItem(item.productId, item.variantId)}
+                              className="text-red-600 hover:text-red-700"
                             >
-                              <Plus className="h-3 w-3" />
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
                           
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveItem(item.productId, item.variantId)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        
-                        <div className="text-right mt-2">
-                          <span className="text-sm font-medium">
-                            ${((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
-                          </span>
+                          <div className="text-right mt-2">
+                            <span className="text-sm font-medium">
+                              ${((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
