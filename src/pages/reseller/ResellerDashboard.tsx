@@ -3,20 +3,21 @@
 import React from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, ShoppingBag, Users, ArrowRight, TrendingUp, Percent } from 'lucide-react';
+import { DollarSign, Users, ArrowRight, TrendingUp, Percent, Tag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import RevenueChart from '@/components/admin/RevenueChart';
 import ReferralLinkGenerator from '@/components/reseller/ReferralLinkGenerator';
+import { getCustomersByResellerId } from '@/utils/userUtils';
+import { getPromoCodesByResellerId } from '@/utils/promoCodeUtils';
 
 const mockResellerStats = {
   totalEarnings: 15000.75,
   monthlySales: 3500.50,
   totalOrders: 450,
   pendingCommissions: 500.00,
-  activeCustomers: 85,
 };
 
 const mockSalesData = [
@@ -34,6 +35,16 @@ const ResellerDashboard = () => {
   const navigate = useNavigate();
   
   const commissionRate = user?.commissionRate || 15;
+  const resellerId = user?.id;
+
+  // Calculate real-time (mocked) metrics
+  const activeCustomersCount = resellerId 
+    ? getCustomersByResellerId(resellerId).length 
+    : 0;
+
+  const activePromoCodesCount = resellerId 
+    ? getPromoCodesByResellerId(resellerId).filter(code => code.isActive).length 
+    : 0;
 
   return (
     <AdminLayout>
@@ -43,7 +54,7 @@ const ResellerDashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          {/* Total Earnings Card */}
+          {/* Total Earnings Card (Mock) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
@@ -57,31 +68,31 @@ const ResellerDashboard = () => {
             </CardContent>
           </Card>
           
-          {/* Monthly Sales Card */}
+          {/* Active Customers Card (Real Mock Data) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Sales</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Referred Customers</CardTitle>
+              <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${mockResellerStats.monthlySales.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {activeCustomersCount}
               </div>
-              <p className="text-xs text-muted-foreground">Total sales generated this month</p>
+              <p className="text-xs text-muted-foreground">Customers linked to your ID</p>
             </CardContent>
           </Card>
           
-          {/* Pending Commissions Card */}
+          {/* Active Promo Codes Card (Real Mock Data) */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Commissions</CardTitle>
-              <DollarSign className="h-4 w-4 text-yellow-600" />
+              <CardTitle className="text-sm font-medium">Active Promo Codes</CardTitle>
+              <Tag className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${mockResellerStats.pendingCommissions.toFixed(2)}
+                {activePromoCodesCount}
               </div>
-              <p className="text-xs text-muted-foreground">Awaiting payment confirmation</p>
+              <p className="text-xs text-muted-foreground">Codes available for use</p>
             </CardContent>
           </Card>
           
@@ -118,25 +129,32 @@ const ResellerDashboard = () => {
               
               <Separator className="my-6" />
               
-              <h3 className="text-lg font-semibold mb-3">Recent Orders</h3>
-              <p className="text-gray-500 mb-4">Placeholder for recent orders placed by your customers.</p>
-              <Button variant="link" onClick={() => navigate('/admin/orders')} className="p-0">
-                View All Orders <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
+              <h3 className="text-lg font-semibold mb-3">Quick Links</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => navigate('/admin/orders')}>
+                  View My Orders
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/reseller/commissions')}>
+                  Track Commissions
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/reseller/customers')}>
+                  Manage Customers
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/reseller/promocodes')}>
+                  Manage Promo Codes
+                </Button>
+              </div>
             </CardContent>
           </Card>
           
-          {/* Quick Actions */}
+          {/* Quick Actions (Simplified) */}
           <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" onClick={() => navigate('/admin/orders')}>
-                View My Orders
-              </Button>
-              <Button className="w-full" onClick={() => navigate('/reseller/commissions')}>
-                Track Commissions
+              <Button className="w-full" onClick={() => navigate('/reseller/promocodes')}>
+                Generate New Promo Code
               </Button>
               <Button className="w-full" onClick={() => navigate('/profile')}>
                 Update Profile
