@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,22 +14,35 @@ import Layout from '@/components/layout/Layout';
 import { Product } from '@/types';
 import { getAllMockProducts } from '@/utils/productUtils';
 
+// Helper to get query parameters
+const useQuery = () => {
+  return new URLSearchParams(useLocation().search);
+};
+
 function ProductCatalog() {
+  const navigate = useNavigate();
+  const query = useQuery();
+  const urlCategory = query.get('category') || 'all';
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState(urlCategory);
   const [sortBy, setSortBy] = useState('name');
   
   const { addItem } = useCartStore();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const mockProducts = getAllMockProducts();
+
+  // Update selectedCategory state if the URL changes
+  React.useEffect(() => {
+    setSelectedCategory(urlCategory);
+  }, [urlCategory]);
 
   const filteredProducts = useMemo(() => {
     let filtered = mockProducts.filter(product => 
       product.isActive &&
       (searchTerm === '' || product.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (selectedCategory === 'all' || product.category === selectedCategory)
+      (selectedCategory === 'all' || product.category.toLowerCase() === selectedCategory.toLowerCase())
     );
 
     filtered.sort((a, b) => {
@@ -47,6 +60,16 @@ function ProductCatalog() {
   }, [searchTerm, selectedCategory, sortBy, mockProducts]);
 
   const categories = ['all', ...Array.from(new Set(mockProducts.map(p => p.category)))];
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    // Update URL query parameter
+    const newQuery = new URLSearchParams();
+    if (category !== 'all') {
+      newQuery.set('category', category.toLowerCase());
+    }
+    navigate({ search: newQuery.toString() }, { replace: true });
+  };
 
   const handleAddToCart = (product: Product) => {
     // For quick add, we assume default variant and no customization
@@ -73,14 +96,14 @@ function ProductCatalog() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
 
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select value={selectedCategory} onValueChange={handleCategoryChange}>
               <SelectTrigger>
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {categories.slice(1).map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
+                  <SelectItem key={category} value={category.toLowerCase()}>{category}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
