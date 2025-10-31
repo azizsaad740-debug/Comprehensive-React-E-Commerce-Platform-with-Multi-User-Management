@@ -77,7 +77,7 @@ const ProductDetailPage = () => {
   
   // Initialize customization state based on product options
   const initialCustomization: ProductCustomization = {
-    texts: [''],
+    texts: [''], // Start with one empty text field
     font: mockProduct.customizationOptions.fonts[0] || '',
     startDesign: mockProduct.customizationOptions.startDesigns[0] || undefined,
     endDesign: mockProduct.customizationOptions.endDesigns[0] || undefined,
@@ -96,7 +96,22 @@ const ProductDetailPage = () => {
   const finalPrice = hasDiscount ? mockProduct.discountedPrice! : price;
 
   const handleAddToCart = () => {
-    addItem(mockProduct, selectedVariant?.id, quantity, customization);
+    // Clean up customization object: remove empty text fields
+    const cleanedCustomization: ProductCustomization = {
+      ...customization,
+      texts: customization.texts.filter(text => text.trim().length > 0),
+    };
+
+    // If no customization was actually provided, pass undefined or a minimal object
+    const customizationToPass = 
+      cleanedCustomization.texts.length > 0 || 
+      cleanedCustomization.font !== initialCustomization.font || 
+      cleanedCustomization.startDesign !== initialCustomization.startDesign ||
+      cleanedCustomization.endDesign !== initialCustomization.endDesign
+        ? cleanedCustomization
+        : undefined;
+
+    addItem(mockProduct, selectedVariant?.id, quantity, customizationToPass);
     toast({
       title: "Added to cart",
       description: `${mockProduct.name} has been added to your cart`,
