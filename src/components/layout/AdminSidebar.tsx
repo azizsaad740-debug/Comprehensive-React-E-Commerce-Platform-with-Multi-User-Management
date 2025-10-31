@@ -39,6 +39,12 @@ const navItems = [
     roles: ['admin'],
   },
   {
+    title: 'My Promo Codes',
+    href: '/reseller/promocodes',
+    icon: Tag,
+    roles: ['reseller'],
+  },
+  {
     title: 'Commissions',
     href: '/reseller/commissions',
     icon: DollarSign,

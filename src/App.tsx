@@ -24,6 +24,7 @@ import OrderManagementPage from "./pages/admin/OrderManagementPage.tsx";
 import ResellerDashboard from "./pages/reseller/ResellerDashboard.tsx";
 import PromoCodeManagementPage from "./pages/admin/PromoCodeManagementPage.tsx";
 import AdminOrderDetailPage from "./pages/admin/AdminOrderDetailPage.tsx";
+import ResellerPromoCodePage from "./pages/reseller/ResellerPromoCodePage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -117,6 +118,14 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <PromoCodeManagementPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/reseller/promocodes" 
+            element={
+              <ProtectedRoute allowedRoles={['reseller']}>
+                <ResellerPromoCodePage />
               </ProtectedRoute>
             } 
           />

@@ -165,6 +165,7 @@ export interface PromoCode {
   validTo: Date;
   isActive: boolean;
   createdAt: Date;
+  updatedAt: Date;
   resellerId?: string;
   autoAssignReseller: boolean;
 }

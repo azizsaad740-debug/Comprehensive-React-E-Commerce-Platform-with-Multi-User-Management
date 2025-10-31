@@ -1,14 +1,17 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { ColumnDef } from "@tanstack/react-table";
 import { PromoCode } from '@/types';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { DataTable } from '../../components/data-table/DataTable.tsx';
+import { DataTable } from '@/components/data-table/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, Edit, Trash2, PlusCircle } from 'lucide-react';
-import { getAllPromoCodes } from '@/utils/promoCodeUtils';
+import { ArrowUpDown, Edit, Trash2, PlusCircle, Tag } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore';
+import { getPromoCodesByResellerId } from '@/utils/promoCodeUtils';
+import CreatePromoCodeForm from '@/components/reseller/CreatePromoCodeForm';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const columns: ColumnDef<PromoCode>[] = [
   {
@@ -54,6 +57,14 @@ const columns: ColumnDef<PromoCode>[] = [
     },
   },
   {
+    accessorKey: "validTo",
+    header: "Expires",
+    cell: ({ row }) => {
+      const date = row.original.validTo;
+      return <div>{date.toLocaleDateString()}</div>;
+    },
+  },
+  {
     accessorKey: "isActive",
     header: "Status",
     cell: ({ row }) => {
@@ -81,30 +92,61 @@ const columns: ColumnDef<PromoCode>[] = [
   },
 ];
 
-const PromoCodeManagementPage = () => {
-  const promoCodes = getAllPromoCodes();
+const ResellerPromoCodePage = () => {
+  const { user } = useAuthStore();
+  const [isCreating, setIsCreating] = useState(false);
+  
+  // Initialize state with codes linked to the current reseller
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>(
+    user?.id ? getPromoCodesByResellerId(user.id) : []
+  );
+
+  const handleCodeCreated = (newCode: PromoCode) => {
+    setPromoCodes(prev => [...prev, newCode]);
+    setIsCreating(false);
+  };
+
+  if (!user || user.role !== 'reseller') {
+    return <AdminLayout><div className="p-8">Access Denied.</div></AdminLayout>;
+  }
 
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Promo Code Management</h1>
-          <Button>
+          <h1 className="text-3xl font-bold">My Promo Codes</h1>
+          <Button onClick={() => setIsCreating(!isCreating)}>
             <PlusCircle className="h-4 w-4 mr-2" />
-            Create New Code
+            {isCreating ? 'Cancel Creation' : 'Generate New Code'}
           </Button>
         </div>
-        <p className="text-gray-600 mb-8">Manage promotional codes, discounts, and usage limits.</p>
+        <p className="text-gray-600 mb-8">Manage promotional codes linked to your reseller account.</p>
 
-        <DataTable 
-          columns={columns} 
-          data={promoCodes} 
-          filterColumnId="code"
-          filterPlaceholder="Filter by code..."
-        />
+        {isCreating && (
+          <div className="mb-8">
+            <CreatePromoCodeForm onCodeCreated={handleCodeCreated} />
+          </div>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Tag className="h-5 w-5" />
+              Active Codes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DataTable 
+              columns={columns} 
+              data={promoCodes} 
+              filterColumnId="code"
+              filterPlaceholder="Filter by code..."
+            />
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );
 };
 
-export default PromoCodeManagementPage;
+export default ResellerPromoCodePage;
