@@ -21,6 +21,7 @@ import UserManagementPage from "./pages/admin/UserManagementPage.tsx";
 import ProductManagementPage from "./pages/admin/ProductManagementPage.tsx";
 import CommissionTrackingPage from "@/pages/reseller/CommissionTrackingPage.tsx";
 import OrderManagementPage from "./pages/admin/OrderManagementPage.tsx";
+import ResellerDashboard from "./pages/reseller/ResellerDashboard.tsx";
 
 const queryClient = new QueryClient();
 
@@ -56,7 +57,7 @@ const App = () => (
             path="/reseller/dashboard" 
             element={
               <ProtectedRoute allowedRoles={['reseller', 'admin']}>
-                <AdminDashboard />
+                <ResellerDashboard />
               </ProtectedRoute>
             } 
           />
