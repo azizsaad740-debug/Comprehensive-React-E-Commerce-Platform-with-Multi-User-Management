@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ColumnDef } from "@tanstack/react-table";
 import { Order } from '@/types';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -9,25 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Eye, XCircle, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
-// Mock Data (Expanded from OrderDetailPage)
-const mockOrders: Order[] = [
-  {
-    id: 'CP-2024-001234', customerId: '1', status: 'shipped', items: [], subtotal: 64.97, discountAmount: 0, taxAmount: 5.20, shippingCost: 9.99, totalAmount: 80.16, paymentMethod: 'Credit Card', paymentStatus: 'paid', shippingAddress: {} as any, deliveryMethod: 'Standard Shipping', designFiles: [], createdAt: new Date(Date.now() - 86400000 * 5), updatedAt: new Date(),
-  },
-  {
-    id: 'CP-2024-001235', customerId: '2', status: 'processing', items: [], subtotal: 150.00, discountAmount: 15.00, taxAmount: 10.80, shippingCost: 0, totalAmount: 145.80, paymentMethod: 'PayPal', paymentStatus: 'paid', shippingAddress: {} as any, deliveryMethod: 'Express Shipping', designFiles: [], createdAt: new Date(Date.now() - 86400000 * 2), updatedAt: new Date(),
-  },
-  {
-    id: 'CP-2024-001236', customerId: '3', status: 'pending', items: [], subtotal: 30.00, discountAmount: 0, taxAmount: 2.40, shippingCost: 9.99, totalAmount: 42.39, paymentMethod: 'Credit Card', paymentStatus: 'pending', shippingAddress: {} as any, deliveryMethod: 'Standard Shipping', designFiles: [], createdAt: new Date(Date.now() - 86400000 * 1), updatedAt: new Date(),
-  },
-  {
-    id: 'CP-2024-001237', customerId: '4', status: 'delivered', items: [], subtotal: 250.00, discountAmount: 0, taxAmount: 20.00, shippingCost: 0, totalAmount: 270.00, paymentMethod: 'Credit Card', paymentStatus: 'paid', shippingAddress: {} as any, deliveryMethod: 'Standard Shipping', designFiles: [], createdAt: new Date(Date.now() - 86400000 * 10), updatedAt: new Date(),
-  },
-  {
-    id: 'CP-2024-001238', customerId: '5', status: 'cancelled', items: [], subtotal: 50.00, discountAmount: 0, taxAmount: 4.00, shippingCost: 9.99, totalAmount: 63.99, paymentMethod: 'Credit Card', paymentStatus: 'failed', shippingAddress: {} as any, deliveryMethod: 'Standard Shipping', designFiles: [], createdAt: new Date(Date.now() - 86400000 * 7), updatedAt: new Date(),
-  },
-];
+import { getMockOrders } from '@/utils/orderUtils';
+import { useAuthStore } from '@/stores/authStore';
 
 const getStatusBadge = (status: Order['status']) => {
   switch (status) {
@@ -130,7 +113,22 @@ const columns: ColumnDef<Order>[] = [
 ];
 
 const OrderManagementPage = () => {
-  const orders = mockOrders;
+  const { user } = useAuthStore();
+  const allOrders = getMockOrders();
+
+  const orders = useMemo(() => {
+    if (user?.role === 'admin') {
+      // Admin sees all orders
+      return allOrders;
+    }
+    if (user?.role === 'reseller') {
+      // Reseller sees only orders associated with their ID (mocked as 'u2' for demonstration)
+      // NOTE: In a real app, user.id would be used here. We use 'u2' to match the mock data structure.
+      const resellerId = user.id; 
+      return allOrders.filter(order => order.resellerId === resellerId);
+    }
+    return [];
+  }, [user, allOrders]);
 
   return (
     <AdminLayout>
@@ -139,7 +137,9 @@ const OrderManagementPage = () => {
           <h1 className="text-3xl font-bold">Order Management</h1>
           <Button variant="outline">Export Orders</Button>
         </div>
-        <p className="text-gray-600 mb-8">View and manage all customer orders.</p>
+        <p className="text-gray-600 mb-8">
+          {user?.role === 'admin' ? 'View and manage all customer orders.' : 'View and manage orders placed through your referral.'}
+        </p>
 
         <DataTable 
           columns={columns} 

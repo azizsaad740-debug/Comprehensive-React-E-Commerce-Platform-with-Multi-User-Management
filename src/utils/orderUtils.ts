@@ -43,13 +43,19 @@ const mockOrderItems: OrderItem[] = [
 
 const initialMockOrders: Order[] = [
   {
-    id: 'CP-2024-001234', customerId: '1', status: 'shipped', items: mockOrderItems, subtotal: 64.97, discountAmount: 0, taxAmount: 5.20, shippingCost: 9.99, totalAmount: 80.16, paymentMethod: 'Credit Card', paymentStatus: 'paid', shippingAddress: mockShippingAddress, deliveryMethod: 'Standard Shipping', designFiles: ['tshirt_design.svg', 'mug_design.svg'], createdAt: new Date(Date.now() - 86400000 * 5), updatedAt: new Date(),
+    id: 'CP-2024-001234', customerId: '1', resellerId: 'u2', status: 'shipped', items: mockOrderItems, subtotal: 64.97, discountAmount: 0, taxAmount: 5.20, shippingCost: 9.99, totalAmount: 80.16, paymentMethod: 'Credit Card', paymentStatus: 'paid', shippingAddress: mockShippingAddress, deliveryMethod: 'Standard Shipping', designFiles: ['tshirt_design.svg', 'mug_design.svg'], createdAt: new Date(Date.now() - 86400000 * 5), updatedAt: new Date(),
   },
   {
-    id: 'CP-2024-001235', customerId: '1', status: 'pending', items: mockOrderItems, subtotal: 150.00, discountAmount: 15.00, taxAmount: 10.80, shippingCost: 0, totalAmount: 145.80, paymentMethod: 'PayPal', paymentStatus: 'paid', shippingAddress: mockShippingAddress, deliveryMethod: 'Express Shipping', designFiles: ['tshirt_design.svg'], createdAt: new Date(Date.now() - 86400000 * 2), updatedAt: new Date(),
+    id: 'CP-2024-001235', customerId: '1', resellerId: 'u2', status: 'pending', items: mockOrderItems, subtotal: 150.00, discountAmount: 15.00, taxAmount: 10.80, shippingCost: 0, totalAmount: 145.80, paymentMethod: 'PayPal', paymentStatus: 'paid', shippingAddress: mockShippingAddress, deliveryMethod: 'Express Shipping', designFiles: ['tshirt_design.svg'], createdAt: new Date(Date.now() - 86400000 * 2), updatedAt: new Date(),
   },
   {
     id: 'CP-2024-001236', customerId: '1', status: 'delivered', items: mockOrderItems, subtotal: 30.00, discountAmount: 0, taxAmount: 2.40, shippingCost: 9.99, totalAmount: 42.39, paymentMethod: 'Credit Card', paymentStatus: 'paid', shippingAddress: mockShippingAddress, deliveryMethod: 'Standard Shipping', designFiles: [], createdAt: new Date(Date.now() - 86400000 * 10), updatedAt: new Date(),
+  },
+  {
+    id: 'CP-2024-001237', customerId: '2', resellerId: 'u2', status: 'processing', items: mockOrderItems, subtotal: 99.99, discountAmount: 0, taxAmount: 8.00, shippingCost: 0, totalAmount: 107.99, paymentMethod: 'Credit Card', paymentStatus: 'paid', shippingAddress: mockShippingAddress, deliveryMethod: 'Standard Shipping', designFiles: [], createdAt: new Date(Date.now() - 86400000 * 1), updatedAt: new Date(),
+  },
+  {
+    id: 'CP-2024-001238', customerId: '3', status: 'shipped', items: mockOrderItems, subtotal: 200.00, discountAmount: 20.00, taxAmount: 14.40, shippingCost: 0, totalAmount: 194.40, paymentMethod: 'Credit Card', paymentStatus: 'paid', shippingAddress: mockShippingAddress, deliveryMethod: 'Express Shipping', designFiles: [], createdAt: new Date(Date.now() - 86400000 * 3), updatedAt: new Date(),
   },
 ];
 
