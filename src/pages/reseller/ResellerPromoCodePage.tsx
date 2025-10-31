@@ -12,6 +12,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { getPromoCodesByResellerId } from '@/utils/promoCodeUtils';
 import CreatePromoCodeForm from '@/components/reseller/CreatePromoCodeForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ResellerCodeDisplay from '@/components/reseller/ResellerCodeDisplay';
 
 const columns: ColumnDef<PromoCode>[] = [
   {
@@ -109,6 +110,8 @@ const ResellerPromoCodePage = () => {
   if (!user || user.role !== 'reseller') {
     return <AdminLayout><div className="p-8">Access Denied.</div></AdminLayout>;
   }
+  
+  const memoizedColumns = useMemo(() => columns, []);
 
   return (
     <AdminLayout>
@@ -122,6 +125,8 @@ const ResellerPromoCodePage = () => {
         </div>
         <p className="text-gray-600 mb-8">Manage promotional codes linked to your reseller account.</p>
 
+        <ResellerCodeDisplay resellerId={user.id} />
+
         {isCreating && (
           <div className="mb-8">
             <CreatePromoCodeForm onCodeCreated={handleCodeCreated} />
@@ -132,12 +137,12 @@ const ResellerPromoCodePage = () => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Tag className="h-5 w-5" />
-              Active Codes
+              All Generated Codes
             </CardTitle>
           </CardHeader>
           <CardContent>
             <DataTable 
-              columns={columns} 
+              columns={memoizedColumns} 
               data={promoCodes} 
               filterColumnId="code"
               filterPlaceholder="Filter by code..."
