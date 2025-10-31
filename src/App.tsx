@@ -14,6 +14,8 @@ import CheckoutPage from "./pages/checkout/CheckoutPage";
 import OrderConfirmationPage from "./pages/checkout/OrderConfirmationPage";
 import OrdersPage from "./pages/orders/OrdersPage";
 import ProfilePage from "./pages/profile/ProfilePage";
+import AdminDashboard from "@/pages/admin/Dashboard.tsx";
+import ProtectedRoute from "@/components/auth/ProtectedRoute.tsx";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +36,25 @@ const App = () => (
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
+          
+          {/* Protected Admin/Reseller Routes */}
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/reseller/dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={['reseller', 'admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
