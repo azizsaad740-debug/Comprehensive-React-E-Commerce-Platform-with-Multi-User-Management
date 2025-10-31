@@ -65,6 +65,16 @@ const mockProduct: Product = {
   updatedAt: new Date()
 };
 
+// Helper function to determine if customization is meaningful
+const isCustomizationMeaningful = (customization: ProductCustomization, initialCustomization: ProductCustomization): boolean => {
+  const hasText = customization.texts.some(text => text.trim().length > 0);
+  const hasFontChange = customization.font !== initialCustomization.font;
+  const hasStartDesign = customization.startDesign && customization.startDesign !== initialCustomization.startDesign;
+  const hasEndDesign = customization.endDesign && customization.endDesign !== initialCustomization.endDesign;
+  
+  return hasText || hasFontChange || hasStartDesign || hasEndDesign;
+};
+
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -96,20 +106,16 @@ const ProductDetailPage = () => {
   const finalPrice = hasDiscount ? mockProduct.discountedPrice! : price;
 
   const handleAddToCart = () => {
-    // Clean up customization object: remove empty text fields
-    const cleanedCustomization: ProductCustomization = {
-      ...customization,
-      texts: customization.texts.filter(text => text.trim().length > 0),
-    };
+    let customizationToPass: ProductCustomization | undefined = undefined;
 
-    // If no customization was actually provided, pass undefined or a minimal object
-    const customizationToPass = 
-      cleanedCustomization.texts.length > 0 || 
-      cleanedCustomization.font !== initialCustomization.font || 
-      cleanedCustomization.startDesign !== initialCustomization.startDesign ||
-      cleanedCustomization.endDesign !== initialCustomization.endDesign
-        ? cleanedCustomization
-        : undefined;
+    if (isCustomizationMeaningful(customization, initialCustomization)) {
+      // Clean up empty text fields if customization is meaningful
+      const cleanedCustomization: ProductCustomization = {
+        ...customization,
+        texts: customization.texts.filter(text => text.trim().length > 0),
+      };
+      customizationToPass = cleanedCustomization;
+    }
 
     addItem(mockProduct, selectedVariant?.id, quantity, customizationToPass);
     toast({
