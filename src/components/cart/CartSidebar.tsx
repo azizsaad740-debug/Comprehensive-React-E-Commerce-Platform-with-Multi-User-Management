@@ -1,7 +1,8 @@
 "use client";
 
 import React from 'react';
-import { X, Plus, Minus, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
@@ -9,13 +10,15 @@ import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 
 const CartSidebar = () => {
+  const navigate = useNavigate();
   const { 
     items, 
     isOpen, 
     setCartOpen, 
     updateQuantity, 
     removeItem, 
-    getTotalPrice 
+    getTotalPrice,
+    clearCart
   } = useCartStore();
   const { toast } = useToast();
 
@@ -39,6 +42,16 @@ const CartSidebar = () => {
     });
   };
 
+  const handleCheckout = () => {
+    setCartOpen(false);
+    navigate('/checkout');
+  };
+
+  const handleContinueShopping = () => {
+    setCartOpen(false);
+    navigate('/products');
+  };
+
   const totalPrice = getTotalPrice();
 
   return (
@@ -53,13 +66,13 @@ const CartSidebar = () => {
           <div className="flex-1 overflow-y-auto py-4">
             {items.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">Your cart is empty</p>
+                <ShoppingBag className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 mb-4">Your cart is empty</p>
                 <Button 
                   variant="outline" 
-                  className="mt-4"
-                  onClick={() => setCartOpen(false)}
+                  onClick={handleContinueShopping}
                 >
-                  Continue Shopping
+                  Start Shopping
                 </Button>
               </div>
             ) : (
@@ -87,15 +100,25 @@ const CartSidebar = () => {
                         </h3>
                         {item.variantId && (
                           <p className="text-sm text-gray-500">
-                            Variant: {item.product.variants.find(v => v.id === item.variantId)?.name}
+                            {item.product.variants.find(v => v.id === item.variantId)?.name}
                           </p>
                         )}
                         
                         {/* Customization Preview */}
-                        {item.customization.texts.length > 0 && (
-                          <p className="text-xs text-blue-600 mt-1">
-                            Custom: {item.customization.texts.join(', ')}
-                          </p>
+                        {item.customization.texts.some(text => text.trim()) && (
+                          <div className="mt-1 p-2 bg-blue-50 rounded border border-blue-200">
+                            <p className="text-xs text-blue-700 font-medium mb-1">Customization:</p>
+                            {item.customization.texts.filter(text => text.trim()).map((text, idx) => (
+                              <p key={idx} className="text-xs text-blue-600">
+                                "{text}"
+                              </p>
+                            ))}
+                            {item.customization.font && (
+                              <p className="text-xs text-blue-600">
+                                Font: {item.customization.font}
+                              </p>
+                            )}
+                          </div>
                         )}
                         
                         <div className="flex items-center justify-between mt-2">
@@ -131,6 +154,7 @@ const CartSidebar = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRemoveItem(item.productId, item.variantId)}
+                            className="text-red-600 hover:text-red-700"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -153,21 +177,44 @@ const CartSidebar = () => {
           {items.length > 0 && (
             <>
               <Separator />
-              <div className="py-4">
-                <div className="flex items-center justify-between mb-4">
+              <div className="py-4 space-y-4">
+                <div className="flex items-center justify-between">
                   <span className="text-lg font-medium">Total:</span>
                   <span className="text-lg font-bold">${totalPrice.toFixed(2)}</span>
                 </div>
-                <Button className="w-full" size="lg">
+                
+                <Button 
+                  className="w-full" 
+                  size="lg"
+                  onClick={handleCheckout}
+                >
                   Checkout
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full mt-2"
-                  onClick={() => setCartOpen(false)}
-                >
-                  Continue Shopping
-                </Button>
+                
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleContinueShopping}
+                  >
+                    Continue Shopping
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/cart')}
+                  >
+                    View Cart
+                  </Button>
+                </div>
+                
+                {/* Shipping Info */}
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">
+                    {totalPrice >= 50 
+                      ? '🚚 Free shipping included!' 
+                      : `Add $${(50 - totalPrice).toFixed(2)} more for free shipping`
+                    }
+                  </p>
+                </div>
               </div>
             </>
           )}

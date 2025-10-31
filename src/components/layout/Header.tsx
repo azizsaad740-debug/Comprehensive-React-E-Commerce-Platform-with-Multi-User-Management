@@ -1,7 +1,8 @@
 "use client";
 
 import React from 'react';
-import { ShoppingCart, User, Menu, Search } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, User, Search, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -11,22 +12,51 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
 
 const Header = () => {
+  const navigate = useNavigate();
   const { getTotalItems, toggleCart } = useCartStore();
   const { user, isAuthenticated, logout } = useAuthStore();
   const totalItems = getTotalItems();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center space-x-4">
+          <Link to="/" className="flex items-center space-x-4">
             <h1 className="text-xl font-bold text-primary">CustomPrint</h1>
-          </div>
+          </Link>
+
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <Link 
+              to="/products" 
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            >
+              Products
+            </Link>
+            <Link 
+              to="/categories" 
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            >
+              Categories
+            </Link>
+            <Link 
+              to="/about" 
+              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+            >
+              About
+            </Link>
+          </nav>
 
           {/* Search Bar */}
           <div className="flex-1 max-w-md mx-8">
@@ -40,13 +70,13 @@ const Header = () => {
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* Right Navigation */}
           <div className="flex items-center space-x-4">
             {/* Cart */}
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={toggleCart}
+              onClick={() => navigate('/cart')}
               className="relative"
             >
               <ShoppingCart className="h-5 w-5" />
@@ -64,26 +94,52 @@ const Header = () => {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <User className="h-5 w-5" />
-                    <span className="ml-2">{user?.name}</span>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <span className="hidden sm:block">{user?.name}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>Orders</DropdownMenuItem>
-                  {user?.role === 'admin' && (
-                    <DropdownMenuItem>Admin Panel</DropdownMenuItem>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/orders')}>
+                    My Orders
+                  </DropdownMenuItem>
+                  {user?.role === 'reseller' && (
+                    <DropdownMenuItem onClick={() => navigate('/reseller/dashboard')}>
+                      Reseller Dashboard
+                    </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={logout}>
+                  {user?.role === 'admin' && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      Admin Panel
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" />
                     Logout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="default" size="sm">
-                Login
-              </Button>
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/auth/login')}
+                >
+                  Login
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => navigate('/auth/register')}
+                >
+                  Sign Up
+                </Button>
+              </div>
             )}
           </div>
         </div>
