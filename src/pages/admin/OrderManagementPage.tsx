@@ -175,22 +175,28 @@ const OrderManagementPage = () => {
       return allOrders;
     }
     if (user?.role === 'reseller') {
-      // Reseller sees only orders associated with their ID (mocked as 'u2' for demonstration)
+      // Reseller sees only orders associated with their ID
       const resellerId = user.id; 
       return allOrders.filter(order => order.resellerId === resellerId);
     }
     return [];
   }, [user, allOrders]);
 
+  const isReseller = user?.role === 'reseller';
+  const pageTitle = isReseller ? 'My Referred Orders' : 'Order Management';
+  const pageDescription = isReseller 
+    ? 'View and manage orders placed by customers referred by you.' 
+    : 'View and manage all customer orders.';
+
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Order Management</h1>
-          <Button variant="outline">Export Orders</Button>
+          <h1 className="text-3xl font-bold">{pageTitle}</h1>
+          {!isReseller && <Button variant="outline">Export Orders</Button>}
         </div>
         <p className="text-gray-600 mb-8">
-          {user?.role === 'admin' ? 'View and manage all customer orders.' : 'View and manage orders placed through your referral.'}
+          {pageDescription}
         </p>
 
         <DataTable 
