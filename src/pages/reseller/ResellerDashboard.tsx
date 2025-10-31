@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import RevenueChart from '@/components/admin/RevenueChart';
+import ReferralLinkGenerator from '@/components/reseller/ReferralLinkGenerator';
 
 const mockResellerStats = {
   totalEarnings: 15000.75,
@@ -95,6 +96,11 @@ const ResellerDashboard = () => {
               <p className="text-xs text-muted-foreground">Your current rate</p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Referral Link Generator */}
+        <div className="mb-8">
+          <ReferralLinkGenerator />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
