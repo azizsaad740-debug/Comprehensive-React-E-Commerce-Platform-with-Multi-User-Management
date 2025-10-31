@@ -18,6 +18,7 @@ import AdminDashboard from "@/pages/admin/Dashboard.tsx";
 import ProtectedRoute from "@/components/auth/ProtectedRoute.tsx";
 import OrderDetailPage from "./pages/orders/OrderDetailPage.tsx";
 import UserManagementPage from "./pages/admin/UserManagementPage.tsx";
+import ProductManagementPage from "./pages/admin/ProductManagementPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,14 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <UserManagementPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/products" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ProductManagementPage />
               </ProtectedRoute>
             } 
           />

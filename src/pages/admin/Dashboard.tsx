@@ -92,7 +92,7 @@ const Dashboard = () => {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full" variant="outline">Manage Products</Button>
+              <Button className="w-full" onClick={() => navigate('/admin/products')}>Manage Products</Button>
               <Button className="w-full" variant="outline">View Reports</Button>
               {role === 'admin' && (
                 <Button className="w-full" onClick={() => navigate('/admin/users')}>
