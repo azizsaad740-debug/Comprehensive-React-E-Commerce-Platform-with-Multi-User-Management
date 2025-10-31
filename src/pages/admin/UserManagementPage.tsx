@@ -8,23 +8,9 @@ import { DataTable } from '../../components/data-table/DataTable.tsx';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Edit, Trash2 } from 'lucide-react';
+import { getAllMockUsers } from '@/utils/userUtils';
 
-// Mock Data
-const mockUsers: User[] = [
-  {
-    id: 'u1', email: 'admin@example.com', name: 'Alice Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(),
-  },
-  {
-    id: 'u2', email: 'reseller1@example.com', name: 'Bob Reseller', role: 'reseller', isActive: true, createdAt: new Date(), updatedAt: new Date(), commissionRate: 15, totalEarnings: 5000,
-  },
-  {
-    id: 'u3', email: 'customer1@example.com', name: 'Charlie Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(),
-  },
-  {
-    id: 'u4', email: 'inactive@example.com', name: 'Diana Dormant', role: 'customer', isActive: false, createdAt: new Date(), updatedAt: new Date(),
-  },
-];
-
+// Columns definition remains the same
 const columns: ColumnDef<User>[] = [
   {
     accessorKey: "name",
@@ -86,8 +72,8 @@ const columns: ColumnDef<User>[] = [
 ];
 
 const UserManagementPage = () => {
-  // In a real app, fetch users here
-  const users = mockUsers;
+  // Fetch users from centralized utility
+  const users = getAllMockUsers();
 
   return (
     <AdminLayout>

@@ -39,6 +39,12 @@ const navItems = [
     roles: ['admin'],
   },
   {
+    title: 'My Customers',
+    href: '/reseller/customers',
+    icon: Users,
+    roles: ['reseller'],
+  },
+  {
     title: 'My Promo Codes',
     href: '/reseller/promocodes',
     icon: Tag,

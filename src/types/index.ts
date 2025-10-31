@@ -21,6 +21,7 @@ export interface User {
   updatedAt: Date;
   commissionRate?: number;
   totalEarnings?: number;
+  resellerId?: string; // NEW: ID of the reseller who referred this user
 }
 
 export interface CustomFont {
