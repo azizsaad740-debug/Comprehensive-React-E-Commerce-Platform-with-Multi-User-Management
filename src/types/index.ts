@@ -59,6 +59,7 @@ export interface ProductVariant {
     color?: string;
     size?: string;
     material?: string;
+    model?: string;
   };
 }
 

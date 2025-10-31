@@ -12,71 +12,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import { Product } from '@/types';
-
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Custom T-Shirt',
-    sku: 'TS001',
-    description: 'High-quality cotton t-shirt perfect for custom printing',
-    basePrice: 29.99,
-    discountedPrice: 24.99,
-    images: ['/placeholder.svg'],
-    category: 'Apparel',
-    subcategory: 'T-Shirts',
-    stockQuantity: 50,
-    variants: [
-      {
-        id: 'v1',
-        name: 'Small',
-        price: 29.99,
-        stockQuantity: 20,
-        attributes: { size: 'S', color: 'White' }
-      }
-    ],
-    customizationOptions: {
-      fonts: ['Arial', 'Times New Roman'],
-      startDesigns: ['Simple', 'Floral'],
-      endDesigns: ['Logo', 'Text'],
-      maxCharacters: 50
-    },
-    printPaths: 1,
-    isActive: true,
-    tags: ['popular'],
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '2',
-    name: 'Personalized Mug',
-    sku: 'MG001',
-    description: 'Ceramic mug with custom printing',
-    basePrice: 19.99,
-    images: ['/placeholder.svg'],
-    category: 'Drinkware',
-    stockQuantity: 100,
-    variants: [
-      {
-        id: 'v2',
-        name: 'Standard',
-        price: 19.99,
-        stockQuantity: 100,
-        attributes: { material: 'Ceramic' }
-      }
-    ],
-    customizationOptions: {
-      fonts: ['Arial', 'Comic Sans'],
-      startDesigns: ['Minimalist', 'Vintage'],
-      endDesigns: ['Simple', 'Clean'],
-      maxCharacters: 25
-    },
-    printPaths: 1,
-    isActive: true,
-    tags: ['new'],
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-];
+import { getAllMockProducts } from '@/utils/productUtils';
 
 function ProductCatalog() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -86,6 +22,8 @@ function ProductCatalog() {
   const { addItem } = useCartStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const mockProducts = getAllMockProducts();
 
   const filteredProducts = useMemo(() => {
     let filtered = mockProducts.filter(product => 
@@ -106,12 +44,13 @@ function ProductCatalog() {
     });
 
     return filtered;
-  }, [searchTerm, selectedCategory, sortBy]);
+  }, [searchTerm, selectedCategory, sortBy, mockProducts]);
 
   const categories = ['all', ...Array.from(new Set(mockProducts.map(p => p.category)))];
 
   const handleAddToCart = (product: Product) => {
-    addItem(product, undefined, 1);
+    // For quick add, we assume default variant and no customization
+    addItem(product, product.variants[0]?.id, 1);
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart`,
@@ -224,7 +163,7 @@ function ProductCatalog() {
                       onClick={() => handleAddToCart(product)}
                     >
                       <ShoppingCart className="h-4 w-4 mr-2" />
-                      Add to Cart
+                      Quick Add
                     </Button>
                     <Button 
                       variant="outline" 

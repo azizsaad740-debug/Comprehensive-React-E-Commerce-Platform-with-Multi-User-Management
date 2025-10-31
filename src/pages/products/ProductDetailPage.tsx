@@ -15,55 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import { Product, ProductCustomization } from '@/types';
 import ProductCustomizationForm from '@/components/products/ProductCustomizationForm.tsx';
-
-// Mock product data - in real app, this would come from API
-const mockProduct: Product = {
-  id: '1',
-  name: 'Custom T-Shirt',
-  sku: 'TS001',
-  description: 'High-quality cotton t-shirt perfect for custom printing. Choose from various fonts, colors, and designs to create your unique style.',
-  basePrice: 29.99,
-  discountedPrice: 24.99,
-  images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
-  category: 'Apparel',
-  subcategory: 'T-Shirts',
-  stockQuantity: 50,
-  variants: [
-    {
-      id: 'v1',
-      name: 'Small',
-      price: 29.99,
-      stockQuantity: 20,
-      attributes: { size: 'S', color: 'White' }
-    },
-    {
-      id: 'v2',
-      name: 'Medium',
-      price: 29.99,
-      stockQuantity: 30,
-      attributes: { size: 'M', color: 'White' }
-    },
-    {
-      id: 'v3',
-      name: 'Large',
-      price: 29.99,
-      stockQuantity: 25,
-      attributes: { size: 'L', color: 'White' }
-    }
-  ],
-  customizationOptions: {
-    fonts: ['Arial', 'Times New Roman', 'Helvetica', 'Comic Sans', 'Impact'],
-    startDesigns: ['Simple', 'Floral', 'Abstract', 'Geometric', 'Vintage'],
-    endDesigns: ['Logo', 'Text', 'Pattern', 'Border', 'Frame'],
-    maxCharacters: 50,
-    allowedColors: ['Red', 'Blue', 'Green', 'Black', 'White', 'Gold', 'Silver']
-  },
-  printPaths: 1,
-  isActive: true,
-  tags: ['popular', 'bestseller'],
-  createdAt: new Date(),
-  updatedAt: new Date()
-};
+import { getMockProductById } from '@/utils/productUtils';
 
 // Helper function to determine if customization is meaningful
 const isCustomizationMeaningful = (customization: ProductCustomization, initialCustomization: ProductCustomization): boolean => {
@@ -81,29 +33,60 @@ const ProductDetailPage = () => {
   const { addItem } = useCartStore();
   const { toast } = useToast();
 
-  const [selectedVariant, setSelectedVariant] = useState(mockProduct.variants[0]);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<Product['variants'][number] | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
-  // Initialize customization state based on product options
-  const initialCustomization: ProductCustomization = {
-    texts: [''], // Start with one empty text field
-    font: mockProduct.customizationOptions.fonts[0] || '',
-    startDesign: mockProduct.customizationOptions.startDesigns[0] || undefined,
-    endDesign: mockProduct.customizationOptions.endDesigns[0] || undefined,
-    previewImage: '',
-    svgFile: ''
-  };
+  const [initialCustomization, setInitialCustomization] = useState<ProductCustomization | null>(null);
+  const [customization, setCustomization] = useState<ProductCustomization | null>(null);
 
-  const [customization, setCustomization] = useState<ProductCustomization>(initialCustomization);
+  useEffect(() => {
+    if (id) {
+      const fetchedProduct = getMockProductById(id);
+      if (fetchedProduct) {
+        setProduct(fetchedProduct);
+        setSelectedVariant(fetchedProduct.variants[0]);
+        
+        // Initialize customization state based on product options
+        const initialCustom: ProductCustomization = {
+          texts: [''], // Start with one empty text field
+          font: fetchedProduct.customizationOptions.fonts[0] || '',
+          startDesign: fetchedProduct.customizationOptions.startDesigns?.[0] || undefined,
+          endDesign: fetchedProduct.customizationOptions.endDesigns?.[0] || undefined,
+          previewImage: '',
+          svgFile: ''
+        };
+        setInitialCustomization(initialCustom);
+        setCustomization(initialCustom);
+      } else {
+        // Handle product not found
+        navigate('/products');
+        toast({
+          title: "Product Not Found",
+          description: `Product with ID ${id} does not exist.`,
+          variant: "destructive",
+        });
+      }
+    }
+  }, [id, navigate, toast]);
 
   const handleCustomizationChange = useCallback((newCustomization: ProductCustomization) => {
     setCustomization(newCustomization);
   }, []);
 
-  const price = selectedVariant?.price || mockProduct.basePrice;
-  const hasDiscount = mockProduct.discountedPrice && mockProduct.discountedPrice < mockProduct.basePrice;
-  const finalPrice = hasDiscount ? mockProduct.discountedPrice! : price;
+  if (!product || !customization || !initialCustomization) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-16 text-center">
+          <p>Loading product details...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  const price = selectedVariant?.price || product.basePrice;
+  const hasDiscount = product.discountedPrice && product.discountedPrice < product.basePrice;
+  const finalPrice = hasDiscount ? product.discountedPrice! : price;
 
   const handleAddToCart = () => {
     let customizationToPass: ProductCustomization | undefined = undefined;
@@ -117,10 +100,10 @@ const ProductDetailPage = () => {
       customizationToPass = cleanedCustomization;
     }
 
-    addItem(mockProduct, selectedVariant?.id, quantity, customizationToPass);
+    addItem(product, selectedVariant?.id, quantity, customizationToPass);
     toast({
       title: "Added to cart",
-      description: `${mockProduct.name} has been added to your cart`,
+      description: `${product.name} has been added to your cart`,
     });
   };
 
@@ -142,15 +125,15 @@ const ProductDetailPage = () => {
           <div className="space-y-4">
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
               <img 
-                src={mockProduct.images[currentImageIndex] || '/placeholder.svg'} 
-                alt={mockProduct.name}
+                src={product.images[currentImageIndex] || '/placeholder.svg'} 
+                alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
             
-            {mockProduct.images.length > 1 && (
+            {product.images.length > 1 && (
               <div className="flex space-x-2">
-                {mockProduct.images.map((image, index) => (
+                {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
@@ -160,7 +143,7 @@ const ProductDetailPage = () => {
                   >
                     <img 
                       src={image} 
-                      alt={`${mockProduct.name} ${index + 1}`}
+                      alt={`${product.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -173,14 +156,14 @@ const ProductDetailPage = () => {
           <div className="space-y-6">
             <div>
               <div className="flex items-center space-x-2 mb-2">
-                <Badge variant="outline">{mockProduct.category}</Badge>
-                {mockProduct.tags.map(tag => (
+                <Badge variant="outline">{product.category}</Badge>
+                {product.tags.map(tag => (
                   <Badge key={tag} variant="secondary" className="text-xs">
                     {tag}
                   </Badge>
                 ))}
               </div>
-              <h1 className="text-3xl font-bold mb-2">{mockProduct.name}</h1>
+              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
               <div className="flex items-center space-x-4 mb-4">
                 <div className="flex items-center space-x-1">
                   <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
@@ -188,7 +171,7 @@ const ProductDetailPage = () => {
                   <span className="text-gray-500">(124 reviews)</span>
                 </div>
               </div>
-              <p className="text-gray-600 mb-4">{mockProduct.description}</p>
+              <p className="text-gray-600 mb-4">{product.description}</p>
               
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
@@ -211,24 +194,26 @@ const ProductDetailPage = () => {
 
             {/* Product Options */}
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="variant" className="text-base font-medium">Size</Label>
-                <Select value={selectedVariant?.id} onValueChange={(value) => {
-                  const variant = mockProduct.variants.find(v => v.id === value);
-                  setSelectedVariant(variant);
-                }}>
-                  <SelectTrigger className="w-full mt-2">
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {mockProduct.variants.map(variant => (
-                      <SelectItem key={variant.id} value={variant.id}>
-                        {variant.name} - ${variant.price.toFixed(2)} ({variant.stockQuantity} in stock)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {product.variants.length > 0 && (
+                <div>
+                  <Label htmlFor="variant" className="text-base font-medium">Variant</Label>
+                  <Select value={selectedVariant?.id} onValueChange={(value) => {
+                    const variant = product.variants.find(v => v.id === value);
+                    setSelectedVariant(variant);
+                  }}>
+                    <SelectTrigger className="w-full mt-2">
+                      <SelectValue placeholder="Select variant" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {product.variants.map(variant => (
+                        <SelectItem key={variant.id} value={variant.id}>
+                          {variant.name} - ${variant.price.toFixed(2)} ({variant.stockQuantity} in stock)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="quantity" className="text-base font-medium">Quantity</Label>
@@ -243,7 +228,7 @@ const ProductDetailPage = () => {
                   <Input
                     type="number"
                     min="1"
-                    max={selectedVariant?.stockQuantity || 1}
+                    max={selectedVariant?.stockQuantity || product.stockQuantity || 1}
                     value={quantity}
                     onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                     className="w-16 text-center"
@@ -251,7 +236,7 @@ const ProductDetailPage = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setQuantity(Math.min(selectedVariant?.stockQuantity || 1, quantity + 1))}
+                    onClick={() => setQuantity(Math.min(selectedVariant?.stockQuantity || product.stockQuantity || 1, quantity + 1))}
                   >
                     +
                   </Button>
@@ -265,6 +250,7 @@ const ProductDetailPage = () => {
                 className="w-full" 
                 size="lg"
                 onClick={handleAddToCart}
+                disabled={!selectedVariant && product.variants.length > 0}
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
                 Add to Cart
@@ -311,7 +297,7 @@ const ProductDetailPage = () => {
                 </CardHeader>
                 <CardContent>
                   <ProductCustomizationForm
-                    product={mockProduct}
+                    product={product}
                     initialCustomization={initialCustomization}
                     onCustomizationChange={handleCustomizationChange}
                   />
