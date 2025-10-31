@@ -13,13 +13,6 @@ import ReferralLinkGenerator from '@/components/reseller/ReferralLinkGenerator';
 import { getCustomersByResellerId } from '@/utils/userUtils';
 import { getPromoCodesByResellerId } from '@/utils/promoCodeUtils';
 
-const mockResellerStats = {
-  totalEarnings: 15000.75,
-  monthlySales: 3500.50,
-  totalOrders: 450,
-  pendingCommissions: 500.00,
-};
-
 const mockSalesData = [
   { date: 'Jan', revenue: 1500 },
   { date: 'Feb', revenue: 1800 },
@@ -38,13 +31,19 @@ const ResellerDashboard = () => {
   const resellerId = user?.id;
 
   // Calculate real-time (mocked) metrics
-  const activeCustomersCount = resellerId 
-    ? getCustomersByResellerId(resellerId).length 
-    : 0;
+  const referredCustomers = resellerId 
+    ? getCustomersByResellerId(resellerId) 
+    : [];
+    
+  const activeCustomersCount = referredCustomers.length;
+
+  const totalReferredSales = referredCustomers.reduce((sum, customer) => sum + (customer.totalSales || 0), 0);
 
   const activePromoCodesCount = resellerId 
     ? getPromoCodesByResellerId(resellerId).filter(code => code.isActive).length 
     : 0;
+    
+  const totalEarnings = user?.totalEarnings || 0;
 
   return (
     <AdminLayout>
@@ -54,7 +53,7 @@ const ResellerDashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          {/* Total Earnings Card (Mock) */}
+          {/* Total Earnings Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
@@ -62,9 +61,23 @@ const ResellerDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${mockResellerStats.totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                ${totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </div>
               <p className="text-xs text-muted-foreground">Lifetime commissions paid</p>
+            </CardContent>
+          </Card>
+          
+          {/* Total Referred Sales Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Referred Sales</CardTitle>
+              <TrendingUp className="h-4 w-4 text-indigo-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                ${totalReferredSales.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </div>
+              <p className="text-xs text-muted-foreground">Total sales from your customers</p>
             </CardContent>
           </Card>
           
@@ -79,20 +92,6 @@ const ResellerDashboard = () => {
                 {activeCustomersCount}
               </div>
               <p className="text-xs text-muted-foreground">Customers linked to your ID</p>
-            </CardContent>
-          </Card>
-          
-          {/* Active Promo Codes Card (Real Mock Data) */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Promo Codes</CardTitle>
-              <Tag className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {activePromoCodesCount}
-              </div>
-              <p className="text-xs text-muted-foreground">Codes available for use</p>
             </CardContent>
           </Card>
           
