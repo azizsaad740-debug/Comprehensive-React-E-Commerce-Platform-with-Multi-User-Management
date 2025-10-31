@@ -75,6 +75,8 @@ export interface Product {
   isActive: boolean;
   customizationOptions: CustomizationOptions;
   printPaths: number; // Added printPaths to Product interface based on usage in productUtils
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface ProductCustomization {
