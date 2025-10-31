@@ -16,6 +16,7 @@ import OrdersPage from "./pages/orders/OrdersPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import AdminDashboard from "@/pages/admin/Dashboard.tsx";
 import ProtectedRoute from "@/components/auth/ProtectedRoute.tsx";
+import OrderDetailPage from "./pages/orders/OrderDetailPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/orders/confirmation" element={<OrderConfirmationPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/orders/:id" element={<OrderDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
