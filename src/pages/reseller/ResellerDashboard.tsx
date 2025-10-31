@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import RevenueChart from '@/components/admin/RevenueChart';
 
 const mockResellerStats = {
   totalEarnings: 15000.75,
@@ -16,6 +17,16 @@ const mockResellerStats = {
   pendingCommissions: 500.00,
   activeCustomers: 85,
 };
+
+const mockSalesData = [
+  { date: 'Jan', revenue: 1500 },
+  { date: 'Feb', revenue: 1800 },
+  { date: 'Mar', revenue: 2500 },
+  { date: 'Apr', revenue: 2200 },
+  { date: 'May', revenue: 3000 },
+  { date: 'Jun', revenue: 3500 },
+  { date: 'Jul', revenue: 4000 },
+];
 
 const ResellerDashboard = () => {
   const { user } = useAuthStore();
@@ -93,10 +104,11 @@ const ResellerDashboard = () => {
               <CardTitle>Monthly Sales Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-64 bg-gray-50 border border-dashed rounded-lg flex items-center justify-center text-gray-500">
-                {/* Placeholder for Sales Chart */}
-                <p>Chart Placeholder: Monthly Sales Data</p>
-              </div>
+              <RevenueChart 
+                data={mockSalesData} 
+                dataKey="Monthly Sales" 
+                title="Last 7 Months Sales" 
+              />
               
               <Separator className="my-6" />
               
