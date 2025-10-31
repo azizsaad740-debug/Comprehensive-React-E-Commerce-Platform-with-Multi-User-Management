@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,40 +9,8 @@ import { ArrowRight, Star, ShoppingBag, Palette, Truck, Heart } from 'lucide-rea
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
-
-// Sample products data
-const featuredProducts = [
-  {
-    id: '1',
-    name: 'Custom T-Shirt',
-    price: 29.99,
-    originalPrice: 39.99,
-    image: '/placeholder.svg',
-    rating: 4.8,
-    reviews: 124,
-    category: 'Apparel'
-  },
-  {
-    id: '2', 
-    name: 'Personalized Mug',
-    price: 19.99,
-    originalPrice: 24.99,
-    image: '/placeholder.svg',
-    rating: 4.9,
-    reviews: 89,
-    category: 'Drinkware'
-  },
-  {
-    id: '3',
-    name: 'Custom Phone Case',
-    price: 24.99,
-    originalPrice: 29.99,
-    image: '/placeholder.svg',
-    rating: 4.7,
-    reviews: 156,
-    category: 'Accessories'
-  }
-];
+import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
+import { Product } from '@/types';
 
 const features = [
   {
@@ -67,34 +35,21 @@ const Index = () => {
   const { addItem } = useCartStore();
   const { toast } = useToast();
 
-  // Mock product for adding to cart
-  const mockProduct = {
-    id: '1',
-    name: 'Custom T-Shirt',
-    sku: 'TS001',
-    description: 'High-quality cotton t-shirt perfect for custom printing',
-    basePrice: 29.99,
-    discountedPrice: 24.99,
-    images: ['/placeholder.svg'],
-    category: 'Apparel',
-    subcategory: 'T-Shirts',
-    stockQuantity: 50,
-    variants: [],
-    customizationOptions: {
-      fonts: ['Arial', 'Times New Roman'],
-      startDesigns: ['Simple', 'Floral'],
-      endDesigns: ['Logo', 'Text'],
-      maxCharacters: 50
-    },
-    printPaths: 1,
-    isActive: true,
-    tags: ['popular'],
-    createdAt: new Date(),
-    updatedAt: new Date()
-  };
+  const allProducts = getAllMockProducts();
+  
+  // Use specific product IDs for featured products
+  const featuredProductIds = ['1', '2', '3']; 
+  
+  const featuredProducts = useMemo(() => {
+    return featuredProductIds
+      .map(id => getMockProductById(id))
+      .filter((p): p is Product => !!p);
+  }, [allProducts]);
 
-  const handleAddToCart = (product: any) => {
-    addItem(product, undefined, 1);
+
+  const handleAddToCart = (product: Product) => {
+    // For quick add, we assume the first variant and no customization
+    addItem(product, product.variants[0]?.id, 1);
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart`,
@@ -170,63 +125,68 @@ const Index = () => {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {featuredProducts.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="aspect-square bg-gray-100 relative">
-                  <img 
-                    src={product.image} 
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/80 hover:bg-white"
-                  >
-                    <Heart className="h-4 w-4" />
-                  </Button>
-                </div>
-                <CardHeader>
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="secondary">{product.category}</Badge>
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm text-gray-600">
-                        {product.rating} ({product.reviews})
-                      </span>
-                    </div>
-                  </div>
-                  <CardTitle className="text-lg">{product.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xl font-bold text-green-600">
-                        ${product.price}
-                      </span>
-                      {product.originalPrice > product.price && (
-                        <span className="text-sm text-gray-500 line-through">
-                          ${product.originalPrice}
-                        </span>
-                      )}
-                    </div>
-                    <Button size="sm" onClick={() => navigate(`/products/${product.id}`)}>
-                      Customize
-                    </Button>
-                  </div>
-                  <div className="mt-2 flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => handleAddToCart(mockProduct)}
+            {featuredProducts.map((product) => {
+              const price = product.discountedPrice || product.basePrice;
+              const originalPrice = product.basePrice;
+              
+              return (
+                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="aspect-square bg-gray-100 relative">
+                    <img 
+                      src={product.images[0] || '/placeholder.svg'} 
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/80 hover:bg-white"
                     >
-                      Quick Add
+                      <Heart className="h-4 w-4" />
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                  <CardHeader>
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="secondary">{product.category}</Badge>
+                      <div className="flex items-center space-x-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm text-gray-600">
+                          4.8 (124) {/* Mock rating/reviews */}
+                        </span>
+                      </div>
+                    </div>
+                    <CardTitle className="text-lg">{product.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xl font-bold text-green-600">
+                          ${price.toFixed(2)}
+                        </span>
+                        {originalPrice > price && (
+                          <span className="text-sm text-gray-500 line-through">
+                            ${originalPrice.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      <Button size="sm" onClick={() => navigate(`/products/${product.id}`)}>
+                        Customize
+                      </Button>
+                    </div>
+                    <div className="mt-2 flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleAddToCart(product)}
+                      >
+                        Quick Add
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
           
           <div className="text-center mt-12">
