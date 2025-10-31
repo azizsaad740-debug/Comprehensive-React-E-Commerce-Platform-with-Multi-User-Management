@@ -1,33 +1,50 @@
+import { ReactNode } from 'react';
+
+// =================================================================
+// CORE TYPES
+// =================================================================
+
+export type UserRole = 'admin' | 'reseller' | 'customer';
+
 export interface User {
   id: string;
   email: string;
   name: string;
-  phone?: string;
-  whatsapp?: string;
-  role: 'admin' | 'reseller' | 'customer';
-  avatar?: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  // Reseller specific fields
-  commissionRate?: number;
-  totalEarnings?: number;
-  // Customer specific fields
-  resellerId?: string;
-  addresses?: Address[];
+  role: UserRole;
+  token: string;
 }
 
-export interface Address {
+export interface CustomFont {
   id: string;
-  fullName: string;
-  phone: string;
-  whatsapp?: string;
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  isDefault: boolean;
+  name: string;
+  file: string; // URL or path to the font file
+}
+
+export interface CustomDesign {
+  id: string;
+  name: string;
+  category: string;
+  imageUrl: string; // URL or path to the design SVG/image
+}
+
+// =================================================================
+// PRODUCT & INVENTORY TYPES
+// =================================================================
+
+export interface ProductVariant {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  stockQuantity: number;
+  attributes: Record<string, string>; // e.g., { color: 'Red', size: 'L' }
+}
+
+export interface CustomizationOptions {
+  printPaths?: number; // NEW: Number of text paths available for engraving
+  fonts: string[]; // List of font IDs available
+  startDesigns?: string[]; // List of design IDs for the start of the engraving
+  endDesigns?: string[]; // List of design IDs for the end of the engraving
 }
 
 export interface Product {
@@ -39,200 +56,56 @@ export interface Product {
   discountedPrice?: number;
   images: string[];
   category: string;
-  subcategory?: string;
+  tags: string[];
   stockQuantity: number;
   variants: ProductVariant[];
+  isActive: boolean;
   customizationOptions: CustomizationOptions;
-  printPaths: number; // 1, 2, 3+ print paths
-  isActive: boolean;
-  tags: string[];
-  createdAt: Date;
-  updatedAt: Date;
 }
 
-export interface ProductVariant {
-  id: string;
-  name: string;
+export interface ProductCustomization {
+  texts: string[]; // Text input for each print path
+  font: string; // Selected font ID
+  startDesign?: string; // Selected start design ID
+  endDesign?: string; // Selected end design ID
+  previewImage: string; // URL of the generated preview image
+  svgFile: string; // Base64 or URL of the final SVG file
+}
+
+// =================================================================
+// CART & ORDER TYPES
+// =================================================================
+
+export interface CartItem {
+  productId: string;
+  productName: string;
+  variantId?: string;
+  variantName?: string;
+  quantity: number;
   price: number;
-  stockQuantity: number;
-  attributes: {
-    color?: string;
-    size?: string;
-    material?: string;
-    model?: string;
-  };
-}
-
-export interface CustomizationOptions {
-  fonts: string[];
-  startDesigns: string[];
-  endDesigns: string[];
-  maxCharacters?: number;
-  allowedColors?: string[];
-}
-
-export interface Design {
-  id: string;
-  name: string;
-  type: 'start' | 'end' | 'font';
-  category: string;
-  fileUrl: string;
-  thumbnailUrl: string;
-  isActive: boolean;
-  usageCount: number;
-  createdAt: Date;
+  customization?: ProductCustomization;
 }
 
 export interface Order {
   id: string;
   customerId: string;
-  resellerId?: string;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  items: OrderItem[];
-  subtotal: number;
-  discountAmount: number;
-  taxAmount: number;
-  shippingCost: number;
+  customerName: string;
+  items: CartItem[];
   totalAmount: number;
+  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  orderDate: string;
+  shippingAddress: string;
   paymentMethod: string;
-  paymentStatus: 'pending' | 'paid' | 'failed';
-  shippingAddress: Address;
-  deliveryMethod: string;
-  promoCode?: string;
-  notes?: string;
-  designFiles: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface OrderItem {
-  id: string;
-  productId: string;
-  variantId?: string;
-  quantity: number;
-  price: number;
-  customization: ProductCustomization;
-}
-
-export interface ProductCustomization {
-  texts: string[];
-  font: string;
-  startDesign?: string;
-  endDesign?: string;
-  previewImage: string;
-  svgFile: string;
-}
-
-export interface PromoCode {
-  id: string;
-  code: string;
-  name: string;
-  discountType: 'percentage' | 'fixed';
-  discountValue: number;
-  minimumOrderValue?: number;
-  usageLimit?: number;
-  usedCount: number;
-  validFrom: Date;
-  validTo: Date;
   resellerId?: string;
-  applicableProducts?: string[];
-  applicableCategories?: string[];
-  isActive: boolean;
-  autoAssignReseller?: boolean;
-  createdAt: Date;
 }
 
-export interface InventoryTransaction {
-  id: string;
-  productId: string;
-  variantId?: string;
-  type: 'purchase' | 'sale' | 'adjustment' | 'return';
-  quantity: number;
-  previousStock: number;
-  newStock: number;
-  notes?: string;
-  createdAt: Date;
-}
+// =================================================================
+// LAYOUT & UI TYPES
+// =================================================================
 
-export interface Expense {
-  id: string;
-  category: string;
-  amount: number;
-  description: string;
-  date: Date;
-  receipt?: string;
-  createdAt: Date;
-}
-
-export interface FinancialReport {
-  period: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  startDate: Date;
-  endDate: Date;
-  totalRevenue: number;
-  totalExpenses: number;
-  netProfit: number;
-  orderCount: number;
-  averageOrderValue: number;
-  topProducts: Array<{
-    productId: string;
-    productName: string;
-    quantity: number;
-    revenue: number;
-  }>;
-  revenueByPaymentMethod: Record<string, number>;
-}
-
-export interface CartItem {
-  productId: string;
-  variantId?: string;
-  quantity: number;
-  customization: ProductCustomization;
-  product: Product;
-}
-
-export interface Notification {
-  id: string;
-  type: 'order' | 'payment' | 'inventory' | 'system';
+export interface NavItem {
   title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: Date;
-  metadata?: Record<string, any>;
-}
-
-export interface DashboardStats {
-  totalRevenue: number;
-  totalOrders: number;
-  totalCustomers: number;
-  totalProducts: number;
-  lowStockCount: number;
-  pendingOrders: number;
-  activeResellers: number;
-  todayRevenue: number;
-  monthRevenue: number;
-  topSellingProducts: Array<{
-    productId: string;
-    productName: string;
-    quantity: number;
-    revenue: number;
-  }>;
-  revenueData: Array<{
-    date: string;
-    revenue: number;
-  }>;
-  orderStatusData: Array<{
-    status: string;
-    count: number;
-  }>;
-}
-
-export interface AIInsight {
-  id: string;
-  type: 'inventory' | 'sales' | 'pricing' | 'marketing' | 'financial';
-  title: string;
-  description: string;
-  recommendation: string;
-  confidence: number;
-  impact: 'low' | 'medium' | 'high';
-  createdAt: Date;
+  href: string;
+  icon: ReactNode;
+  roles: UserRole[];
 }
