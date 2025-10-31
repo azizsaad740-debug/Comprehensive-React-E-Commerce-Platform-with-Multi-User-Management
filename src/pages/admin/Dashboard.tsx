@@ -17,7 +17,7 @@ const mockStats = {
 };
 
 const Dashboard = () => {
-  const { user } = useAuthStore();
+  const { user, hasRole } = useAuthStore();
   const navigate = useNavigate();
   const role = user?.role || 'guest';
 
@@ -92,6 +92,11 @@ const Dashboard = () => {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              {hasRole(['admin', 'reseller']) && (
+                <Button className="w-full" onClick={() => navigate('/reseller/commissions')}>
+                  View Commissions
+                </Button>
+              )}
               <Button className="w-full" onClick={() => navigate('/admin/products')}>Manage Products</Button>
               <Button className="w-full" variant="outline">View Reports</Button>
               {role === 'admin' && (

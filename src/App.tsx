@@ -19,6 +19,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute.tsx";
 import OrderDetailPage from "./pages/orders/OrderDetailPage.tsx";
 import UserManagementPage from "./pages/admin/UserManagementPage.tsx";
 import ProductManagementPage from "./pages/admin/ProductManagementPage.tsx";
+import CommissionTrackingPage from "@/pages/reseller/CommissionTrackingPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,14 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <ProductManagementPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/reseller/commissions" 
+            element={
+              <ProtectedRoute allowedRoles={['reseller', 'admin']}>
+                <CommissionTrackingPage />
               </ProtectedRoute>
             } 
           />
