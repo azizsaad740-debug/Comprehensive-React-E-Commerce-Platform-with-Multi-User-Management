@@ -3,11 +3,11 @@
 import React from 'react';
 import { ColumnDef } from "@tanstack/react-table";
 import { Order } from '@/types';
-import Layout from '@/components/layout/Layout';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { DataTable } from '../../components/data-table/DataTable.tsx';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, Eye, Truck, XCircle, CheckCircle } from 'lucide-react';
+import { ArrowUpDown, Eye, XCircle, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 // Mock Data (Expanded from OrderDetailPage)
@@ -133,7 +133,7 @@ const OrderManagementPage = () => {
   const orders = mockOrders;
 
   return (
-    <Layout>
+    <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Order Management</h1>
@@ -148,7 +148,7 @@ const OrderManagementPage = () => {
           filterPlaceholder="Filter by Order ID..."
         />
       </div>
-    </Layout>
+    </AdminLayout>
   );
 };
 

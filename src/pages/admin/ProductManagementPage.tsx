@@ -3,7 +3,7 @@
 import React from 'react';
 import { ColumnDef } from "@tanstack/react-table";
 import { Product } from '@/types';
-import Layout from '@/components/layout/Layout';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { DataTable } from '../../components/data-table/DataTable.tsx';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -171,7 +171,7 @@ const ProductManagementPage = () => {
   const products = mockProducts;
 
   return (
-    <Layout>
+    <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Product Management</h1>
@@ -186,7 +186,7 @@ const ProductManagementPage = () => {
           filterPlaceholder="Filter by product name..."
         />
       </div>
-    </Layout>
+    </AdminLayout>
   );
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import Layout from '@/components/layout/Layout';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ShoppingBag, Users, ArrowRight, TrendingUp, Percent } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -24,7 +24,7 @@ const ResellerDashboard = () => {
   const commissionRate = user?.commissionRate || 15;
 
   return (
-    <Layout>
+    <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Reseller Dashboard</h1>
         <p className="text-gray-600 mb-8">Welcome back, {user?.name}. Track your performance and commissions here.</p>
@@ -128,7 +128,7 @@ const ResellerDashboard = () => {
           </Card>
         </div>
       </div>
-    </Layout>
+    </AdminLayout>
   );
 };
 

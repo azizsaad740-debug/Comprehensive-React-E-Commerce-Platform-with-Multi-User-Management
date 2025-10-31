@@ -1,13 +1,13 @@
 "use client";
 
 import React from 'react';
-import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ShoppingBag, Users, Package, ArrowRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import AdminLayout from '@/components/layout/AdminLayout'; // Changed import
 
 const mockStats = {
   totalRevenue: 125000.50,
@@ -17,14 +17,13 @@ const mockStats = {
 };
 
 const Dashboard = () => {
-  const { user, hasRole } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
-  const role = user?.role || 'guest';
 
-  const ordersPath = '/admin/orders'; // Admin always goes to management page
+  const ordersPath = '/admin/orders'; 
 
   return (
-    <Layout>
+    <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
         <p className="text-gray-600 mb-8">Welcome back, {user?.name}. Here is an overview of the system.</p>
@@ -124,7 +123,7 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
-    </Layout>
+    </AdminLayout>
   );
 };
 
