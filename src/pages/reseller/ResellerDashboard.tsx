@@ -9,9 +9,9 @@ import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import RevenueChart from '@/components/admin/RevenueChart';
-import ReferralLinkGenerator from '@/components/reseller/ReferralLinkGenerator';
 import { getCustomersByResellerId } from '@/utils/userUtils';
 import { getPromoCodesByResellerId } from '@/utils/promoCodeUtils';
+import ResellerCodeDisplay from '@/components/reseller/ResellerCodeDisplay';
 
 const mockSalesData = [
   { date: 'Jan', revenue: 1500 },
@@ -108,10 +108,8 @@ const ResellerDashboard = () => {
           </Card>
         </div>
 
-        {/* Referral Link Generator */}
-        <div className="mb-8">
-          <ReferralLinkGenerator />
-        </div>
+        {/* Referral Link & Promo Code Display */}
+        {user?.id && <ResellerCodeDisplay resellerId={user.id} />}
 
         <div className="grid gap-4 lg:grid-cols-3">
           {/* Sales Overview */}
