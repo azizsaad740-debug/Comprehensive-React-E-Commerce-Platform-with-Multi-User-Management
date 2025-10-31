@@ -32,26 +32,29 @@ const OrderStatusUpdater: React.FC<OrderStatusUpdaterProps> = ({ order, onStatus
 
     setIsLoading(true);
     try {
-      // Simulate API call
-      const updatedOrder = updateMockOrderStatus(order.id, newStatus);
+      // Simulate API call delay
+      setTimeout(() => {
+        const updatedOrder = updateMockOrderStatus(order.id, newStatus);
+        
+        if (updatedOrder) {
+          onStatusUpdate(updatedOrder);
+          toast({
+            title: "Status Updated",
+            description: `Order #${order.id} status changed to ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}.`,
+          });
+        } else {
+          throw new Error("Failed to update order status.");
+        }
+        setIsLoading(false);
+      }, 500); // Simulate network delay
       
-      if (updatedOrder) {
-        onStatusUpdate(updatedOrder);
-        toast({
-          title: "Status Updated",
-          description: `Order #${order.id} status changed to ${newStatus}.`,
-        });
-      } else {
-        throw new Error("Failed to update order status.");
-      }
     } catch (error) {
+      setIsLoading(false);
       toast({
         title: "Error",
         description: "Could not update order status.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
