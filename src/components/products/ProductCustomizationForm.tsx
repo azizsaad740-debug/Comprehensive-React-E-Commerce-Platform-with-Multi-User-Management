@@ -21,7 +21,13 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
 }) => {
   const { customizationOptions } = product;
 
-  const [customization, setCustomization] = useState<ProductCustomization>(initialCustomization);
+  // Ensure texts array is never empty for form rendering purposes
+  const safeInitialCustomization = {
+    ...initialCustomization,
+    texts: initialCustomization.texts.length > 0 ? initialCustomization.texts : [''],
+  };
+
+  const [customization, setCustomization] = useState<ProductCustomization>(safeInitialCustomization);
 
   // Sync internal state changes back to the parent component
   useEffect(() => {
@@ -43,8 +49,12 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
 
   const removeTextField = (index: number) => {
     if (customization.texts.length > 1) {
+      // Remove the specific field if there is more than one
       const newTexts = customization.texts.filter((_, i) => i !== index);
       setCustomization(prev => ({ ...prev, texts: newTexts }));
+    } else if (customization.texts.length === 1) {
+      // If it's the last field, just clear the content
+      handleTextChange(0, '');
     }
   };
 
@@ -77,7 +87,8 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
                 onChange={(e) => handleTextChange(index, e.target.value)}
                 maxLength={customizationOptions.maxCharacters}
               />
-              {customization.texts.length > 1 && (
+              {/* Only show remove button if we have more than one field, OR if we have exactly one field but it's not the first one (which shouldn't happen with this logic, but safe guard) */}
+              {(customization.texts.length > 1 || index > 0) && (
                 <Button
                   variant="outline"
                   size="sm"
