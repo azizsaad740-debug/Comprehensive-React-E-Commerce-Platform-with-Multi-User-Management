@@ -16,6 +16,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { Address } from '@/types';
 import Layout from '@/components/layout/Layout';
+import { createMockOrder } from '@/utils/orderUtils';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -46,16 +47,64 @@ const CheckoutPage = () => {
   const finalTotal = totalPrice + shippingCost + taxAmount - discountAmount;
 
   const handleSubmitOrder = async () => {
+    if (!user) {
+      toast({ title: "Error", description: "Please log in to place an order.", variant: "destructive" });
+      navigate('/auth/login');
+      return;
+    }
+
+    // Basic validation check for required address fields
+    if (!shippingAddress.fullName || !shippingAddress.street || !shippingAddress.city || !shippingAddress.state || !shippingAddress.zipCode) {
+      toast({ title: "Error", description: "Please complete all shipping address fields.", variant: "destructive" });
+      setCurrentStep(1);
+      return;
+    }
+
+    // Ensure Address object is complete for the mock utility
+    const completeShippingAddress: Address = {
+      id: 'temp-addr-' + Date.now(),
+      country: 'US',
+      phone: '',
+      isDefault: true,
+      ...shippingAddress,
+      fullName: shippingAddress.fullName!,
+      street: shippingAddress.street!,
+      city: shippingAddress.city!,
+      state: shippingAddress.state!,
+      zipCode: shippingAddress.zipCode!,
+    };
+
     // Simulate order processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    clearCart();
-    toast({
-      title: "Order placed successfully!",
-      description: "You'll receive an email confirmation shortly.",
-    });
-    
-    navigate('/orders/confirmation');
+    try {
+      createMockOrder({
+        customerId: user.id,
+        resellerId: user.resellerId, // Pass the reseller ID if the user was referred
+        cartItems: items,
+        shippingAddress: completeShippingAddress,
+        paymentMethod: paymentMethod,
+        subtotal: totalPrice,
+        discountAmount: discountAmount,
+        shippingCost: shippingCost,
+        taxAmount: taxAmount,
+        totalAmount: finalTotal,
+      });
+
+      clearCart();
+      toast({
+        title: "Order placed successfully!",
+        description: "You'll receive an email confirmation shortly.",
+      });
+      
+      navigate('/orders/confirmation');
+    } catch (error) {
+      toast({
+        title: "Order Failed",
+        description: "There was an error processing your order.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (items.length === 0) {

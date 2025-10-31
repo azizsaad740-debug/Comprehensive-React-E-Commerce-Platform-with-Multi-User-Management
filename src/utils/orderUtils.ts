@@ -1,4 +1,5 @@
-import { Order, OrderItem, Address } from '@/types';
+import { Order, OrderItem, Address, CartItem } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
 
 // Mock Data (Centralized)
 const mockShippingAddress: Address = {
@@ -85,4 +86,54 @@ export const updateMockOrderStatus = (id: string, newStatus: Order['status']): O
 
 export const cancelOrder = (id: string): Order | undefined => {
   return updateMockOrderStatus(id, 'cancelled');
+};
+
+interface OrderCreationData {
+  customerId: string;
+  resellerId?: string;
+  cartItems: CartItem[];
+  shippingAddress: Address;
+  paymentMethod: string;
+  subtotal: number;
+  discountAmount: number;
+  shippingCost: number;
+  taxAmount: number;
+  totalAmount: number;
+}
+
+export const createMockOrder = (data: OrderCreationData): Order => {
+  const orderId = 'CP-' + new Date().getFullYear() + '-' + uuidv4().slice(0, 6).toUpperCase();
+  const now = new Date();
+
+  const orderItems: OrderItem[] = data.cartItems.map(cartItem => ({
+    id: uuidv4(),
+    productId: cartItem.productId,
+    variantId: cartItem.variantId,
+    quantity: cartItem.quantity,
+    price: cartItem.product.discountedPrice || cartItem.product.basePrice,
+    customization: cartItem.customization || { texts: [], font: '', previewImage: '', svgFile: '' },
+  }));
+
+  const newOrder: Order = {
+    id: orderId,
+    customerId: data.customerId,
+    resellerId: data.resellerId,
+    status: 'pending', // New orders start as pending
+    items: orderItems,
+    subtotal: data.subtotal,
+    discountAmount: data.discountAmount,
+    taxAmount: data.taxAmount,
+    shippingCost: data.shippingCost,
+    totalAmount: data.totalAmount,
+    paymentMethod: data.paymentMethod,
+    paymentStatus: 'paid', // Assuming payment is successful at checkout
+    shippingAddress: data.shippingAddress,
+    deliveryMethod: 'Standard Shipping', // Mocked
+    designFiles: orderItems.map(item => item.customization.svgFile).filter(Boolean),
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  currentMockOrders.push(newOrder);
+  return newOrder;
 };
