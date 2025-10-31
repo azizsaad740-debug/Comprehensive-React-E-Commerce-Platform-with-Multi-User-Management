@@ -1,80 +1,53 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Package, Truck, CheckCircle, Clock, DollarSign, MapPin } from 'lucide-react';
+import { ArrowLeft, Package, Truck, CheckCircle, Clock, DollarSign, MapPin, XCircle } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
-import { Order, OrderItem, Address } from '@/types';
-
-// Mock Data
-const mockShippingAddress: Address = {
-  id: 'a1',
-  fullName: 'John Doe',
-  phone: '555-1234',
-  street: '123 Custom St',
-  city: 'Design City',
-  state: 'DC',
-  zipCode: '12345',
-  country: 'USA',
-  isDefault: true,
-};
-
-const mockOrderItems: OrderItem[] = [
-  {
-    id: 'oi1',
-    productId: '1',
-    quantity: 1,
-    price: 24.99,
-    customization: {
-      texts: ['My Custom Text'],
-      font: 'Arial',
-      previewImage: '/placeholder.svg',
-      svgFile: 'tshirt_design.svg',
-    },
-  },
-  {
-    id: 'oi2',
-    productId: '2',
-    variantId: 'v2',
-    quantity: 2,
-    price: 19.99,
-    customization: {
-      texts: ['Best Mug Ever'],
-      font: 'Impact',
-      previewImage: '/placeholder.svg',
-      svgFile: 'mug_design.svg',
-    },
-  },
-];
-
-const mockOrder: Order = {
-  id: 'CP-2024-001234',
-  customerId: '1',
-  status: 'shipped',
-  items: mockOrderItems,
-  subtotal: 64.97, // 24.99 + (2 * 19.99)
-  discountAmount: 0,
-  taxAmount: 5.20, // 8% tax
-  shippingCost: 9.99,
-  totalAmount: 80.16,
-  paymentMethod: 'Credit Card',
-  paymentStatus: 'paid',
-  shippingAddress: mockShippingAddress,
-  deliveryMethod: 'Standard Shipping',
-  designFiles: ['tshirt_design.svg', 'mug_design.svg'],
-  createdAt: new Date(Date.now() - 86400000 * 5), // 5 days ago
-  updatedAt: new Date(),
-};
+import { Order } from '@/types';
+import { getMockOrderById, cancelOrder } from '@/utils/orderUtils';
+import { useToast } from '@/hooks/use-toast';
 
 const OrderDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  // In a real app, fetch order data using 'id'
-  const order = mockOrder; 
+  // State to hold the current order data
+  const [order, setOrder] = useState<Order | undefined>(undefined);
+
+  useEffect(() => {
+    if (id) {
+      // Simulate fetching the order
+      const fetchedOrder = getMockOrderById(id);
+      setOrder(fetchedOrder);
+    }
+  }, [id]);
+
+  const handleCancelOrder = () => {
+    if (!order || order.status !== 'pending') return;
+
+    // Simulate API call
+    const updatedOrder = cancelOrder(order.id);
+
+    if (updatedOrder) {
+      setOrder(updatedOrder);
+      toast({
+        title: "Order Cancelled",
+        description: `Order #${order.id} has been successfully cancelled.`,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to cancel order.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!order) {
     return (
@@ -96,7 +69,6 @@ const OrderDetailPage = () => {
       case 'pending':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
       case 'confirmed':
-        return <Badge className="bg-blue-100 text-blue-800">Confirmed</Badge>;
       case 'processing':
         return <Badge className="bg-indigo-100 text-indigo-800">Processing</Badge>;
       case 'shipped':
@@ -116,10 +88,14 @@ const OrderDetailPage = () => {
         return <Truck className="h-5 w-5 text-purple-600" />;
       case 'delivered':
         return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case 'cancelled':
+        return <XCircle className="h-5 w-5 text-red-600" />;
       default:
         return <Clock className="h-5 w-5 text-blue-600" />;
     }
   };
+
+  const isCancellable = order.status === 'pending';
 
   return (
     <Layout>
@@ -156,6 +132,8 @@ const OrderDetailPage = () => {
                       {order.status === 'shipped' && 'Tracking number: TRK123456'}
                       {order.status === 'delivered' && 'Delivered successfully'}
                       {order.status === 'confirmed' && 'Preparing for production'}
+                      {order.status === 'pending' && 'Awaiting confirmation'}
+                      {order.status === 'cancelled' && 'This order has been cancelled.'}
                     </p>
                   </div>
                 </div>
@@ -278,6 +256,17 @@ const OrderDetailPage = () => {
                   <span>${order.totalAmount.toFixed(2)}</span>
                 </div>
                 
+                {isCancellable && (
+                  <Button 
+                    className="w-full mt-4" 
+                    variant="destructive"
+                    onClick={handleCancelOrder}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Cancel Order
+                  </Button>
+                )}
+
                 <Button className="w-full mt-4" variant="outline">
                   Download Invoice
                 </Button>

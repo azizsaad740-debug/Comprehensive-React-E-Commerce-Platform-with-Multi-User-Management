@@ -8,42 +8,21 @@ import { Badge } from '@/components/ui/badge';
 import { Eye, Package, Truck, CheckCircle, Clock } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { useAuthStore } from '@/stores/authStore';
+import { getMockOrders } from '@/utils/orderUtils';
+import { Order } from '@/types';
 
 const OrdersPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
-  // Mock orders data
-  const mockOrders = [
-    {
-      id: 'CP-2024-001234',
-      date: '2024-12-10',
-      status: 'confirmed' as const,
-      total: 89.97,
-      items: 3,
-      estimatedDelivery: 'Dec 15, 2024'
-    },
-    {
-      id: 'CP-2024-001233',
-      date: '2024-12-08',
-      status: 'shipped' as const,
-      total: 45.99,
-      items: 2,
-      estimatedDelivery: 'Dec 12, 2024'
-    },
-    {
-      id: 'CP-2024-001232',
-      date: '2024-12-05',
-      status: 'delivered' as const,
-      total: 24.99,
-      items: 1,
-      estimatedDelivery: 'Dec 10, 2024'
-    }
-  ];
+  // Use centralized mock orders data
+  const mockOrders = getMockOrders().filter(order => order.customerId === user?.id);
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: Order['status']) => {
     switch (status) {
       case 'confirmed':
+      case 'pending':
+      case 'processing':
         return <Clock className="h-4 w-4 text-blue-600" />;
       case 'shipped':
         return <Truck className="h-4 w-4 text-purple-600" />;
@@ -54,16 +33,21 @@ const OrdersPage = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: Order['status']) => {
     switch (status) {
+      case 'pending':
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
       case 'confirmed':
-        return <Badge className="bg-blue-100 text-blue-800">Confirmed</Badge>;
+      case 'processing':
+        return <Badge className="bg-indigo-100 text-indigo-800">Processing</Badge>;
       case 'shipped':
         return <Badge className="bg-purple-100 text-purple-800">Shipped</Badge>;
       case 'delivered':
         return <Badge className="bg-green-100 text-green-800">Delivered</Badge>;
+      case 'cancelled':
+        return <Badge variant="destructive">Cancelled</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="outline">{status}</Badge>;
     }
   };
 
@@ -108,7 +92,7 @@ const OrdersPage = () => {
                     <div>
                       <CardTitle className="text-lg">Order #{order.id}</CardTitle>
                       <CardDescription>
-                        Placed on {new Date(order.date).toLocaleDateString('en-US', {
+                        Placed on {order.createdAt.toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
@@ -118,7 +102,7 @@ const OrdersPage = () => {
                     <div className="text-right">
                       {getStatusBadge(order.status)}
                       <p className="text-sm text-gray-500 mt-1">
-                        {order.items} {order.items === 1 ? 'item' : 'items'}
+                        {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
                       </p>
                     </div>
                   </div>
@@ -128,19 +112,20 @@ const OrdersPage = () => {
                     <div className="flex items-center space-x-4">
                       {getStatusIcon(order.status)}
                       <div>
-                        <p className="font-medium">
-                          {order.status === 'confirmed' && 'Order Confirmed'}
-                          {order.status === 'shipped' && 'In Transit'}
-                          {order.status === 'delivered' && 'Delivered'}
+                        <p className="font-medium capitalize">
+                          {order.status === 'confirmed' || order.status === 'pending' || order.status === 'processing' ? 'In Production' : order.status}
                         </p>
                         <p className="text-sm text-gray-500">
-                          Estimated delivery: {order.estimatedDelivery}
+                          {order.status === 'shipped' && 'In Transit'}
+                          {order.status === 'delivered' && 'Delivered'}
+                          {order.status === 'cancelled' && 'Order Cancelled'}
+                          {order.status === 'pending' && 'Awaiting confirmation'}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
                       <div className="text-right">
-                        <p className="font-medium">${order.total.toFixed(2)}</p>
+                        <p className="font-medium">${order.totalAmount.toFixed(2)}</p>
                       </div>
                       <Button 
                         variant="outline" 
