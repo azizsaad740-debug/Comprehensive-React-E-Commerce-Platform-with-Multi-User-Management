@@ -9,79 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Edit, Trash2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getAllMockProducts } from '@/utils/productUtils';
 
-// Mock Data (Expanded from ProductCatalog)
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Custom T-Shirt',
-    sku: 'TS001',
-    description: 'High-quality cotton t-shirt perfect for custom printing',
-    basePrice: 29.99,
-    discountedPrice: 24.99,
-    images: ['/placeholder.svg'],
-    category: 'Apparel',
-    subcategory: 'T-Shirts',
-    stockQuantity: 50,
-    variants: [],
-    customizationOptions: {
-      fonts: ['Arial', 'Times New Roman'],
-      startDesigns: ['Simple', 'Floral'],
-      endDesigns: ['Logo', 'Text'],
-      maxCharacters: 50
-    },
-    printPaths: 1,
-    isActive: true,
-    tags: ['popular'],
-    createdAt: new Date(Date.now() - 86400000 * 30),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    name: 'Personalized Mug',
-    sku: 'MG001',
-    description: 'Ceramic mug with custom printing',
-    basePrice: 19.99,
-    images: ['/placeholder.svg'],
-    category: 'Drinkware',
-    stockQuantity: 100,
-    variants: [],
-    customizationOptions: {
-      fonts: ['Arial', 'Comic Sans'],
-      startDesigns: ['Minimalist', 'Vintage'],
-      endDesigns: ['Simple', 'Clean'],
-      maxCharacters: 25
-    },
-    printPaths: 1,
-    isActive: true,
-    tags: ['new'],
-    createdAt: new Date(Date.now() - 86400000 * 10),
-    updatedAt: new Date(),
-  },
-  {
-    id: '3',
-    name: 'Custom Phone Case',
-    sku: 'PC003',
-    description: 'Durable phone case with full customization',
-    basePrice: 35.00,
-    images: ['/placeholder.svg'],
-    category: 'Accessories',
-    stockQuantity: 5,
-    variants: [],
-    customizationOptions: {
-      fonts: ['Roboto'],
-      startDesigns: ['Abstract'],
-      endDesigns: ['Pattern'],
-      maxCharacters: 10
-    },
-    printPaths: 2,
-    isActive: false,
-    tags: ['low-stock'],
-    createdAt: new Date(Date.now() - 86400000 * 60),
-    updatedAt: new Date(),
-  },
-];
-
+// Columns definition remains the same, but now uses the imported Product type
 const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "name",
@@ -116,7 +46,7 @@ const columns: ColumnDef<Product>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const price = parseFloat(row.getValue("basePrice") as string);
+      const price = parseFloat(row.original.discountedPrice?.toString() || row.getValue("basePrice") as string);
       return <div className="text-right font-mono">${price.toFixed(2)}</div>;
     },
   },
@@ -168,7 +98,8 @@ const columns: ColumnDef<Product>[] = [
 ];
 
 const ProductManagementPage = () => {
-  const products = mockProducts;
+  // Fetch products from centralized utility
+  const products = getAllMockProducts();
 
   return (
     <AdminLayout>
