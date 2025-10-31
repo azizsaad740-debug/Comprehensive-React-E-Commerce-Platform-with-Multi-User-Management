@@ -13,6 +13,7 @@ const OrdersPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
 
+  // Mock orders data
   const mockOrders = [
     {
       id: 'CP-2024-001234',

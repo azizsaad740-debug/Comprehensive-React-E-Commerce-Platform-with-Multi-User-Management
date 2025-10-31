@@ -12,8 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Star, Heart, ShoppingCart, ArrowLeft, Palette, Type } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
-import Header from '@/components/layout/Header';
-import CartSidebar from '@/components/cart/CartSidebar';
+import Layout from '@/components/layout/Layout';
 import { Product, ProductCustomization } from '@/types';
 
 // Mock product data - in real app, this would come from API
@@ -117,9 +116,7 @@ const ProductDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
+    <Layout>
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <Button 
@@ -516,9 +513,7 @@ const ProductDetailPage = () => {
           </Tabs>
         </div>
       </div>
-
-      <CartSidebar />
-    </div>
+    </Layout>
   );
 };
 
