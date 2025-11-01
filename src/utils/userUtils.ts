@@ -42,6 +42,10 @@ const mockAddresses: Record<string, Address[]> = {
 
 export const getAllMockUsers = (): User[] => mockUsers;
 
+export const getMockUserById = (userId: string): User | undefined => {
+  return mockUsers.find(user => user.id === userId);
+};
+
 export const getCustomersByResellerId = (resellerId: string): User[] => {
   const referredCustomers = mockUsers.filter(user => user.role === 'customer' && user.resellerId === resellerId);
   const allOrders = getMockOrders();

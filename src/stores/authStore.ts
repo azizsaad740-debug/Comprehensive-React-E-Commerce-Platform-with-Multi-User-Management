@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, UserRole } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { getMockUserById } from '@/utils/userUtils'; // Import helper
 
 // Helper function to fetch user profile and merge with auth data
 const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
@@ -16,39 +17,35 @@ const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
     .eq('id', supabaseUser.id)
     .single();
     
-  if (profileError) {
+  if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means 'no rows found'
     console.error("Error fetching profile:", profileError);
-    // If fetching fails, we still try to construct a basic user object
   }
   
-  // 2. Determine role and name
-  // Use profile role if available, otherwise default to 'customer'
+  // 2. Determine role and name (Prioritize Supabase profile data)
   const role: UserRole = (profileData?.role as UserRole) || 'customer';
   
-  // Construct name from profile data (first_name + last_name)
   const firstName = profileData?.first_name || supabaseUser.user_metadata?.first_name || '';
   const lastName = profileData?.last_name || supabaseUser.user_metadata?.last_name || '';
   const name = `${firstName} ${lastName}`.trim() || supabaseUser.email;
 
-  // 3. Mocking complex fields based on role (since these aren't in the profile table yet)
-  let mockUser: Partial<User> = {};
-  if (role === 'reseller') {
-    // Mock commission rate and earnings for resellers
-    mockUser = { commissionRate: 15, totalEarnings: 5000 };
-  }
+  // 3. Get mock data for extra fields (like commissionRate, totalEarnings)
+  const mockUser = getMockUserById(supabaseUser.id);
 
   const user: User = {
     id: supabaseUser.id,
     email: supabaseUser.email,
     name: name,
-    role: role,
+    role: role, // Use role determined from Supabase profile
     isActive: true, // Assuming active unless explicitly deactivated
     createdAt: new Date(supabaseUser.created_at),
     updatedAt: new Date(),
     email_verified: supabaseUser.email_confirmed_at !== null,
     
-    // Merge profile data and mocks
-    ...mockUser,
+    // Merge profile data and mock data for extra fields
+    commissionRate: mockUser?.commissionRate,
+    totalEarnings: mockUser?.totalEarnings,
+    totalSales: mockUser?.totalSales,
+    
     resellerId: profileData?.reseller_id,
     phone: profileData?.phone || '',
     whatsapp: profileData?.whatsapp || '',
