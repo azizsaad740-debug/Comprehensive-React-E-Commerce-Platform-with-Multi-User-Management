@@ -1,4 +1,5 @@
 import { User } from '@/types';
+import { getMockOrders } from './orderUtils'; // Import order utility
 
 export const mockUsers: User[] = [
   {
@@ -24,5 +25,19 @@ export const mockUsers: User[] = [
 export const getAllMockUsers = (): User[] => mockUsers;
 
 export const getCustomersByResellerId = (resellerId: string): User[] => {
-  return mockUsers.filter(user => user.role === 'customer' && user.resellerId === resellerId);
+  const referredCustomers = mockUsers.filter(user => user.role === 'customer' && user.resellerId === resellerId);
+  const allOrders = getMockOrders();
+
+  return referredCustomers.map(customer => {
+    const customerOrders = allOrders.filter(
+      order => order.customerId === customer.id && order.status !== 'cancelled'
+    );
+    
+    const totalSales = customerOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+
+    return {
+      ...customer,
+      totalSales: totalSales,
+    };
+  });
 };

@@ -55,7 +55,8 @@ const columns: ColumnDef<User>[] = [
       );
     },
     cell: ({ row }) => {
-      const sales = row.original.totalSales || 0;
+      // totalSales is now dynamically calculated and attached to the user object
+      const sales = row.original.totalSales || 0; 
       return <div className="font-bold text-right">${sales.toFixed(2)}</div>;
     },
   },
