@@ -118,6 +118,11 @@ const ProductDetailPage = () => {
         };
     }
     
+    // Ensure font is set to a valid option if it was empty after loading/defaulting
+    if (!loadedCustomization.font && fetchedProduct.customizationOptions.fonts.length > 0) {
+        loadedCustomization.font = fetchedProduct.customizationOptions.fonts[0];
+    }
+    
     setInitialCustomization(defaultCustom); // Keep default for comparison
     setCustomization(loadedCustomization);
     setIsMeaningful(isCustomizationMeaningful(loadedCustomization, defaultCustom));
