@@ -23,11 +23,13 @@ const Dashboard = () => {
 
   // Calculate dynamic stats
   const mockStats = useMemo(() => {
-    const totalRevenue = allOrders
-      .filter(o => o.status !== 'cancelled' && o.paymentStatus === 'paid')
+    const activeOrders = allOrders.filter(o => o.status !== 'cancelled');
+    
+    const totalRevenue = activeOrders
+      .filter(o => o.paymentStatus === 'paid')
       .reduce((sum, o) => sum + o.totalAmount, 0);
       
-    const totalOrders = allOrders.length;
+    const totalOrders = activeOrders.length;
     
     const newCustomers = allUsers.filter(u => 
       u.role === 'customer' && 
