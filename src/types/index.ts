@@ -47,6 +47,17 @@ export interface ProductCustomization {
   svgFile: string;
 }
 
+export interface SavedDesignTemplate {
+  id: string;
+  userId: string;
+  name: string;
+  productId: string;
+  productName: string;
+  customization: ProductCustomization;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface ProductVariant {
   id: string;
   name: string;

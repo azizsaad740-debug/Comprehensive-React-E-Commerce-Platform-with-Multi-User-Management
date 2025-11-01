@@ -1,0 +1,157 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { PlusCircle, Palette, Edit, Trash2, ArrowLeft, ShoppingCart } from 'lucide-react';
+import Layout from '@/components/layout/Layout';
+import { useAuthStore } from '@/stores/authStore';
+import { useToast } from '@/hooks/use-toast';
+import { SavedDesignTemplate } from '@/types';
+import { getDesignsByUserId, deleteDesign } from '@/utils/designUtils';
+import { getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
+
+const DesignLibraryPage = () => {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const [designs, setDesigns] = useState<SavedDesignTemplate[]>([]);
+  
+  const mockStartDesigns = getAllMockStartDesigns();
+  const mockEndDesigns = getAllMockEndDesigns();
+
+  useEffect(() => {
+    if (!isAuthenticated && !authLoading) {
+      navigate('/auth/login');
+    }
+    if (user) {
+      setDesigns(getDesignsByUserId(user.id));
+    }
+  }, [user, isAuthenticated, authLoading, navigate]);
+
+  const refreshDesigns = () => {
+    if (user) {
+      setDesigns(getDesignsByUserId(user.id));
+    }
+  };
+
+  const handleDeleteDesign = (designId: string) => {
+    if (window.confirm("Are you sure you want to delete this saved design?")) {
+      try {
+        deleteDesign(designId);
+        refreshDesigns();
+        toast({
+          title: "Deleted",
+          description: "Design template removed successfully.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete design.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
+  const handleReorder = (design: SavedDesignTemplate) => {
+    // In a real app, this would load the design into the customizer
+    toast({
+      title: "Reordering Product",
+      description: `Loading design "${design.name}" for ${design.productName}...`,
+    });
+    // Mock navigation to product detail page with design pre-loaded
+    navigate(`/products/${design.productId}?designId=${design.id}`);
+  };
+
+  if (!isAuthenticated || !user) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-16 text-center">
+          <p>Loading design library or redirecting...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">My Design Library</h1>
+          <Button variant="outline" onClick={() => navigate('/profile')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Profile
+          </Button>
+        </div>
+        <p className="text-gray-600 mb-8">
+          View, manage, and reorder products using your saved customization templates.
+        </p>
+
+        <div className="flex justify-end mb-8">
+          <Button variant="default" onClick={() => navigate('/products')}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Create New Design
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {designs.length === 0 ? (
+            <Card className="lg:col-span-3 text-center py-12">
+              <Palette className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-600">You haven't saved any designs yet.</p>
+            </Card>
+          ) : (
+            designs.map((design) => (
+              <Card key={design.id} className="flex flex-col">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-xl">{design.name}</CardTitle>
+                  <CardDescription>Product: {design.productName}</CardDescription>
+                </CardHeader>
+                
+                <CardContent className="flex-1 space-y-3">
+                  {/* Mock Preview */}
+                  <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center p-4 border border-dashed border-gray-300">
+                    <div className="text-center text-gray-600 text-sm">
+                      <p className="font-bold mb-1">Customization Preview</p>
+                      <p>Text: {design.customization.texts.filter(t => t.trim()).join(' | ') || 'N/A'}</p>
+                      <p>Font: {design.customization.font || 'Default'}</p>
+                      {design.customization.startDesign && (
+                        <p>Start Design: {mockStartDesigns.find(d => d.id === design.customization.startDesign)?.name}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <p className="text-xs text-gray-500">
+                    Last updated: {design.updatedAt.toLocaleDateString()}
+                  </p>
+                  
+                  <div className="flex space-x-2 pt-2 border-t mt-4">
+                    <Button 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleReorder(design)}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Reorder
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleReorder(design)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDeleteDesign(design.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default DesignLibraryPage;

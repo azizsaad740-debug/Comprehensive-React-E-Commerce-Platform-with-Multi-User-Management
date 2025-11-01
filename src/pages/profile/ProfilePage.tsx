@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { User as UserIcon, Mail, Phone, MessageSquare, Save, MapPin } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, MessageSquare, Save, MapPin, Palette } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -162,19 +162,36 @@ const ProfilePage = () => {
           </CardContent>
         </Card>
         
-        {/* Address Book Link */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Shipping Addresses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">Manage your saved shipping and billing addresses.</p>
-            <Button variant="outline" onClick={() => navigate('/profile/addresses')}>
-              <MapPin className="h-4 w-4 mr-2" />
-              Go to Address Book
-            </Button>
-          </CardContent>
-        </Card>
+        {/* Quick Links */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          {/* Address Book Link */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Shipping Addresses</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">Manage your saved shipping and billing addresses.</p>
+              <Button variant="outline" onClick={() => navigate('/profile/addresses')}>
+                <MapPin className="h-4 w-4 mr-2" />
+                Go to Address Book
+              </Button>
+            </CardContent>
+          </Card>
+          
+          {/* Design Library Link */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Design Library</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-gray-600 mb-4">View and reorder products using your saved designs.</p>
+              <Button variant="outline" onClick={() => navigate('/profile/designs')}>
+                <Palette className="h-4 w-4 mr-2" />
+                Go to Design Library
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </Layout>
   );

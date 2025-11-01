@@ -26,6 +26,7 @@ import AdminOrderDetailPage from "./pages/admin/AdminOrderDetailPage.tsx";
 import ResellerPromoCodePage from "./pages/reseller/ResellerPromoCodePage.tsx";
 import CustomerManagementPage from "./pages/reseller/CustomerManagementPage.tsx";
 import AddressBookPage from "./pages/profile/AddressBookPage.tsx";
+import DesignLibraryPage from "./pages/profile/DesignLibraryPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,14 @@ const App = () => (
             element={
               <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
                 <AddressBookPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile/designs" 
+            element={
+              <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                <DesignLibraryPage />
               </ProtectedRoute>
             } 
           />
