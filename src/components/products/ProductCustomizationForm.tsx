@@ -70,7 +70,12 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
   const textInputs = useMemo(() => Array.from({ length: printPaths }, (_, i) => i), [printPaths]);
   
   // Helper to get the currently selected font ID for the Select component
-  const currentFontId = mockFonts.find(f => f.name === customizationState.font)?.id || '';
+  // We need to map the font name stored in customizationState back to its ID for the Select component
+  const currentFontId = useMemo(() => {
+    return mockFonts.find(f => f.name === customizationState.font)?.id || 
+           mockFonts.find(f => f.name === product.customizationOptions.fonts[0])?.id || 
+           '';
+  }, [customizationState.font, mockFonts, product.customizationOptions.fonts]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
