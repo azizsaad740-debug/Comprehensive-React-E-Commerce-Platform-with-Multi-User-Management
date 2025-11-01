@@ -9,33 +9,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Heart, ShoppingCart, ArrowLeft, Palette, Save } from 'lucide-react';
+import { Star, Heart, ShoppingCart, ArrowLeft, Palette } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import { Product, ProductCustomization, SavedDesignTemplate } from '@/types';
-import ProductCustomizationForm from '@/components/products/ProductCustomizationForm.tsx';
-import SaveDesignButton from '@/components/products/SaveDesignButton';
-import DesignLoaderDialog from '@/components/products/DesignLoaderDialog';
 import { getMockProductById } from '@/utils/productUtils';
-import { getDesignById } from '@/utils/designUtils'; // Import design utility
-
-// Helper function to determine if customization is meaningful
-const isCustomizationMeaningful = (customization: ProductCustomization, initialCustomization: ProductCustomization): boolean => {
-  const hasText = customization.texts.some(text => text.trim().length > 0);
-  const hasFontChange = customization.font !== initialCustomization.font;
-  const hasStartDesign = customization.startDesign && customization.startDesign !== initialCustomization.startDesign;
-  const hasEndDesign = customization.endDesign && customization.endDesign !== initialCustomization.endDesign;
-  
-  return hasText || hasFontChange || hasStartDesign || hasEndDesign;
-};
+import { getDesignById } from '@/utils/designUtils';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
-  const designId = query.get('designId');
+  const designId = query.get('designId'); // Keep this to check if we are loading a design
 
   const { addItem } = useCartStore();
   const { toast } = useToast();
@@ -44,10 +31,6 @@ const ProductDetailPage = () => {
   const [selectedVariant, setSelectedVariant] = useState<Product['variants'][number] | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [initialCustomization, setInitialCustomization] = useState<ProductCustomization | null>(null);
-  const [customization, setCustomization] = useState<ProductCustomization | null>(null);
-  const [isMeaningful, setIsMeaningful] = useState(false);
-  const [existingDesign, setExistingDesign] = useState<SavedDesignTemplate | undefined>(undefined); // NEW state for existing design
 
   useEffect(() => {
     if (!id) return;
@@ -66,102 +49,14 @@ const ProductDetailPage = () => {
     setProduct(fetchedProduct);
     setSelectedVariant(fetchedProduct.variants[0]);
     
-    // 1. Define the default customization based on product options
-    const defaultCustom: ProductCustomization = {
-      texts: Array(fetchedProduct.printPaths).fill(''), // Initialize texts based on printPaths
-      font: fetchedProduct.customizationOptions.fonts[0] || '',
-      startDesign: fetchedProduct.customizationOptions.startDesigns?.[0] || undefined,
-      endDesign: fetchedProduct.customizationOptions.endDesigns?.[0] || undefined,
-      previewImage: '',
-      svgFile: ''
-    };
-
-    let loadedCustomization: ProductCustomization = defaultCustom;
-    let loadedDesign: SavedDesignTemplate | undefined;
-
-    // 2. Check for saved design override
+    // If a designId is present, we should redirect to the editor immediately
     if (designId) {
-      loadedDesign = getDesignById(designId);
-      if (loadedDesign && loadedDesign.productId === id) {
-        loadedCustomization = loadedDesign.customization;
-        setExistingDesign(loadedDesign); // Set existing design for editing
-        // Do not show toast here, as it's handled by the initial load logic or the loader dialog
-      } else if (designId) {
-        setExistingDesign(undefined);
-        toast({
-          title: "Design Not Found",
-          description: "Could not load the specified design template.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      setExistingDesign(undefined);
+        navigate(`/products/${id}/design?designId=${designId}`, { replace: true });
     }
     
-    // 3. Ensure loaded customization texts array matches product printPaths length
-    const requiredTextLength = fetchedProduct.printPaths;
-    const currentTextLength = loadedCustomization.texts.length;
-    
-    if (currentTextLength < requiredTextLength) {
-        const padding = Array(requiredTextLength - currentTextLength).fill('');
-        loadedCustomization = {
-            ...loadedCustomization,
-            texts: [...loadedCustomization.texts, ...padding]
-        };
-    } else if (currentTextLength > requiredTextLength) {
-        // Truncate if necessary
-        loadedCustomization = {
-            ...loadedCustomization,
-            texts: loadedCustomization.texts.slice(0, requiredTextLength)
-        };
-    }
-    
-    // Ensure font is set to a valid option if it was empty after loading/defaulting
-    if (!loadedCustomization.font && fetchedProduct.customizationOptions.fonts.length > 0) {
-        loadedCustomization.font = fetchedProduct.customizationOptions.fonts[0];
-    }
-    
-    setInitialCustomization(defaultCustom); // Keep default for comparison
-    setCustomization(loadedCustomization);
-    setIsMeaningful(isCustomizationMeaningful(loadedCustomization, defaultCustom));
-    
-  }, [id, navigate, toast, designId, location.search]);
+  }, [id, navigate, toast, designId]);
 
-  const handleCustomizationChange = useCallback((newCustomization: ProductCustomization) => {
-    setCustomization(newCustomization);
-    if (initialCustomization) {
-      setIsMeaningful(isCustomizationMeaningful(newCustomization, initialCustomization));
-    }
-  }, [initialCustomization]);
-  
-  const handleDesignSaved = (savedDesign: SavedDesignTemplate) => {
-    // If we were editing, ensure the URL reflects the designId
-    if (savedDesign.id && savedDesign.id !== designId) {
-      // If a new design was saved, update the URL to include the new designId for continuity
-      navigate(`/products/${product?.id}?designId=${savedDesign.id}`, { replace: true });
-    }
-    // Update the local state to reflect the saved design (important if we were editing)
-    setExistingDesign(savedDesign);
-  };
-  
-  const handleDesignLoaded = (design: SavedDesignTemplate) => {
-    // 1. Update customization state
-    setCustomization(design.customization);
-    
-    // 2. Set the existing design state (important for the SaveDesignButton to switch to 'Update')
-    setExistingDesign(design);
-    
-    // 3. Update URL query parameter to reflect the loaded design ID
-    navigate(`/products/${product?.id}?designId=${design.id}`, { replace: true });
-    
-    // 4. Recalculate meaningfulness
-    if (initialCustomization) {
-        setIsMeaningful(isCustomizationMeaningful(design.customization, initialCustomization));
-    }
-  };
-
-
-  if (!product || !customization || !initialCustomization) {
+  if (!product) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-16 text-center">
@@ -174,7 +69,6 @@ const ProductDetailPage = () => {
   // --- Price Calculation Logic ---
   const basePrice = selectedVariant?.price || product.basePrice;
   
-  // Determine the final price: if a product-level discounted price exists and is lower than the base price, use it.
   const finalPrice = product.discountedPrice && product.discountedPrice < basePrice
     ? product.discountedPrice
     : basePrice;
@@ -184,23 +78,16 @@ const ProductDetailPage = () => {
   // -------------------------------
 
   const handleAddToCart = () => {
-    let customizationToPass: ProductCustomization | undefined = undefined;
-
-    if (isMeaningful || existingDesign) {
-      // If customization is meaningful OR we loaded an existing design, pass the customization.
-      // Clean up empty text fields
-      const cleanedCustomization: ProductCustomization = {
-        ...customization,
-        texts: customization.texts.filter(text => text.trim().length > 0),
-      };
-      customizationToPass = cleanedCustomization;
-    }
-
-    addItem(product, selectedVariant?.id, quantity, customizationToPass);
+    // Quick Add: Add item without customization
+    addItem(product, selectedVariant?.id, quantity);
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart`,
     });
+  };
+  
+  const handleCustomize = () => {
+    navigate(`/products/${product.id}/design`);
   };
 
   return (
@@ -352,23 +239,18 @@ const ProductDetailPage = () => {
                 disabled={!selectedVariant && product.variants.length > 0}
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                Add to Cart
+                Quick Add (No Customization)
               </Button>
               
-              {/* Save Design Button */}
-              <SaveDesignButton
-                product={product}
-                customization={customization}
-                isCustomizationMeaningful={isMeaningful}
-                onDesignSaved={handleDesignSaved}
-                existingDesign={existingDesign} // Pass existing design here
-              />
-              
-              {/* Load Design Button */}
-              <DesignLoaderDialog
-                product={product}
-                onDesignLoaded={handleDesignLoaded}
-              />
+              <Button 
+                variant="default" 
+                className="w-full" 
+                size="lg"
+                onClick={handleCustomize}
+              >
+                <Palette className="h-5 w-5 mr-2" />
+                Start Customizing
+              </Button>
               
               <Button variant="outline" className="w-full" size="lg">
                 <Heart className="h-5 w-5 mr-2" />
@@ -390,35 +272,14 @@ const ProductDetailPage = () => {
           </div>
         </div>
 
-        {/* Customization Section */}
+        {/* Tabs Section (Reviews/Specs remain) */}
         <div className="mt-12">
-          <Tabs defaultValue="customization" className="w-full">
+          <Tabs defaultValue="reviews" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="customization">Customization</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
               <TabsTrigger value="specifications">Specifications</TabsTrigger>
+              <TabsTrigger value="customization" disabled>Customization (Moved to Editor)</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="customization" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Palette className="h-5 w-5 mr-2" />
-                    Customize Your Product
-                  </CardTitle>
-                  <CardDescription>
-                    Add your personal touch with custom text, fonts, and designs
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ProductCustomizationForm
-                    product={product}
-                    initialCustomization={customization} // Pass the loaded customization state
-                    onCustomizationChange={handleCustomizationChange}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
             
             <TabsContent value="reviews" className="mt-6">
               <Card>
@@ -517,6 +378,10 @@ const ProductDetailPage = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+            
+            <TabsContent value="customization" className="mt-6">
+              {/* This tab is now disabled and serves as a placeholder */}
             </TabsContent>
           </Tabs>
         </div>
