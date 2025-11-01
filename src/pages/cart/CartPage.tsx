@@ -160,12 +160,12 @@ const CartPage = () => {
                             )}
                             {customization.startDesign && (
                               <p className="text-xs text-blue-600">
-                                Start Design: {mockStartDesigns.find(d => d.id === customization.startDesign)?.name}
+                                Start Design: {mockStartDesigns.find(d => d.id === customization.startDesign)?.name || customization.startDesign}
                               </p>
                             )}
                             {customization.endDesign && (
                               <p className="text-xs text-blue-600">
-                                End Design: {mockEndDesigns.find(d => d.id === customization.endDesign)?.name}
+                                End Design: {mockEndDesigns.find(d => d.id === customization.endDesign)?.name || customization.endDesign}
                               </p>
                             )}
                           </div>

@@ -133,12 +133,12 @@ const CartSidebar = () => {
                               )}
                               {customization.startDesign && (
                                 <p className="text-xs text-blue-600">
-                                  Start Design: {mockStartDesigns.find(d => d.id === customization.startDesign)?.name}
+                                  Start Design: {mockStartDesigns.find(d => d.id === customization.startDesign)?.name || customization.startDesign}
                                 </p>
                               )}
                               {customization.endDesign && (
                                 <p className="text-xs text-blue-600">
-                                  End Design: {mockEndDesigns.find(d => d.id === customization.endDesign)?.name}
+                                  End Design: {mockEndDesigns.find(d => d.id === customization.endDesign)?.name || customization.endDesign}
                                 </p>
                               )}
                             </div>
@@ -173,20 +173,11 @@ const CartSidebar = () => {
                               </Button>
                             </div>
                             
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveItem(item.productId, item.variantId)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          
-                          <div className="text-right mt-2">
-                            <span className="text-sm font-medium">
-                              ${((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
-                            </span>
+                            <div className="text-right">
+                              <span className="text-sm font-medium">
+                                ${((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
