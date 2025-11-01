@@ -21,6 +21,9 @@ export const mockUsers: User[] = [
   {
     id: 'u6', email: 'customer3@example.com', name: 'Frank Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
   },
+  {
+    id: 'u7', email: 'azizsaad740@gmail.com', name: 'Super User', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
+  },
 ];
 
 // Mock Address Store (in-memory)
