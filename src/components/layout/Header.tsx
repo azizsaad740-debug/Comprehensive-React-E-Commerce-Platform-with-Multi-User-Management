@@ -22,6 +22,8 @@ const Header = () => {
   const { user, isAuthenticated, logout } = useAuthStore();
   const totalItems = getTotalItems();
 
+  const isDashboardUser = isAuthenticated && (user?.role === 'admin' || user?.role === 'reseller');
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -36,43 +38,51 @@ const Header = () => {
             <h1 className="text-xl font-bold text-primary">CustomPrint</h1>
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link 
-              to="/products" 
-              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
-            >
-              Products
-            </Link>
-            <Link 
-              to="/categories" 
-              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
-            >
-              Categories
-            </Link>
-            <Link 
-              to="/about" 
-              className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
-            >
-              About
-            </Link>
-          </nav>
+          {/* Navigation Links (Hidden for Dashboard Users) */}
+          {!isDashboardUser && (
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link 
+                to="/products" 
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                Products
+              </Link>
+              <Link 
+                to="/categories" 
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                Categories
+              </Link>
+              <Link 
+                to="/about" 
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+              >
+                About
+              </Link>
+            </nav>
+          )}
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-md mx-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input 
-                type="text" 
-                placeholder="Search products..." 
-                className="pl-10"
-              />
+          {/* Search Bar (Hidden for Dashboard Users) */}
+          {!isDashboardUser && (
+            <div className="flex-1 max-w-md mx-8">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input 
+                  type="text" 
+                  placeholder="Search products..." 
+                  className="pl-10"
+                />
+              </div>
             </div>
-          </div>
+          )}
+          
+          {/* Spacer for Dashboard Users */}
+          {isDashboardUser && <div className="flex-1 mx-8"></div>}
+
 
           {/* Right Navigation */}
           <div className="flex items-center space-x-4">
-            {/* Cart */}
+            {/* Cart (Always visible) */}
             <Button 
               variant="ghost" 
               size="sm" 
