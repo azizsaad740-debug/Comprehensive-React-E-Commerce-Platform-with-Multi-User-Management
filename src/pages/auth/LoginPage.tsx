@@ -49,6 +49,30 @@ function LoginPage() {
     }
   };
 
+  // Admin login helper
+  const handleAdminLogin = async () => {
+    setEmail('admin@example.com');
+    setPassword('admin123');
+    setIsLoading(true);
+
+    try {
+      await login('admin@example.com', 'admin123');
+      toast({
+        title: "Admin Login Success",
+        description: "Welcome back, Admin!",
+      });
+      navigate('/admin');
+    } catch (error) {
+      toast({
+        title: "Admin Login Failed",
+        description: "Admin credentials not working. Please check the database setup.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -115,11 +139,29 @@ function LoginPage() {
               </Button>
             </form>
             
-            <div className="mt-4 text-center text-sm">
-              Don't have an account?{" "}
-              <Link to="/auth/register" className="text-primary hover:underline font-medium">
-                Sign up
-              </Link>
+            <div className="mt-4 space-y-3">
+              <div className="text-center text-sm text-gray-600">
+                Don't have an account?{" "}
+                <Link to="/auth/register" className="text-primary hover:underline font-medium">
+                  Sign up
+                </Link>
+              </div>
+              
+              {/* Admin Quick Login */}
+              <div className="border-t pt-3">
+                <p className="text-xs text-gray-500 text-center mb-2">Testing Admin Access</p>
+                <Button 
+                  variant="outline" 
+                  className="w-full text-sm" 
+                  onClick={handleAdminLogin}
+                  disabled={isLoading}
+                >
+                  🔑 Quick Admin Login (Test Only)
+                </Button>
+                <p className="text-xs text-gray-400 text-center mt-1">
+                  Email: admin@example.com | Password: admin123
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
