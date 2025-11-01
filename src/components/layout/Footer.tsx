@@ -13,7 +13,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold">CustomPrint</h3>
+            <h3 className="text-xl font-bold">Misali CEnter</h3>
             <p className="text-gray-300 text-sm">
               Create unique, personalized products with our easy-to-use design tools and high-quality printing.
             </p>
@@ -108,7 +108,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-300">hello@customprint.com</span>
+                <span className="text-gray-300">hello@misalicenter.com</span>
               </div>
             </div>
             
@@ -132,7 +132,7 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-sm text-gray-400">
-              © 2024 CustomPrint. All rights reserved.
+              © 2024 Misali CEnter. All rights reserved.
             </div>
             <div className="flex space-x-6 text-sm">
               <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">

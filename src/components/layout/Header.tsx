@@ -35,7 +35,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-4">
-            <h1 className="text-xl font-bold text-primary">CustomPrint</h1>
+            <h1 className="text-xl font-bold text-primary">Misali CEnter</h1>
           </Link>
 
           {/* Navigation Links (Hidden for Dashboard Users) */}
