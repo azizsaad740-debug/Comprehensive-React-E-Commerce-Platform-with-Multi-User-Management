@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Package, ShoppingBag, DollarSign, Settings, Tag, Palette, Plug, Image } from 'lucide-react';
+import { LayoutDashboard, Users, Package, ShoppingBag, DollarSign, Settings, Tag, Palette, Plug, Image, Type } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
@@ -44,6 +44,12 @@ const navItems: NavItem[] = [
     title: 'Promo Codes',
     href: '/admin/promocodes',
     icon: Tag,
+    roles: ['admin'],
+  },
+  {
+    title: 'Customization',
+    href: '/admin/customization',
+    icon: Type,
     roles: ['admin'],
   },
   {

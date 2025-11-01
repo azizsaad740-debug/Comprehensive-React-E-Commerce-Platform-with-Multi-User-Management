@@ -32,7 +32,8 @@ import PluginManagementPage from "./pages/admin/PluginManagementPage.tsx";
 import SupabaseAuthProvider from "./components/auth/SupabaseAuthProvider";
 import DesignEditorPage from "./pages/products/DesignEditorPage";
 import VariantManagementPage from "./pages/admin/VariantManagementPage";
-import ImageManagementPage from "./pages/admin/ImageManagementPage"; // Import new page
+import ImageManagementPage from "./pages/admin/ImageManagementPage";
+import CustomizationManagementPage from "./pages/admin/CustomizationManagementPage"; // Import new page
 
 const queryClient = new QueryClient();
 
@@ -160,6 +161,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <PromoCodeManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/customization" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <CustomizationManagementPage />
                 </ProtectedRoute>
               } 
             />
