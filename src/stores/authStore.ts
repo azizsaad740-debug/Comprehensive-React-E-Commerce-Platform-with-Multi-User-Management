@@ -59,7 +59,7 @@ interface AuthState {
   isLoading: boolean;
   login: (email: string, password: string, resellerId?: string) => Promise<void>;
   logout: () => void;
-  updateUser: (userData: Partial<User>) => void;
+  updateUser: (userData: Partial<User>) => Promise<void>;
   setLoading: (loading: boolean) => void;
   hasRole: (role: User['role'] | User['role'][]) => boolean;
   hasPermission: (permission: string) => boolean;
@@ -129,13 +129,44 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      updateUser: (userData: Partial<User>) => {
+      updateUser: async (userData: Partial<User>) => {
         const { user } = get();
-        if (user) {
-          // Note: This only updates the local store state, not Supabase.
-          // For full persistence, we would need a separate API call here.
-          set({ user: { ...user, ...userData, updatedAt: new Date() } });
+        if (!user) return;
+
+        // 1. Parse name into first_name and last_name for Supabase
+        let firstName = user.name.split(' ')[0];
+        let lastName = user.name.split(' ').slice(1).join(' ');
+        
+        if (userData.name) {
+            const parts = userData.name.split(' ');
+            firstName = parts[0];
+            lastName = parts.slice(1).join(' ');
         }
+
+        const profileUpdateData: Record<string, any> = {
+            updated_at: new Date().toISOString(),
+            first_name: firstName,
+            last_name: lastName,
+            phone: userData.phone,
+            whatsapp: userData.whatsapp,
+        };
+        
+        // Filter out undefined values
+        Object.keys(profileUpdateData).forEach(key => profileUpdateData[key] === undefined && delete profileUpdateData[key]);
+
+        // 2. Update Supabase profiles table
+        const { error } = await supabase
+            .from('profiles')
+            .update(profileUpdateData)
+            .eq('id', user.id);
+
+        if (error) {
+            console.error('Supabase profile update error:', error);
+            throw new Error(error.message);
+        }
+
+        // 3. Update local store state with merged data
+        set({ user: { ...user, ...userData, updatedAt: new Date() } });
       },
 
       setLoading: (loading: boolean) => {

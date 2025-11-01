@@ -45,10 +45,8 @@ const ProfilePage = () => {
 
     setIsSaving(true);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      updateUser(formData);
+      // The updateUser function is now asynchronous and handles Supabase persistence
+      await updateUser(formData);
 
       toast({
         title: "Success",
