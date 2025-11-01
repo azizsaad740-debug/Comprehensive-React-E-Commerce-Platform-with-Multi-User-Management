@@ -28,8 +28,7 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
 
   // Sync internal state with external changes (e.g., product change or design load)
   useEffect(() => {
-    // Deep comparison is tricky, but since initialCustomization is derived from URL/product, 
-    // we can rely on the object reference changing when a new design is loaded.
+    // When initialCustomization changes (e.g., a design is loaded), update the local state.
     setCustomizationState(initialCustomization);
   }, [initialCustomization]);
 
@@ -47,18 +46,13 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
     }));
   };
 
-  const handleFontChange = (fontName: string) => {
-    // We store the font name in customizationState, but the Select component uses the ID/value
-    // We need to find the font name based on the selected ID/value if the Select uses IDs.
-    // Since the ProductDetailPage initializes customizationState.font with the font name, 
-    // we should ensure this component uses the font name consistently or update the logic.
-    
-    // Assuming the Select component below uses font.id as value, let's find the name:
-    const selectedFont = mockFonts.find(f => f.id === fontName);
+  const handleFontChange = (fontId: string) => {
+    // Find the font name based on the selected ID/value
+    const selectedFont = mockFonts.find(f => f.id === fontId);
     
     setCustomizationState(prev => ({
       ...prev,
-      font: selectedFont ? selectedFont.name : fontName, // Store name
+      font: selectedFont ? selectedFont.name : '', // Store name
     }));
   };
 
@@ -76,7 +70,7 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
   const textInputs = useMemo(() => Array.from({ length: printPaths }, (_, i) => i), [printPaths]);
   
   // Helper to get the currently selected font ID for the Select component
-  const currentFontId = mockFonts.find(f => f.name === customizationState.font)?.id || mockFonts[0]?.id;
+  const currentFontId = mockFonts.find(f => f.name === customizationState.font)?.id || '';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -100,6 +94,7 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
                   value={customizationState.texts[index] || ''}
                   onChange={(e) => handleTextChange(index, e.target.value)}
                   className="mt-1"
+                  maxLength={product.customizationOptions.maxCharacters}
                 />
               </div>
             ))}
@@ -124,11 +119,13 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
                 <SelectValue placeholder="Choose a font" />
               </SelectTrigger>
               <SelectContent>
-                {mockFonts.map(font => (
-                  <SelectItem key={font.id} value={font.id}>
-                    {font.name}
-                  </SelectItem>
-                ))}
+                {mockFonts
+                  .filter(font => product.customizationOptions.fonts.includes(font.name))
+                  .map(font => (
+                    <SelectItem key={font.id} value={font.id}>
+                      {font.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </CardContent>
@@ -155,11 +152,13 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
-                  {mockStartDesigns.map(design => (
-                    <SelectItem key={design.id} value={design.id}>
-                      {design.name}
-                    </SelectItem>
-                  ))}
+                  {mockStartDesigns
+                    .filter(design => product.customizationOptions.startDesigns?.includes(design.name))
+                    .map(design => (
+                      <SelectItem key={design.id} value={design.id}>
+                        {design.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -176,11 +175,13 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
-                  {mockEndDesigns.map(design => (
-                    <SelectItem key={design.id} value={design.id}>
-                      {design.name}
-                    </SelectItem>
-                  ))}
+                  {mockEndDesigns
+                    .filter(design => product.customizationOptions.endDesigns?.includes(design.name))
+                    .map(design => (
+                      <SelectItem key={design.id} value={design.id}>
+                        {design.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
