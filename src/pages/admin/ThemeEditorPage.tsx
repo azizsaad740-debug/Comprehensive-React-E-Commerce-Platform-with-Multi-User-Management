@@ -9,6 +9,7 @@ import { Palette, LayoutGrid, Type, Upload, Save, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import ColorInput from '@/components/admin/ColorInput';
 
 const ThemeEditorPage = () => {
   const [themeName, setThemeName] = useState('CustomPrint Default');
@@ -94,43 +95,19 @@ const ThemeEditorPage = () => {
                     <Separator />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="primaryColor">Primary Color</Label>
-                        <div className="flex items-center space-x-2">
-                          <Input 
-                            id="primaryColor" 
-                            type="color" 
-                            value={primaryColor} 
-                            onChange={(e) => setPrimaryColor(e.target.value)} 
-                            className="w-12 h-12 p-0 cursor-pointer"
-                          />
-                          <Input 
-                            type="text" 
-                            value={primaryColor} 
-                            onChange={(e) => setPrimaryColor(e.target.value)} 
-                            className="flex-1 font-mono"
-                          />
-                        </div>
-                      </div>
+                      <ColorInput
+                        id="primaryColor"
+                        label="Primary Color"
+                        value={primaryColor}
+                        onChange={setPrimaryColor}
+                      />
                       
-                      <div className="space-y-2">
-                        <Label htmlFor="accentColor">Accent Color</Label>
-                        <div className="flex items-center space-x-2">
-                          <Input 
-                            id="accentColor" 
-                            type="color" 
-                            value={accentColor} 
-                            onChange={(e) => setAccentColor(e.target.value)} 
-                            className="w-12 h-12 p-0 cursor-pointer"
-                          />
-                          <Input 
-                            type="text" 
-                            value={accentColor} 
-                            onChange={(e) => setAccentColor(e.target.value)} 
-                            className="flex-1 font-mono"
-                          />
-                        </div>
-                      </div>
+                      <ColorInput
+                        id="accentColor"
+                        label="Accent Color"
+                        value={accentColor}
+                        onChange={setAccentColor}
+                      />
                     </div>
                     
                     <p className="text-sm text-gray-500">Note: Applying these changes requires publishing the theme.</p>
