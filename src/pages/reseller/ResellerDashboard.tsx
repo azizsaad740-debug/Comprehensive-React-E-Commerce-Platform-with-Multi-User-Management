@@ -12,7 +12,7 @@ import RevenueChart from '@/components/admin/RevenueChart';
 import { getCustomersByResellerId } from '@/utils/userUtils';
 import { getPromoCodesByResellerId } from '@/utils/promoCodeUtils';
 import ResellerCodeDisplay from '@/components/reseller/ResellerCodeDisplay';
-import { getResellerMonthlySales, getResellerTotalReferredSales } from '@/utils/orderUtils';
+import { getResellerMonthlySales, getResellerTotalReferredSales, getResellerCommissionRecords } from '@/utils/orderUtils';
 
 const ResellerDashboard = () => {
   const { user } = useAuthStore();
@@ -37,7 +37,14 @@ const ResellerDashboard = () => {
     ? getPromoCodesByResellerId(resellerId).filter(code => code.isActive).length 
     : 0;
     
-  const totalEarnings = user?.totalEarnings || 0;
+  // Dynamically calculate total paid earnings from commission records
+  const totalPaidEarnings = useMemo(() => {
+    if (!resellerId) return 0;
+    const commissions = getResellerCommissionRecords(resellerId, commissionRate);
+    return commissions
+      .filter(c => c.status === 'paid')
+      .reduce((sum, c) => sum + c.commissionEarned, 0);
+  }, [resellerId, commissionRate]);
   
   // Fetch dynamic sales data
   const monthlySalesData = useMemo(() => {
@@ -63,7 +70,7 @@ const ResellerDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${totalEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                ${totalPaidEarnings.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </div>
               <p className="text-xs text-muted-foreground">Lifetime commissions paid</p>
             </CardContent>
