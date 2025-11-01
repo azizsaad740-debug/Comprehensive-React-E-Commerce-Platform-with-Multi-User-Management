@@ -12,6 +12,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { getResellerCommissionRecords } from '@/utils/orderUtils';
 import { CommissionRecord } from '@/types'; // Import CommissionRecord
+import CommissionReportButton from '@/components/reseller/CommissionReportButton'; // NEW IMPORT
 
 // Columns definition remains the same, but now uses the imported CommissionRecord type
 const columns: ColumnDef<CommissionRecord>[] = [
@@ -109,9 +110,14 @@ const CommissionTrackingPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Commission Tracking</h1>
-          <Button variant="outline" onClick={() => navigate('/reseller/dashboard')}>
-            Back to Dashboard
-          </Button>
+          <div className="flex space-x-2">
+            {resellerId && (
+              <CommissionReportButton commissions={commissions} resellerId={resellerId} />
+            )}
+            <Button variant="outline" onClick={() => navigate('/reseller/dashboard')}>
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
         <p className="text-gray-600 mb-8">View detailed records of your earned commissions.</p>
 
