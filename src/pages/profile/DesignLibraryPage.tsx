@@ -141,6 +141,9 @@ const DesignLibraryPage = () => {
                       {design.customization.startDesign && (
                         <p>Start Design: {mockStartDesigns.find(d => d.id === design.customization.startDesign)?.name}</p>
                       )}
+                      {design.customization.endDesign && (
+                        <p>End Design: {mockEndDesigns.find(d => d.id === design.customization.endDesign)?.name}</p>
+                      )}
                     </div>
                   </div>
                   
