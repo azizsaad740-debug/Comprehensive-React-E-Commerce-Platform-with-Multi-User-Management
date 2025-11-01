@@ -123,7 +123,8 @@ export const useAuthStore = create<AuthState>()(
         }
         
         // Clear local storage state explicitly upon successful logout
-        (get as any).persist.clearStorage();
+        // The key 'auth-storage' is defined in the persist middleware options below.
+        localStorage.removeItem('auth-storage');
 
         set({
           user: null,
