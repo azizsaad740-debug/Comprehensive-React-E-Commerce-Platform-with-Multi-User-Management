@@ -7,7 +7,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import { DataTable } from '../../components/data-table/DataTable.tsx';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, Edit, Trash2, Eye } from 'lucide-react';
+import { ArrowUpDown, Edit, Trash2, Eye, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getAllMockProducts } from '@/utils/productUtils';
 
@@ -82,13 +82,16 @@ const columns: ColumnDef<Product>[] = [
       const product = row.original;
       return (
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm" onClick={() => navigate(`/products/${product.id}`)}>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/products/${product.id}`)} title="View Product">
             <Eye className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="secondary" size="sm" onClick={() => navigate(`/admin/products/${product.id}/variants`)} title="Manage Variants">
+            <Settings className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" title="Edit Product">
             <Edit className="h-4 w-4" />
           </Button>
-          <Button variant="destructive" size="sm">
+          <Button variant="destructive" size="sm" title="Delete Product">
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>

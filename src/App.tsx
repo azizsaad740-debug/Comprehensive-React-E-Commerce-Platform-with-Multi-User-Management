@@ -30,7 +30,8 @@ import DesignLibraryPage from "./pages/profile/DesignLibraryPage.tsx";
 import ThemeEditorPage from "./pages/admin/ThemeEditorPage.tsx";
 import PluginManagementPage from "./pages/admin/PluginManagementPage.tsx";
 import SupabaseAuthProvider from "./components/auth/SupabaseAuthProvider";
-import DesignEditorPage from "./pages/products/DesignEditorPage"; // Import new page
+import DesignEditorPage from "./pages/products/DesignEditorPage";
+import VariantManagementPage from "./pages/admin/VariantManagementPage"; // Import new page
 
 const queryClient = new QueryClient();
 
@@ -44,7 +45,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/products" element={<ProductCatalog />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
-            <Route path="/products/:id/design" element={<DesignEditorPage />} /> {/* NEW ROUTE */}
+            <Route path="/products/:id/design" element={<DesignEditorPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/orders/confirmation" element={<OrderConfirmationPage />} />
@@ -126,6 +127,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <ProductManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/products/:id/variants" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <VariantManagementPage />
                 </ProtectedRoute>
               } 
             />
