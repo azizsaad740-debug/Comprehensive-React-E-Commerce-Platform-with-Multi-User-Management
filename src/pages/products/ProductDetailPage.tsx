@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,9 +13,10 @@ import { Star, Heart, ShoppingCart, ArrowLeft, Palette } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
-import { Product, ProductCustomization } from '@/types';
+import { Product, ProductCustomization, SavedDesignTemplate } from '@/types';
 import ProductCustomizationForm from '@/components/products/ProductCustomizationForm.tsx';
 import { getMockProductById } from '@/utils/productUtils';
+import { getDesignById } from '@/utils/designUtils'; // Import design utility
 
 // Helper function to determine if customization is meaningful
 const isCustomizationMeaningful = (customization: ProductCustomization, initialCustomization: ProductCustomization): boolean => {
@@ -30,6 +31,10 @@ const isCustomizationMeaningful = (customization: ProductCustomization, initialC
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const designId = query.get('designId');
+
   const { addItem } = useCartStore();
   const { toast } = useToast();
 
@@ -41,34 +46,57 @@ const ProductDetailPage = () => {
   const [customization, setCustomization] = useState<ProductCustomization | null>(null);
 
   useEffect(() => {
-    if (id) {
-      const fetchedProduct = getMockProductById(id);
-      if (fetchedProduct) {
-        setProduct(fetchedProduct);
-        setSelectedVariant(fetchedProduct.variants[0]);
-        
-        // Initialize customization state based on product options
-        const initialCustom: ProductCustomization = {
-          texts: [''], // Start with one empty text field
-          font: fetchedProduct.customizationOptions.fonts[0] || '',
-          startDesign: fetchedProduct.customizationOptions.startDesigns?.[0] || undefined,
-          endDesign: fetchedProduct.customizationOptions.endDesigns?.[0] || undefined,
-          previewImage: '',
-          svgFile: ''
-        };
-        setInitialCustomization(initialCustom);
-        setCustomization(initialCustom);
-      } else {
-        // Handle product not found
-        navigate('/products');
+    if (!id) return;
+
+    const fetchedProduct = getMockProductById(id);
+    if (!fetchedProduct) {
+      navigate('/products');
+      toast({
+        title: "Product Not Found",
+        description: `Product with ID ${id} does not exist.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setProduct(fetchedProduct);
+    setSelectedVariant(fetchedProduct.variants[0]);
+    
+    // 1. Define the default customization based on product options
+    const defaultCustom: ProductCustomization = {
+      texts: Array(fetchedProduct.printPaths).fill(''), // Initialize texts based on printPaths
+      font: fetchedProduct.customizationOptions.fonts[0] || '',
+      startDesign: fetchedProduct.customizationOptions.startDesigns?.[0] || undefined,
+      endDesign: fetchedProduct.customizationOptions.endDesigns?.[0] || undefined,
+      previewImage: '',
+      svgFile: ''
+    };
+
+    let loadedCustomization: ProductCustomization = defaultCustom;
+    let loadedDesign: SavedDesignTemplate | undefined;
+
+    // 2. Check for saved design override
+    if (designId) {
+      loadedDesign = getDesignById(designId);
+      if (loadedDesign && loadedDesign.productId === id) {
+        loadedCustomization = loadedDesign.customization;
         toast({
-          title: "Product Not Found",
-          description: `Product with ID ${id} does not exist.`,
+          title: "Design Loaded",
+          description: `Customization template "${loadedDesign.name}" loaded.`,
+        });
+      } else if (designId) {
+        toast({
+          title: "Design Not Found",
+          description: "Could not load the specified design template.",
           variant: "destructive",
         });
       }
     }
-  }, [id, navigate, toast]);
+    
+    setInitialCustomization(defaultCustom); // Keep default for comparison
+    setCustomization(loadedCustomization);
+    
+  }, [id, navigate, toast, designId, location.search]); // Re-run when designId changes
 
   const handleCustomizationChange = useCallback((newCustomization: ProductCustomization) => {
     setCustomization(newCustomization);
@@ -298,7 +326,7 @@ const ProductDetailPage = () => {
                 <CardContent>
                   <ProductCustomizationForm
                     product={product}
-                    initialCustomization={initialCustomization}
+                    initialCustomization={customization} // Pass the loaded customization state
                     onCustomizationChange={handleCustomizationChange}
                   />
                 </CardContent>

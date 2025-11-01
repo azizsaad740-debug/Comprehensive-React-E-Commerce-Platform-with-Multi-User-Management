@@ -26,8 +26,10 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
   const mockStartDesigns = getAllMockStartDesigns();
   const mockEndDesigns = getAllMockEndDesigns();
 
-  // Sync internal state with external changes (e.g., product change)
+  // Sync internal state with external changes (e.g., product change or design load)
   useEffect(() => {
+    // Deep comparison is tricky, but since initialCustomization is derived from URL/product, 
+    // we can rely on the object reference changing when a new design is loaded.
     setCustomizationState(initialCustomization);
   }, [initialCustomization]);
 
@@ -45,28 +47,36 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
     }));
   };
 
-  const handleFontChange = (fontId: string) => {
-    const selectedFont = mockFonts.find(f => f.id === fontId);
-    if (selectedFont) {
-      setCustomizationState(prev => ({
-        ...prev,
-        font: selectedFont.name, // Storing name for display, but ID/file would be used for rendering
-      }));
-    }
-  };
-
-  const handleDesignChange = (type: 'startDesign' | 'endDesign', designId: string) => {
-    const designs = type === 'startDesign' ? mockStartDesigns : mockEndDesigns;
-    const selectedDesign = designs.find(d => d.id === designId);
+  const handleFontChange = (fontName: string) => {
+    // We store the font name in customizationState, but the Select component uses the ID/value
+    // We need to find the font name based on the selected ID/value if the Select uses IDs.
+    // Since the ProductDetailPage initializes customizationState.font with the font name, 
+    // we should ensure this component uses the font name consistently or update the logic.
+    
+    // Assuming the Select component below uses font.id as value, let's find the name:
+    const selectedFont = mockFonts.find(f => f.id === fontName);
     
     setCustomizationState(prev => ({
       ...prev,
-      [type]: selectedDesign ? selectedDesign.id : undefined,
+      font: selectedFont ? selectedFont.name : fontName, // Store name
+    }));
+  };
+
+  const handleDesignChange = (type: 'startDesign' | 'endDesign', designId: string) => {
+    // If 'none' is selected, set to undefined
+    const value = designId === 'none' ? undefined : designId;
+    
+    setCustomizationState(prev => ({
+      ...prev,
+      [type]: value,
     }));
   };
 
   const printPaths = product.printPaths || 1;
   const textInputs = useMemo(() => Array.from({ length: printPaths }, (_, i) => i), [printPaths]);
+  
+  // Helper to get the currently selected font ID for the Select component
+  const currentFontId = mockFonts.find(f => f.name === customizationState.font)?.id || mockFonts[0]?.id;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -107,7 +117,7 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
           <CardContent>
             <Label htmlFor="font-select">Select Font</Label>
             <Select 
-              value={customizationState.font} 
+              value={currentFontId} // Use ID for Select value
               onValueChange={handleFontChange}
             >
               <SelectTrigger className="w-full mt-1">
@@ -195,7 +205,7 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
                   Text: {customizationState.texts.filter(t => t.trim()).join(' | ') || 'No Text'}
                 </p>
                 <p className="text-sm">
-                  Font: {mockFonts.find(f => f.id === customizationState.font)?.name || 'Default'}
+                  Font: {customizationState.font || 'Default'}
                 </p>
                 <p className="text-sm">
                   Start Design: {mockStartDesigns.find(d => d.id === customizationState.startDesign)?.name || 'None'}
