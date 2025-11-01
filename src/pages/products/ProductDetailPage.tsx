@@ -124,9 +124,17 @@ const ProductDetailPage = () => {
     );
   }
 
-  const price = selectedVariant?.price || product.basePrice;
-  const hasDiscount = product.discountedPrice && product.discountedPrice < product.basePrice;
-  const finalPrice = hasDiscount ? product.discountedPrice! : price;
+  // --- Price Calculation Logic ---
+  const basePrice = selectedVariant?.price || product.basePrice;
+  
+  // Determine the final price: if a product-level discounted price exists and is lower than the base price, use it.
+  const finalPrice = product.discountedPrice && product.discountedPrice < basePrice
+    ? product.discountedPrice
+    : basePrice;
+    
+  const hasDiscount = finalPrice < basePrice;
+  const originalPrice = basePrice;
+  // -------------------------------
 
   const handleAddToCart = () => {
     let customizationToPass: ProductCustomization | undefined = undefined;
@@ -220,13 +228,13 @@ const ProductDetailPage = () => {
                   </span>
                   {hasDiscount && (
                     <span className="text-xl text-gray-500 line-through">
-                      ${price.toFixed(2)}
+                      ${originalPrice.toFixed(2)}
                     </span>
                   )}
                 </div>
                 {hasDiscount && (
                   <Badge variant="destructive">
-                    {Math.round(((price - finalPrice) / price) * 100)}% OFF
+                    {Math.round(((originalPrice - finalPrice) / originalPrice) * 100)}% OFF
                   </Badge>
                 )}
               </div>
@@ -237,10 +245,13 @@ const ProductDetailPage = () => {
               {product.variants.length > 0 && (
                 <div>
                   <Label htmlFor="variant" className="text-base font-medium">Variant</Label>
-                  <Select value={selectedVariant?.id} onValueChange={(value) => {
-                    const variant = product.variants.find(v => v.id === value);
-                    setSelectedVariant(variant);
-                  }}>
+                  <Select 
+                    value={selectedVariant?.id} 
+                    onValueChange={(value) => {
+                      const variant = product.variants.find(v => v.id === value);
+                      setSelectedVariant(variant);
+                    }}
+                  >
                     <SelectTrigger className="w-full mt-2">
                       <SelectValue placeholder="Select variant" />
                     </SelectTrigger>
