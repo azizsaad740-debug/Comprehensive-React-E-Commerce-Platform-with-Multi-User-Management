@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { User as UserIcon, Mail, Phone, MessageSquare, Save } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, MessageSquare, Save, MapPin } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -159,6 +159,20 @@ const ProfilePage = () => {
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+        
+        {/* Address Book Link */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Shipping Addresses</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">Manage your saved shipping and billing addresses.</p>
+            <Button variant="outline" onClick={() => navigate('/profile/addresses')}>
+              <MapPin className="h-4 w-4 mr-2" />
+              Go to Address Book
+            </Button>
           </CardContent>
         </Card>
       </div>

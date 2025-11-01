@@ -25,6 +25,7 @@ import PromoCodeManagementPage from "./pages/admin/PromoCodeManagementPage.tsx";
 import AdminOrderDetailPage from "./pages/admin/AdminOrderDetailPage.tsx";
 import ResellerPromoCodePage from "./pages/reseller/ResellerPromoCodePage.tsx";
 import CustomerManagementPage from "./pages/reseller/CustomerManagementPage.tsx";
+import AddressBookPage from "./pages/profile/AddressBookPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -59,7 +60,24 @@ const App = () => (
             } 
           />
           
-          <Route path="/profile" element={<ProfilePage />} />
+          {/* Profile Routes (Protected) */}
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                <ProfilePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile/addresses" 
+            element={
+              <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                <AddressBookPage />
+              </ProtectedRoute>
+            } 
+          />
+          
           <Route path="/auth/login" element={<LoginPage />} />
           <Route path="/auth/register" element={<RegisterPage />} />
           
