@@ -2,7 +2,51 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User } from '@/types';
+import { User, UserRole } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+
+// Helper function to fetch user profile and merge with auth data
+const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
+  if (!supabaseUser) return null;
+
+  // 1. Fetch profile data from public.profiles table
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .select('role, reseller_id, first_name, last_name, phone, whatsapp')
+    .eq('id', supabaseUser.id)
+    .single();
+
+  // Fallback role if profile doesn't exist yet (e.g., right after signup before trigger fires)
+  const role: UserRole = (profileData?.role as UserRole) || 'customer';
+  const name = `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || supabaseUser.email;
+
+  // Mocking complex fields based on role, as they are not in the basic profile table
+  let mockUser: Partial<User> = {};
+  if (role === 'admin') {
+    mockUser = { commissionRate: undefined, totalEarnings: undefined };
+  } else if (role === 'reseller') {
+    mockUser = { commissionRate: 15, totalEarnings: 5000 };
+  }
+
+  const user: User = {
+    id: supabaseUser.id,
+    email: supabaseUser.email,
+    name: name,
+    role: role,
+    isActive: true, // Assuming active unless explicitly deactivated
+    createdAt: new Date(supabaseUser.created_at),
+    updatedAt: new Date(),
+    email_verified: supabaseUser.email_confirmed_at !== null,
+    
+    // Merge profile data
+    ...mockUser,
+    resellerId: profileData?.reseller_id,
+    phone: profileData?.phone || '',
+    whatsapp: profileData?.whatsapp || '',
+  };
+
+  return user;
+};
 
 interface AuthState {
   user: User | null;
@@ -15,6 +59,7 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   hasRole: (role: User['role'] | User['role'][]) => boolean;
   hasPermission: (permission: string) => boolean;
+  setSession: (session: any | null) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,68 +70,58 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
 
-      login: async (email: string, password: string, resellerId?: string) => {
+      setSession: async (session) => {
         set({ isLoading: true });
-        try {
-          // Mock login - replace with real API call
-          
-          let role: User['role'] = 'customer';
-          let id = 'u' + Math.floor(Math.random() * 10000);
-          let name = 'Customer User';
-          let commissionRate = undefined;
-          let totalEarnings = undefined;
-
-          if (email === 'admin@example.com') {
-            role = 'admin';
-            id = 'u1';
-            name = 'Alice Admin';
-          } else if (email === 'reseller1@example.com') {
-            role = 'reseller';
-            id = 'u2';
-            name = 'Bob Reseller';
-            commissionRate = 15;
-            totalEarnings = 5000;
-          } else if (email === 'customer1@example.com') {
-            // Existing customer mock
-            role = 'customer';
-            id = 'u3';
-            name = 'Charlie Customer';
-          }
-
-          const mockUser: User = {
-            id,
-            email,
-            name,
-            phone: '+1234567890',
-            whatsapp: '+1234567890',
-            role,
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            commissionRate,
-            totalEarnings,
-            resellerId: resellerId || undefined, // Apply referral ID if present
-          };
-
-          const mockToken = 'mock-jwt-token-' + Date.now();
-
+        if (session?.user) {
+          const user = await fetchUserProfile(session.user);
           set({
-            user: mockUser,
-            token: mockToken,
+            user,
+            token: session.access_token,
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error) {
-          set({ isLoading: false });
-          throw new Error('Login failed');
+        } else {
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
         }
       },
 
-      logout: () => {
+      login: async (email: string, password: string, resellerId?: string) => {
+        set({ isLoading: true });
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          set({ isLoading: false });
+          throw new Error(error.message);
+        }
+        
+        if (data.session) {
+          await get().setSession(data.session);
+        }
+      },
+
+      logout: async () => {
+        set({ isLoading: true });
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) {
+          set({ isLoading: false });
+          throw new Error(error.message);
+        }
+        
         set({
           user: null,
           token: null,
           isAuthenticated: false,
+          isLoading: false,
         });
       },
 

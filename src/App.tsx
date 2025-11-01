@@ -29,6 +29,7 @@ import AddressBookPage from "./pages/profile/AddressBookPage.tsx";
 import DesignLibraryPage from "./pages/profile/DesignLibraryPage.tsx";
 import ThemeEditorPage from "./pages/admin/ThemeEditorPage.tsx";
 import PluginManagementPage from "./pages/admin/PluginManagementPage.tsx";
+import SupabaseAuthProvider from "./components/auth/SupabaseAuthProvider";
 
 const queryClient = new QueryClient();
 
@@ -37,162 +38,164 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/products" element={<ProductCatalog />} />
-          <Route path="/products/:id" element={<ProductDetailPage />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/orders/confirmation" element={<OrderConfirmationPage />} />
-          
-          {/* Customer Order Routes (Protected) */}
-          <Route 
-            path="/orders" 
-            element={
-              <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
-                <OrdersPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/orders/:id" 
-            element={
-              <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
-                <OrderDetailPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Profile Routes (Protected) */}
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
-                <ProfilePage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/profile/addresses" 
-            element={
-              <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
-                <AddressBookPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/profile/designs" 
-            element={
-              <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
-                <DesignLibraryPage />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route path="/auth/login" element={<LoginPage />} />
-          <Route path="/auth/register" element={<RegisterPage />} />
-          
-          {/* Protected Admin/Reseller Routes */}
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/reseller/dashboard" 
-            element={
-              <ProtectedRoute allowedRoles={['reseller', 'admin']}>
-                <ResellerDashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/users" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <UserManagementPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/products" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <ProductManagementPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/orders" 
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'reseller']}>
-                <OrderManagementPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/orders/:id" 
-            element={
-              <ProtectedRoute allowedRoles={['admin', 'reseller']}>
-                <AdminOrderDetailPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/promocodes" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <PromoCodeManagementPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/theme" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <ThemeEditorPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/plugins" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <PluginManagementPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/reseller/promocodes" 
-            element={
-              <ProtectedRoute allowedRoles={['reseller']}>
-                <ResellerPromoCodePage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/reseller/customers" 
-            element={
-              <ProtectedRoute allowedRoles={['reseller']}>
-                <CustomerManagementPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/reseller/commissions" 
-            element={
-              <ProtectedRoute allowedRoles={['reseller', 'admin']}>
-                <CommissionTrackingPage />
-              </ProtectedRoute>
-            } 
-          />
+        <SupabaseAuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/products" element={<ProductCatalog />} />
+            <Route path="/products/:id" element={<ProductDetailPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/orders/confirmation" element={<OrderConfirmationPage />} />
+            
+            {/* Customer Order Routes (Protected) */}
+            <Route 
+              path="/orders" 
+              element={
+                <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                  <OrdersPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/orders/:id" 
+              element={
+                <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                  <OrderDetailPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Profile Routes (Protected) */}
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile/addresses" 
+              element={
+                <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                  <AddressBookPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile/designs" 
+              element={
+                <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                  <DesignLibraryPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route path="/auth/login" element={<LoginPage />} />
+            <Route path="/auth/register" element={<RegisterPage />} />
+            
+            {/* Protected Admin/Reseller Routes */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reseller/dashboard" 
+              element={
+                <ProtectedRoute allowedRoles={['reseller', 'admin']}>
+                  <ResellerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/users" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <UserManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/products" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ProductManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/orders" 
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'reseller']}>
+                  <OrderManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/orders/:id" 
+              element={
+                <ProtectedRoute allowedRoles={['admin', 'reseller']}>
+                  <AdminOrderDetailPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/promocodes" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <PromoCodeManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/theme" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ThemeEditorPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/plugins" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <PluginManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reseller/promocodes" 
+              element={
+                <ProtectedRoute allowedRoles={['reseller']}>
+                  <ResellerPromoCodePage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reseller/customers" 
+              element={
+                <ProtectedRoute allowedRoles={['reseller']}>
+                  <CustomerManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/reseller/commissions" 
+              element={
+                <ProtectedRoute allowedRoles={['reseller', 'admin']}>
+                  <CommissionTrackingPage />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </SupabaseAuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

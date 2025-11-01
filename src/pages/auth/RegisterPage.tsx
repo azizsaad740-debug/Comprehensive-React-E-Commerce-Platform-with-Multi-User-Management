@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Loader2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
+import { supabase } from '@/integrations/supabase/client';
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -24,8 +25,8 @@ function RegisterPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
   
-  const { login } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,26 +62,67 @@ function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const [firstName, ...lastNameParts] = formData.name.split(' ');
+      const lastName = lastNameParts.join(' ');
       
-      // Pass the captured referralId during the simulated login/registration step
-      await login(formData.email, formData.password, referralId || undefined);
-      
-      toast({
-        title: "Success",
-        description: "Account created successfully!",
+      const { error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            role: formData.role,
+            resellerId: referralId,
+            first_name: firstName,
+            last_name: lastName,
+          },
+          emailRedirectTo: `${window.location.origin}/`, // Redirect after email confirmation
+        },
       });
-      navigate('/');
-    } catch (error) {
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Supabase sends a verification email. We inform the user.
+      setVerificationSent(true);
       toast({
-        title: "Error",
-        description: "Registration failed. Please try again.",
+        title: "Verification Email Sent",
+        description: "Please check your email inbox (and spam folder) to confirm your account.",
+      });
+      
+    } catch (error: any) {
+      toast({
+        title: "Registration Failed",
+        description: error.message || "An unexpected error occurred during registration.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (verificationSent) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+          <Card className="w-full max-w-md text-center">
+            <CardHeader>
+              <Mail className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+              <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
+              <CardDescription>
+                A verification link has been sent to <strong>{formData.email}</strong>. Please click the link to activate your account.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/auth/login')}>
+                Go to Login
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -203,7 +245,11 @@ function RegisterPage() {
                 className="w-full" 
                 disabled={isLoading}
               >
-                {isLoading ? 'Creating account...' : 'Create Account'}
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  'Create Account'
+                )}
               </Button>
             </form>
           </CardContent>
