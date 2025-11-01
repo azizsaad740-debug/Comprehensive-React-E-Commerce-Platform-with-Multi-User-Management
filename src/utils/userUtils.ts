@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const mockUsers: User[] = [
   {
-    id: 'u1', email: 'admin@example.com', name: 'Alice Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
+    id: '00000000-0000-0000-0000-000000000001', email: 'admin@example.com', name: 'Alice Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
   },
   {
     id: 'u2', email: 'reseller1@example.com', name: 'Bob Reseller', role: 'reseller', isActive: true, createdAt: new Date(), updatedAt: new Date(), commissionRate: 15, totalEarnings: 5000, email_verified: true,
@@ -20,12 +20,6 @@ export const mockUsers: User[] = [
   },
   {
     id: 'u6', email: 'customer3@example.com', name: 'Frank Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
-  },
-  {
-    id: 'u7', email: 'superuser@example.com', name: 'Super Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true, // New Super Admin
-  },
-  {
-    id: '00000000-0000-0000-0000-000000000001', email: 'azizsaad740@gmail.com', name: 'Super User', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
   },
 ];
 
