@@ -7,11 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Package, Truck, CreditCard, Mail } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
+import { getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
 
 const OrderConfirmationPage = () => {
   const navigate = useNavigate();
+  const mockStartDesigns = getAllMockStartDesigns();
+  const mockEndDesigns = getAllMockEndDesigns();
 
-  // Mock order data
+  // Mock order data (This should ideally come from a successful checkout state/API response)
   const orderData = {
     orderNumber: 'CP-2024-001234',
     status: 'confirmed',
@@ -23,14 +26,28 @@ const OrderConfirmationPage = () => {
         name: 'Custom T-Shirt',
         variant: 'Medium',
         quantity: 1,
-        price: 24.99
+        price: 24.99,
+        customization: {
+          texts: ['My Custom Text'],
+          font: 'Arial',
+          startDesign: 'design-s1',
+          previewImage: '/placeholder.svg',
+          svgFile: 'tshirt_design.svg',
+        },
       },
       {
         id: '2',
         name: 'Personalized Mug',
         variant: 'Standard',
         quantity: 2,
-        price: 19.99
+        price: 19.99,
+        customization: {
+          texts: ['Best Mug Ever'],
+          font: 'Impact',
+          endDesign: 'design-e1',
+          previewImage: '/placeholder.svg',
+          svgFile: 'mug_design.svg',
+        },
       }
     ],
     shipping: {
@@ -99,20 +116,61 @@ const OrderConfirmationPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {orderData.items.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-4">
-                      <div className="w-16 h-16 bg-gray-100 rounded-md"></div>
-                      <div className="flex-1">
-                        <h4 className="font-medium">{item.name}</h4>
-                        <p className="text-sm text-gray-500">{item.variant}</p>
-                        <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
+                  {orderData.items.map((item) => {
+                    const customization = item.customization;
+                    const hasCustomization = customization && (
+                      customization.texts.some(text => text.trim()) ||
+                      customization.font ||
+                      customization.startDesign ||
+                      customization.endDesign
+                    );
+                    
+                    return (
+                      <div key={item.id} className="flex items-start space-x-4 border-b pb-4 last:border-b-0 last:pb-0">
+                        <div className="w-16 h-16 bg-gray-100 rounded-md">
+                          <img 
+                            src={item.customization.previewImage || '/placeholder.svg'} 
+                            alt={item.name}
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{item.name}</h4>
+                          <p className="text-sm text-gray-500">{item.variant}</p>
+                          <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
+                          
+                          {/* Customization Details */}
+                          {hasCustomization && customization && (
+                            <div className="mt-1 p-2 bg-blue-50 rounded border border-blue-200">
+                              <p className="text-xs text-blue-700 font-medium mb-1">Customization:</p>
+                              {customization.texts.filter(text => text.trim()).map((text, idx) => (
+                                <p key={idx} className="text-xs text-blue-600">
+                                  Text {idx + 1}: "{text}"
+                                </p>
+                              ))}
+                              {customization.font && (
+                                <p className="text-xs text-blue-600">Font: {customization.font}</p>
+                              )}
+                              {customization.startDesign && (
+                                <p className="text-xs text-blue-600">
+                                  Start Design: {mockStartDesigns.find(d => d.id === customization.startDesign)?.name || customization.startDesign}
+                                </p>
+                              )}
+                              {customization.endDesign && (
+                                <p className="text-xs text-blue-600">
+                                  End Design: {mockEndDesigns.find(d => d.id === customization.endDesign)?.name || customization.endDesign}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="text-sm text-gray-500">${item.price.toFixed(2)} each</p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
-                        <p className="text-sm text-gray-500">${item.price.toFixed(2)} each</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
