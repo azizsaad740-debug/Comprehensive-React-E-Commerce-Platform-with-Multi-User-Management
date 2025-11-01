@@ -147,3 +147,13 @@ export interface PromoCode {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface CommissionRecord {
+  id: string;
+  orderId: string;
+  date: Date;
+  saleAmount: number;
+  rate: number; // percentage
+  commissionEarned: number;
+  status: 'pending' | 'paid' | 'cancelled';
+}

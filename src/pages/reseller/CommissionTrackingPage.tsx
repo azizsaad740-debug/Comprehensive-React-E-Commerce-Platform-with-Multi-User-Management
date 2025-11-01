@@ -11,16 +11,7 @@ import { ArrowUpDown, DollarSign } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
 import { getResellerCommissionRecords } from '@/utils/orderUtils';
-
-interface CommissionRecord {
-  id: string;
-  orderId: string;
-  date: Date;
-  saleAmount: number;
-  rate: number; // percentage
-  commissionEarned: number;
-  status: 'pending' | 'paid' | 'cancelled';
-}
+import { CommissionRecord } from '@/types'; // Import CommissionRecord
 
 // Columns definition remains the same, but now uses the imported CommissionRecord type
 const columns: ColumnDef<CommissionRecord>[] = [
@@ -96,6 +87,7 @@ const CommissionTrackingPage = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   
+  // Use the commission rate from the user object, falling back to 15 if user is null/undefined
   const commissionRate = user?.commissionRate || 15;
   const resellerId = user?.id;
 
