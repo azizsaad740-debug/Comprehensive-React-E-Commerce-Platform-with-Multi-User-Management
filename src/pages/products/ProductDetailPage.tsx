@@ -9,12 +9,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Heart, ShoppingCart, ArrowLeft, Palette } from 'lucide-react';
+import { Star, Heart, ShoppingCart, ArrowLeft, Palette, Save } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import { Product, ProductCustomization, SavedDesignTemplate } from '@/types';
 import ProductCustomizationForm from '@/components/products/ProductCustomizationForm.tsx';
+import SaveDesignButton from '@/components/products/SaveDesignButton';
 import { getMockProductById } from '@/utils/productUtils';
 import { getDesignById } from '@/utils/designUtils'; // Import design utility
 
@@ -44,6 +45,7 @@ const ProductDetailPage = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [initialCustomization, setInitialCustomization] = useState<ProductCustomization | null>(null);
   const [customization, setCustomization] = useState<ProductCustomization | null>(null);
+  const [isMeaningful, setIsMeaningful] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -95,12 +97,22 @@ const ProductDetailPage = () => {
     
     setInitialCustomization(defaultCustom); // Keep default for comparison
     setCustomization(loadedCustomization);
+    setIsMeaningful(isCustomizationMeaningful(loadedCustomization, defaultCustom));
     
-  }, [id, navigate, toast, designId, location.search]); // Re-run when designId changes
+  }, [id, navigate, toast, designId, location.search]);
 
   const handleCustomizationChange = useCallback((newCustomization: ProductCustomization) => {
     setCustomization(newCustomization);
-  }, []);
+    if (initialCustomization) {
+      setIsMeaningful(isCustomizationMeaningful(newCustomization, initialCustomization));
+    }
+  }, [initialCustomization]);
+  
+  const handleDesignSaved = (savedDesign: SavedDesignTemplate) => {
+    // Optionally update the URL to reflect the saved design ID if needed, 
+    // but for now, just confirm the save.
+    console.log('Design saved:', savedDesign);
+  };
 
   if (!product || !customization || !initialCustomization) {
     return (
@@ -119,7 +131,7 @@ const ProductDetailPage = () => {
   const handleAddToCart = () => {
     let customizationToPass: ProductCustomization | undefined = undefined;
 
-    if (isCustomizationMeaningful(customization, initialCustomization)) {
+    if (isMeaningful) {
       // Clean up empty text fields if customization is meaningful
       const cleanedCustomization: ProductCustomization = {
         ...customization,
@@ -283,6 +295,15 @@ const ProductDetailPage = () => {
                 <ShoppingCart className="h-5 w-5 mr-2" />
                 Add to Cart
               </Button>
+              
+              {/* Save Design Button */}
+              <SaveDesignButton
+                product={product}
+                customization={customization}
+                isCustomizationMeaningful={isMeaningful}
+                onDesignSaved={handleDesignSaved}
+              />
+              
               <Button variant="outline" className="w-full" size="lg">
                 <Heart className="h-5 w-5 mr-2" />
                 Add to Wishlist
