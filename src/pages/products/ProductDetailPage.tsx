@@ -16,6 +16,7 @@ import Layout from '@/components/layout/Layout';
 import { Product, ProductCustomization, SavedDesignTemplate } from '@/types';
 import ProductCustomizationForm from '@/components/products/ProductCustomizationForm.tsx';
 import SaveDesignButton from '@/components/products/SaveDesignButton';
+import DesignLoaderDialog from '@/components/products/DesignLoaderDialog';
 import { getMockProductById } from '@/utils/productUtils';
 import { getDesignById } from '@/utils/designUtils'; // Import design utility
 
@@ -84,10 +85,7 @@ const ProductDetailPage = () => {
       if (loadedDesign && loadedDesign.productId === id) {
         loadedCustomization = loadedDesign.customization;
         setExistingDesign(loadedDesign); // Set existing design for editing
-        toast({
-          title: "Design Loaded",
-          description: `Customization template "${loadedDesign.name}" loaded for editing.`,
-        });
+        // Do not show toast here, as it's handled by the initial load logic or the loader dialog
       } else if (designId) {
         setExistingDesign(undefined);
         toast({
@@ -145,6 +143,23 @@ const ProductDetailPage = () => {
     // Update the local state to reflect the saved design (important if we were editing)
     setExistingDesign(savedDesign);
   };
+  
+  const handleDesignLoaded = (design: SavedDesignTemplate) => {
+    // 1. Update customization state
+    setCustomization(design.customization);
+    
+    // 2. Set the existing design state (important for the SaveDesignButton to switch to 'Update')
+    setExistingDesign(design);
+    
+    // 3. Update URL query parameter to reflect the loaded design ID
+    navigate(`/products/${product?.id}?designId=${design.id}`, { replace: true });
+    
+    // 4. Recalculate meaningfulness
+    if (initialCustomization) {
+        setIsMeaningful(isCustomizationMeaningful(design.customization, initialCustomization));
+    }
+  };
+
 
   if (!product || !customization || !initialCustomization) {
     return (
@@ -347,6 +362,12 @@ const ProductDetailPage = () => {
                 isCustomizationMeaningful={isMeaningful}
                 onDesignSaved={handleDesignSaved}
                 existingDesign={existingDesign} // Pass existing design here
+              />
+              
+              {/* Load Design Button */}
+              <DesignLoaderDialog
+                product={product}
+                onDesignLoaded={handleDesignLoaded}
               />
               
               <Button variant="outline" className="w-full" size="lg">
