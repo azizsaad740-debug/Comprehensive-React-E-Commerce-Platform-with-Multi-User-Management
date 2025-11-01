@@ -16,15 +16,19 @@ const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
     .eq('id', supabaseUser.id)
     .single();
 
-  // Fallback role if profile doesn't exist yet (e.g., right after signup before trigger fires)
+  // 2. Determine role and name
+  // Use profile role if available, otherwise default to 'customer'
   const role: UserRole = (profileData?.role as UserRole) || 'customer';
-  const name = `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || supabaseUser.email;
+  
+  // Construct name from profile data (first_name + last_name)
+  const firstName = profileData?.first_name || supabaseUser.user_metadata?.first_name || '';
+  const lastName = profileData?.last_name || supabaseUser.user_metadata?.last_name || '';
+  const name = `${firstName} ${lastName}`.trim() || supabaseUser.email;
 
-  // Mocking complex fields based on role, as they are not in the basic profile table
+  // 3. Mocking complex fields based on role (since these aren't in the profile table yet)
   let mockUser: Partial<User> = {};
-  if (role === 'admin') {
-    mockUser = { commissionRate: undefined, totalEarnings: undefined };
-  } else if (role === 'reseller') {
+  if (role === 'reseller') {
+    // Mock commission rate and earnings for resellers
     mockUser = { commissionRate: 15, totalEarnings: 5000 };
   }
 
@@ -38,7 +42,7 @@ const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
     updatedAt: new Date(),
     email_verified: supabaseUser.email_confirmed_at !== null,
     
-    // Merge profile data
+    // Merge profile data and mocks
     ...mockUser,
     resellerId: profileData?.reseller_id,
     phone: profileData?.phone || '',
@@ -128,6 +132,8 @@ export const useAuthStore = create<AuthState>()(
       updateUser: (userData: Partial<User>) => {
         const { user } = get();
         if (user) {
+          // Note: This only updates the local store state, not Supabase.
+          // For full persistence, we would need a separate API call here.
           set({ user: { ...user, ...userData, updatedAt: new Date() } });
         }
       },
