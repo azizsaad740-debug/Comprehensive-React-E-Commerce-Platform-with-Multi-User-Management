@@ -10,6 +10,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
+import { useBrandingStore } from '@/stores/brandingStore';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,6 +22,7 @@ function LoginPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const { appName } = useBrandingStore();
 
   const query = new URLSearchParams(location.search);
   const referralId = query.get('ref');
@@ -52,7 +54,7 @@ function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Sign in to Misali CEnter</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">Sign in to {appName}</CardTitle>
             <CardDescription className="text-center">
               Enter your email and password to access your account
             </CardDescription>

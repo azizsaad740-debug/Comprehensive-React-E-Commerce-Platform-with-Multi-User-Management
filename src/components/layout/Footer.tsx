@@ -5,17 +5,20 @@ import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useBrandingStore } from '@/stores/brandingStore';
 
 const Footer = () => {
+  const { appName, slogan } = useBrandingStore();
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold">Misali CEnter</h3>
+            <h3 className="text-xl font-bold">{appName}</h3>
             <p className="text-gray-300 text-sm">
-              Create unique, personalized products with our easy-to-use design tools and high-quality printing.
+              {slogan}
             </p>
             <div className="flex space-x-4">
               <Button variant="ghost" size="sm" className="p-2">
@@ -132,7 +135,7 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-sm text-gray-400">
-              © 2024 Misali CEnter. All rights reserved.
+              © 2024 {appName}. All rights reserved.
             </div>
             <div className="flex space-x-6 text-sm">
               <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">

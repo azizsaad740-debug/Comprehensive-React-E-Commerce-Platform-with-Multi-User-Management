@@ -5,26 +5,60 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, LayoutGrid, Type, Upload, Save, X } from 'lucide-react';
+import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import ColorInput from '@/components/admin/ColorInput';
+import { useBrandingStore } from '@/stores/brandingStore';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 const ThemeEditorPage = () => {
-  const [themeName, setThemeName] = useState('CustomPrint Default');
+  const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
+  const { toast } = useToast();
+  
+  // Local state for color customization (separate from branding store)
   const [primaryColor, setPrimaryColor] = useState('#2563EB');
   const [accentColor, setAccentColor] = useState('#F59E0B');
+  
+  // Local state for branding form
+  const [brandingData, setBrandingData] = useState({
+    appName: appName,
+    slogan: slogan,
+    logoUrl: logoUrl,
+  });
+
+  const handleBrandingChange = (field: 'appName' | 'slogan' | 'logoUrl', value: string) => {
+    setBrandingData(prev => ({ ...prev, [field]: value }));
+  };
 
   const handlePublish = () => {
-    alert('Theme changes published! (Mock action)');
+    // 1. Update Branding Store
+    updateBranding(brandingData);
+    
+    // 2. Apply Color Changes (Mocked - in a real app, this would update CSS variables)
+    // For now, we just confirm the action.
+    
+    toast({
+      title: "Theme Published",
+      description: "Branding and color changes have been saved and published.",
+    });
   };
 
   const handleDiscard = () => {
-    setThemeName('CustomPrint Default');
+    // Reset local state to current store values
+    setBrandingData({
+      appName: appName,
+      slogan: slogan,
+      logoUrl: logoUrl,
+    });
     setPrimaryColor('#2563EB');
     setAccentColor('#F59E0B');
-    alert('Changes discarded.');
+    toast({
+      title: "Changes Discarded",
+      description: "Local changes were reset to the last published version.",
+    });
   };
 
   return (
@@ -55,10 +89,13 @@ const ThemeEditorPage = () => {
               <CardTitle className="text-lg">Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="colors" orientation="vertical">
+              <Tabs defaultValue="branding" orientation="vertical">
                 <TabsList className="flex flex-col h-auto p-0 bg-transparent space-y-1">
+                  <TabsTrigger value="branding" className="w-full justify-start data-[state=active]:bg-accent">
+                    <Tag className="h-4 w-4 mr-2" /> Branding & Identity
+                  </TabsTrigger>
                   <TabsTrigger value="colors" className="w-full justify-start data-[state=active]:bg-accent">
-                    <Palette className="h-4 w-4 mr-2" /> Colors & Branding
+                    <Palette className="h-4 w-4 mr-2" /> Colors
                   </TabsTrigger>
                   <TabsTrigger value="typography" className="w-full justify-start data-[state=active]:bg-accent">
                     <Type className="h-4 w-4 mr-2" /> Typography
@@ -76,24 +113,68 @@ const ThemeEditorPage = () => {
 
           {/* Theme Content Area */}
           <div className="lg:col-span-3">
-            <Tabs defaultValue="colors">
-              <TabsContent value="colors">
+            <Tabs defaultValue="branding">
+              
+              {/* Branding Tab */}
+              <TabsContent value="branding">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Colors & Branding</CardTitle>
+                    <CardTitle>Branding & Identity</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="themeName">Theme Name</Label>
+                      <Label htmlFor="appName">Application Name</Label>
                       <Input 
-                        id="themeName" 
-                        value={themeName} 
-                        onChange={(e) => setThemeName(e.target.value)} 
+                        id="appName" 
+                        value={brandingData.appName} 
+                        onChange={(e) => handleBrandingChange('appName', e.target.value)} 
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="slogan">Slogan / Tagline</Label>
+                      <Textarea 
+                        id="slogan" 
+                        value={brandingData.slogan} 
+                        onChange={(e) => handleBrandingChange('slogan', e.target.value)} 
                       />
                     </div>
                     
                     <Separator />
-
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="logoUrl">Logo URL / Path</Label>
+                      <div className="flex items-center space-x-4">
+                        <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center border">
+                          {brandingData.logoUrl ? (
+                            <Image className="h-8 w-8 text-gray-500" /> /* Mock logo preview */
+                          ) : (
+                            <span className="text-xs text-gray-400">No Logo</span>
+                          )}
+                        </div>
+                        <Input 
+                          id="logoUrl" 
+                          value={brandingData.logoUrl} 
+                          onChange={(e) => handleBrandingChange('logoUrl', e.target.value)} 
+                          className="flex-1"
+                          placeholder="/placeholder.svg"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500">Use the Content & Images section to upload new logos.</p>
+                    </div>
+                    
+                    <p className="text-sm text-gray-500">Note: Changes require publishing the theme to take effect across the site.</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Colors Tab */}
+              <TabsContent value="colors">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Colors</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <ColorInput
                         id="primaryColor"

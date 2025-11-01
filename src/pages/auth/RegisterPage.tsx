@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock, User, Loader2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { supabase } from '@/integrations/supabase/client';
+import { useBrandingStore } from '@/stores/brandingStore';
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -27,6 +28,7 @@ function RegisterPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const { appName } = useBrandingStore();
 
   const query = new URLSearchParams(location.search);
   const referralId = query.get('ref');
@@ -129,9 +131,9 @@ function RegisterPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Create Misali CEnter Account</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">Create {appName} Account</CardTitle>
             <CardDescription className="text-center">
-              Join Misali CEnter and start creating amazing products
+              Join {appName} and start creating amazing products
             </CardDescription>
           </CardHeader>
           <CardContent>

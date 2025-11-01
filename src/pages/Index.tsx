@@ -11,7 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
 import { Product } from '@/types';
-import HeroSlideshow from '@/components/layout/HeroSlideshow'; // Import new component
+import HeroSlideshow from '@/components/layout/HeroSlideshow';
+import { useBrandingStore } from '@/stores/brandingStore';
 
 const features = [
   {
@@ -35,6 +36,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { addItem } = useCartStore();
   const { toast } = useToast();
+  const { appName } = useBrandingStore();
 
   const allProducts = getAllMockProducts();
   
@@ -66,7 +68,7 @@ const Index = () => {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
-            Why Choose Misali CEnter?
+            Why Choose {appName}?
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
@@ -208,7 +210,7 @@ const Index = () => {
             Ready to Start Creating?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join Misali CEnter and start creating amazing custom products with us
+            Join {appName} and start creating amazing custom products with us
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 

@@ -15,11 +15,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
+import { useBrandingStore } from '@/stores/brandingStore';
 
 const Header = () => {
   const navigate = useNavigate();
-  const { getTotalItems, toggleCart } = useCartStore();
+  const { getTotalItems } = useCartStore();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { appName } = useBrandingStore();
   const totalItems = getTotalItems();
 
   const isDashboardUser = isAuthenticated && (user?.role === 'admin' || user?.role === 'reseller');
@@ -35,7 +37,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-4">
-            <h1 className="text-xl font-bold text-primary">Misali CEnter</h1>
+            <h1 className="text-xl font-bold text-primary">{appName}</h1>
           </Link>
 
           {/* Navigation Links (Hidden for Dashboard Users) */}
