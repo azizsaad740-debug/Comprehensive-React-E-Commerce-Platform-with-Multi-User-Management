@@ -11,11 +11,14 @@ import { useToast } from '@/hooks/use-toast';
 import { SavedDesignTemplate } from '@/types';
 import { getDesignsByUserId, deleteDesign } from '@/utils/designUtils';
 import { getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
+import { getMockProductById } from '@/utils/productUtils';
+import { useCartStore } from '@/stores/cartStore';
 
 const DesignLibraryPage = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { addItem } = useCartStore();
 
   const [designs, setDesigns] = useState<SavedDesignTemplate[]>([]);
   
@@ -57,20 +60,37 @@ const DesignLibraryPage = () => {
   };
   
   const handleReorder = (design: SavedDesignTemplate) => {
-    // In a real app, this would load the design into the customizer
+    const product = getMockProductById(design.productId);
+    
+    if (!product) {
+      toast({
+        title: "Error",
+        description: "Product associated with this design was not found.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Determine the variant ID to use. If the design specifies one, use it. Otherwise, use the first available variant.
+    const variantId = product.variants.length > 0 ? product.variants[0].id : undefined;
+
+    // Add the item to the cart with the saved customization
+    addItem(product, variantId, 1, design.customization);
+    
     toast({
-      title: "Reordering Product",
-      description: `Loading design "${design.name}" for ${design.productName}...`,
+      title: "Added to Cart",
+      description: `Design "${design.name}" added to cart.`,
     });
-    // Mock navigation to product detail page with design pre-loaded
-    navigate(`/products/${design.productId}?designId=${design.id}`);
+    
+    // Optionally navigate to cart or keep on page
+    // navigate('/cart'); 
   };
 
   if (!isAuthenticated || !user) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-16 text-center">
-          <p>Loading design library or redirecting...</p>
+          <p>Loading profile or redirecting...</p>
         </div>
       </Layout>
     );
@@ -137,7 +157,7 @@ const DesignLibraryPage = () => {
                       <ShoppingCart className="h-4 w-4 mr-2" />
                       Reorder
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleReorder(design)}>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/products/${design.productId}?designId=${design.id}`)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => handleDeleteDesign(design.id)}>
