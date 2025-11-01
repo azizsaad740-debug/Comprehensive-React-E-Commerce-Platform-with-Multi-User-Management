@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ColumnDef } from "@tanstack/react-table";
 import AdminLayout from '@/components/layout/AdminLayout';
 import { DataTable } from '../../components/data-table/DataTable.tsx';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowUpDown, DollarSign } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
+import { getResellerCommissionRecords } from '@/utils/orderUtils';
 
 interface CommissionRecord {
   id: string;
@@ -21,22 +22,7 @@ interface CommissionRecord {
   status: 'pending' | 'paid' | 'cancelled';
 }
 
-// Mock Data
-const mockCommissions: CommissionRecord[] = [
-  {
-    id: 'c1', orderId: 'CP-2024-001234', date: new Date(Date.now() - 86400000 * 5), saleAmount: 89.97, rate: 15, commissionEarned: 13.50, status: 'pending',
-  },
-  {
-    id: 'c2', orderId: 'CP-2024-001233', date: new Date(Date.now() - 86400000 * 10), saleAmount: 45.99, rate: 15, commissionEarned: 6.90, status: 'paid',
-  },
-  {
-    id: 'c3', orderId: 'CP-2024-001232', date: new Date(Date.now() - 86400000 * 15), saleAmount: 24.99, rate: 15, commissionEarned: 3.75, status: 'paid',
-  },
-  {
-    id: 'c4', orderId: 'CP-2024-001231', date: new Date(Date.now() - 86400000 * 20), saleAmount: 150.00, rate: 15, commissionEarned: 0, status: 'cancelled',
-  },
-];
-
+// Columns definition remains the same, but now uses the imported CommissionRecord type
 const columns: ColumnDef<CommissionRecord>[] = [
   {
     accessorKey: "orderId",
@@ -110,11 +96,20 @@ const CommissionTrackingPage = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   
-  // Filter commissions based on user (mocking data retrieval for the current reseller)
-  const commissions = mockCommissions; 
+  const commissionRate = user?.commissionRate || 15;
+  const resellerId = user?.id;
+
+  const commissions: CommissionRecord[] = useMemo(() => {
+    if (!resellerId) return [];
+    return getResellerCommissionRecords(resellerId, commissionRate);
+  }, [resellerId, commissionRate]);
   
-  const totalEarnings = commissions
+  const totalPaidEarnings = commissions
     .filter(c => c.status === 'paid')
+    .reduce((sum, c) => sum + c.commissionEarned, 0);
+    
+  const pendingCommissions = commissions
+    .filter(c => c.status === 'pending')
     .reduce((sum, c) => sum + c.commissionEarned, 0);
 
   return (
@@ -135,8 +130,8 @@ const CommissionTrackingPage = () => {
               <DollarSign className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalEarnings.toFixed(2)}</div>
-              <p className="text-xs text-muted-foreground">Lifetime earnings</p>
+              <div className="text-2xl font-bold">${totalPaidEarnings.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">Lifetime earnings (Paid)</p>
             </CardContent>
           </Card>
           <Card>
@@ -146,7 +141,7 @@ const CommissionTrackingPage = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${commissions.filter(c => c.status === 'pending').reduce((sum, c) => sum + c.commissionEarned, 0).toFixed(2)}
+                ${pendingCommissions.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground">Awaiting payment</p>
             </CardContent>
@@ -157,7 +152,7 @@ const CommissionTrackingPage = () => {
               <Badge>Reseller</Badge>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{user?.commissionRate || 15}%</div>
+              <div className="text-2xl font-bold">{commissionRate}%</div>
               <p className="text-xs text-muted-foreground">Your current commission rate</p>
             </CardContent>
           </Card>

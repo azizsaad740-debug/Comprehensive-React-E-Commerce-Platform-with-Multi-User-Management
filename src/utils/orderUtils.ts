@@ -230,3 +230,49 @@ export const getResellerTotalReferredSales = (resellerId: string): number => {
   
   return resellerOrders.reduce((sum, order) => sum + order.totalAmount, 0);
 };
+
+export interface CommissionRecord {
+  id: string;
+  orderId: string;
+  date: Date;
+  saleAmount: number;
+  rate: number; // percentage
+  commissionEarned: number;
+  status: 'pending' | 'paid' | 'cancelled';
+}
+
+export const getResellerCommissionRecords = (resellerId: string, commissionRate: number): CommissionRecord[] => {
+  const resellerOrders = currentMockOrders.filter(order => 
+    order.resellerId === resellerId
+  );
+
+  return resellerOrders.map(order => {
+    let commissionStatus: CommissionRecord['status'];
+    let commissionAmount: number;
+
+    if (order.status === 'cancelled') {
+      commissionStatus = 'cancelled';
+      commissionAmount = 0;
+    } else if (order.status === 'delivered') {
+      commissionStatus = 'paid';
+      // Assuming commission is based on total amount (excluding tax/shipping for simplicity, but using total for mock consistency)
+      commissionAmount = order.totalAmount * (commissionRate / 100);
+    } else {
+      commissionStatus = 'pending';
+      commissionAmount = order.totalAmount * (commissionRate / 100);
+    }
+    
+    // Round commission amount to 2 decimal places
+    commissionAmount = Math.round(commissionAmount * 100) / 100;
+
+    return {
+      id: uuidv4(),
+      orderId: order.id,
+      date: order.createdAt,
+      saleAmount: order.totalAmount,
+      rate: commissionRate,
+      commissionEarned: commissionAmount,
+      status: commissionStatus,
+    };
+  }).sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by newest first
+};
