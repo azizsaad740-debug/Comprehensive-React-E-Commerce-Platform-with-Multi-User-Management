@@ -72,14 +72,15 @@ const DesignLibraryPage = () => {
     }
     
     // Determine the variant ID to use. If the design specifies one, use it. Otherwise, use the first available variant.
-    const variantId = product.variants.length > 0 ? product.variants[0].id : undefined;
+    const variant = product.variants.length > 0 ? product.variants[0] : undefined;
+    const variantId = variant?.id;
 
     // Add the item to the cart with the saved customization
     addItem(product, variantId, 1, design.customization);
     
     toast({
       title: "Added to Cart",
-      description: `Design "${design.name}" added to cart.`,
+      description: `Design "${design.name}" added to cart. ${variant ? `(Variant: ${variant.name})` : ''}`,
     });
     
     // Optionally navigate to cart or keep on page
@@ -160,7 +161,7 @@ const DesignLibraryPage = () => {
                       <ShoppingCart className="h-4 w-4 mr-2" />
                       Reorder
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/products/${design.productId}?designId=${design.id}`)}>
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/products/${design.productId}/design?designId=${design.id}`)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => handleDeleteDesign(design.id)}>
