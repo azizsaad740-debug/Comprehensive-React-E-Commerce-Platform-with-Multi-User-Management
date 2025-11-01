@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 // Helper function to fetch user profile and merge with auth data
 const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
   if (!supabaseUser) return null;
+  
+  console.log("Fetching profile for user ID:", supabaseUser.id);
 
   // 1. Fetch profile data from public.profiles table
   const { data: profileData, error: profileError } = await supabase
@@ -15,6 +17,13 @@ const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
     .select('role, reseller_id, first_name, last_name, phone, whatsapp')
     .eq('id', supabaseUser.id)
     .single();
+    
+  if (profileError) {
+    console.error("Error fetching profile:", profileError);
+    // If fetching fails, we still try to construct a basic user object
+  }
+  
+  console.log("Profile data received:", profileData);
 
   // 2. Determine role and name
   // Use profile role if available, otherwise default to 'customer'
@@ -48,6 +57,8 @@ const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
     phone: profileData?.phone || '',
     whatsapp: profileData?.whatsapp || '',
   };
+  
+  console.log("Final user object role:", user.role);
 
   return user;
 };
@@ -123,7 +134,6 @@ export const useAuthStore = create<AuthState>()(
         }
         
         // Clear local storage state explicitly upon successful logout
-        // The key 'auth-storage' is defined in the persist middleware options below.
         localStorage.removeItem('auth-storage');
 
         set({
