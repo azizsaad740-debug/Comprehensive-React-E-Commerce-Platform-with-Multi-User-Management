@@ -52,7 +52,7 @@ const CommissionReportButton: React.FC<CommissionReportButtonProps> = ({ commiss
           toast({
             title: "No Data",
             description: "No commission records found to generate a report.",
-            variant: "secondary",
+            variant: "default", // Fixed: Changed 'secondary' to 'default'
           });
           setIsGenerating(false);
           return;
