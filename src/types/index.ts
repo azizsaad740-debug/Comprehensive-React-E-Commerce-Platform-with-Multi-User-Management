@@ -170,3 +170,22 @@ export interface CommissionRecord {
   commissionEarned: number;
   status: 'pending' | 'paid' | 'cancelled';
 }
+
+export interface HeroSlide {
+  id: string;
+  heading: string;
+  subheading: string;
+  imageUrl: string; // URL or path to uploaded image
+  buttonText: string;
+  buttonLink: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface ImageAsset {
+  id: string;
+  name: string;
+  url: string;
+  type: 'product' | 'hero' | 'other';
+  uploadedAt: Date;
+}

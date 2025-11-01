@@ -1,14 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock, User, Loader2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
@@ -20,7 +18,6 @@ function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'customer' as 'customer' | 'reseller',
     agreeToTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -65,12 +62,15 @@ function RegisterPage() {
       const [firstName, ...lastNameParts] = formData.name.split(' ');
       const lastName = lastNameParts.join(' ');
       
+      // Force role to 'customer' for public signups
+      const role = 'customer'; 
+      
       const { error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
-            role: formData.role,
+            role: role,
             resellerId: referralId,
             first_name: firstName,
             last_name: lastName,
@@ -129,7 +129,7 @@ function RegisterPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">Create Customer Account</CardTitle>
             <CardDescription className="text-center">
               Join CustomPrint and start creating amazing products
             </CardDescription>
@@ -168,18 +168,7 @@ function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role">Account Type</Label>
-                <Select value={formData.role} onValueChange={(value) => handleInputChange('role', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="customer">Customer</SelectItem>
-                    <SelectItem value="reseller">Reseller</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Role selection removed - defaults to customer */}
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -252,6 +241,12 @@ function RegisterPage() {
                 )}
               </Button>
             </form>
+            <div className="mt-4 text-center text-sm">
+              Already have an account?{" "}
+              <Link to="/auth/login" className="text-primary hover:underline font-medium">
+                Sign in
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>

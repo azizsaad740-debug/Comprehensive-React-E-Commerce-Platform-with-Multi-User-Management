@@ -135,21 +135,12 @@ const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center space-x-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => navigate('/auth/login')}
-                >
-                  Login
-                </Button>
-                <Button 
-                  size="sm"
-                  onClick={() => navigate('/auth/register')}
-                >
-                  Sign Up
-                </Button>
-              </div>
+              <Button 
+                size="sm"
+                onClick={() => navigate('/auth/login')}
+              >
+                Login
+              </Button>
             )}
           </div>
         </div>

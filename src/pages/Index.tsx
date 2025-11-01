@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
 import { Product } from '@/types';
+import HeroSlideshow from '@/components/layout/HeroSlideshow'; // Import new component
 
 const features = [
   {
@@ -58,35 +59,8 @@ const Index = () => {
 
   return (
     <Layout>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Create Custom Products
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-            Design unique t-shirts, mugs, phone cases, and more with our easy-to-use customization tools
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              className="bg-white text-blue-600 hover:bg-gray-100"
-              onClick={() => navigate('/products')}
-            >
-              Start Designing
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-blue-600"
-              onClick={() => navigate('/products')}
-            >
-              Browse Products
-            </Button>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section - Now Dynamic Slideshow */}
+      <HeroSlideshow />
 
       {/* Features Section */}
       <section className="py-16 bg-white">

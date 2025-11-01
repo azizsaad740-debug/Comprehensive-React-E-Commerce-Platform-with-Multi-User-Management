@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,6 +112,13 @@ function LoginPage() {
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </Button>
             </form>
+            
+            <div className="mt-4 text-center text-sm">
+              Don't have an account?{" "}
+              <Link to="/auth/register" className="text-primary hover:underline font-medium">
+                Sign up
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>

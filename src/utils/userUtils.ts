@@ -10,7 +10,7 @@ export const mockUsers: User[] = [
     id: 'u2', email: 'reseller1@example.com', name: 'Bob Reseller', role: 'reseller', isActive: true, createdAt: new Date(), updatedAt: new Date(), commissionRate: 15, totalEarnings: 5000, email_verified: true,
   },
   {
-    id: 'u3', email: 'customer1@example.com', name: 'Charlie Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), resellerId: 'u2', totalSales: 1250.50, email_verified: true, // Referred by Bob
+    id: 'u3', email: 'customer1@example.com', name: 'Charlie Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true, // Promoted to Admin
   },
   {
     id: 'u4', email: 'inactive@example.com', name: 'Diana Dormant', role: 'customer', isActive: false, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
@@ -27,10 +27,10 @@ export const mockUsers: User[] = [
 const mockAddresses: Record<string, Address[]> = {
   'u3': [
     {
-      id: 'a1', fullName: 'Charlie Customer', phone: '555-1234', street: '123 Main St', city: 'Anytown', state: 'CA', zipCode: '90210', country: 'USA', isDefault: true,
+      id: 'a1', fullName: 'Charlie Admin', phone: '555-1234', street: '123 Main St', city: 'Anytown', state: 'CA', zipCode: '90210', country: 'USA', isDefault: true,
     },
     {
-      id: 'a2', fullName: 'Charlie Customer', phone: '555-5678', street: '456 Work Ave', city: 'Tech City', state: 'CA', zipCode: '90001', country: 'USA', isDefault: false,
+      id: 'a2', fullName: 'Charlie Admin', phone: '555-5678', street: '456 Work Ave', city: 'Tech City', state: 'CA', zipCode: '90001', country: 'USA', isDefault: false,
     },
   ],
   'u5': [

@@ -31,7 +31,8 @@ import ThemeEditorPage from "./pages/admin/ThemeEditorPage.tsx";
 import PluginManagementPage from "./pages/admin/PluginManagementPage.tsx";
 import SupabaseAuthProvider from "./components/auth/SupabaseAuthProvider";
 import DesignEditorPage from "./pages/products/DesignEditorPage";
-import VariantManagementPage from "./pages/admin/VariantManagementPage"; // Import new page
+import VariantManagementPage from "./pages/admin/VariantManagementPage";
+import ImageManagementPage from "./pages/admin/ImageManagementPage"; // Import new page
 
 const queryClient = new QueryClient();
 
@@ -175,6 +176,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <PluginManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/content" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ImageManagementPage />
                 </ProtectedRoute>
               } 
             />

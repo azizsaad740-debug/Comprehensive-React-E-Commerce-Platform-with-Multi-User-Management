@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Package, ShoppingBag, DollarSign, Settings, Tag, Palette, Plug } from 'lucide-react';
+import { LayoutDashboard, Users, Package, ShoppingBag, DollarSign, Settings, Tag, Palette, Plug, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
@@ -56,6 +56,12 @@ const navItems: NavItem[] = [
     title: 'Plugins',
     href: '/admin/plugins',
     icon: Plug,
+    roles: ['admin'],
+  },
+  {
+    title: 'Content & Images',
+    href: '/admin/content',
+    icon: Image,
     roles: ['admin'],
   },
   {
