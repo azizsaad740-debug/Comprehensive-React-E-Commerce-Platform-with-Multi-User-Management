@@ -100,6 +100,24 @@ const ProductDetailPage = () => {
       setExistingDesign(undefined);
     }
     
+    // 3. Ensure loaded customization texts array matches product printPaths length
+    const requiredTextLength = fetchedProduct.printPaths;
+    const currentTextLength = loadedCustomization.texts.length;
+    
+    if (currentTextLength < requiredTextLength) {
+        const padding = Array(requiredTextLength - currentTextLength).fill('');
+        loadedCustomization = {
+            ...loadedCustomization,
+            texts: [...loadedCustomization.texts, ...padding]
+        };
+    } else if (currentTextLength > requiredTextLength) {
+        // Truncate if necessary
+        loadedCustomization = {
+            ...loadedCustomization,
+            texts: loadedCustomization.texts.slice(0, requiredTextLength)
+        };
+    }
+    
     setInitialCustomization(defaultCustom); // Keep default for comparison
     setCustomization(loadedCustomization);
     setIsMeaningful(isCustomizationMeaningful(loadedCustomization, defaultCustom));
@@ -437,6 +455,7 @@ const ProductDetailPage = () => {
                         <li>• Pre-shrunk fabric</li>
                         <li>• Machine washable</li>
                         <li>• Iron on reverse side</li>
+                        <li>• Size chart available</li>
                       </ul>
                     </div>
                     
