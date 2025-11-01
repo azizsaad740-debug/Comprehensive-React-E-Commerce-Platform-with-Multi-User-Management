@@ -182,3 +182,42 @@ export const getResellerMonthlySales = (resellerId: string): RevenueData[] => {
 
   return data;
 };
+
+export const getAdminMonthlyRevenue = (): RevenueData[] => {
+  const allActiveOrders = currentMockOrders.filter(order => 
+    order.status !== 'cancelled'
+  );
+
+  const monthlyRevenueMap = new Map<string, number>();
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  allActiveOrders.forEach(order => {
+    const monthIndex = order.createdAt.getMonth();
+    const year = order.createdAt.getFullYear();
+    const key = `${monthNames[monthIndex]} ${year}`;
+    
+    const currentRevenue = monthlyRevenueMap.get(key) || 0;
+    monthlyRevenueMap.set(key, currentRevenue + order.totalAmount);
+  });
+
+  // Generate data for the last 7 months for consistency
+  const today = new Date();
+  const data: RevenueData[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const monthName = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    const key = `${monthName} ${year}`;
+    
+    // Use only the month name for the chart label
+    const dateLabel = monthName; 
+    
+    data.push({
+      date: dateLabel,
+      revenue: monthlyRevenueMap.get(`${monthName} ${year}`) || 0,
+    });
+  }
+
+  return data;
+};

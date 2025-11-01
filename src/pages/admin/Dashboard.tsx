@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ShoppingBag, Users, Package, ArrowRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -9,27 +9,47 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/layout/AdminLayout';
 import RevenueChart from '@/components/admin/RevenueChart';
-
-const mockStats = {
-  totalRevenue: 125000.50,
-  totalOrders: 4500,
-  newCustomers: 120,
-  lowStockItems: 15,
-};
-
-const mockRevenueData = [
-  { date: 'Jan', revenue: 4000 },
-  { date: 'Feb', revenue: 3000 },
-  { date: 'Mar', revenue: 5000 },
-  { date: 'Apr', revenue: 4500 },
-  { date: 'May', revenue: 6000 },
-  { date: 'Jun', revenue: 7500 },
-  { date: 'Jul', revenue: 8000 },
-];
+import { getAdminMonthlyRevenue, getMockOrders } from '@/utils/orderUtils';
+import { getAllMockUsers } from '@/utils/userUtils';
+import { getAllMockProducts } from '@/utils/productUtils';
 
 const Dashboard = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+
+  const allOrders = getMockOrders();
+  const allUsers = getAllMockUsers();
+  const allProducts = getAllMockProducts();
+
+  // Calculate dynamic stats
+  const mockStats = useMemo(() => {
+    const totalRevenue = allOrders
+      .filter(o => o.status !== 'cancelled' && o.paymentStatus === 'paid')
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+      
+    const totalOrders = allOrders.length;
+    
+    const newCustomers = allUsers.filter(u => 
+      u.role === 'customer' && 
+      (new Date().getTime() - u.createdAt.getTime()) < (86400000 * 30) // Joined in last 30 days
+    ).length;
+    
+    const lowStockItems = allProducts.filter(p => 
+      p.stockQuantity < 10
+    ).length;
+
+    return {
+      totalRevenue,
+      totalOrders,
+      newCustomers,
+      lowStockItems,
+    };
+  }, [allOrders, allUsers, allProducts]);
+
+  // Fetch dynamic revenue data
+  const monthlyRevenueData = useMemo(() => {
+    return getAdminMonthlyRevenue();
+  }, [allOrders]);
 
   const ordersPath = '/admin/orders'; 
 
@@ -51,7 +71,7 @@ const Dashboard = () => {
               <div className="text-2xl font-bold">
                 ${mockStats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </div>
-              <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+              <p className="text-xs text-muted-foreground">+20.1% from last month (Mock)</p>
             </CardContent>
           </Card>
           
@@ -63,19 +83,19 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{mockStats.totalOrders.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">+15% from last month</p>
+              <p className="text-xs text-muted-foreground">+15% from last month (Mock)</p>
             </CardContent>
           </Card>
           
           {/* New Customers Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">New Customers</CardTitle>
+              <CardTitle className="text-sm font-medium">New Customers (30 Days)</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">+{mockStats.newCustomers}</div>
-              <p className="text-xs text-muted-foreground">+5% from last month</p>
+              <p className="text-xs text-muted-foreground">New sign-ups</p>
             </CardContent>
           </Card>
           
@@ -100,14 +120,14 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <RevenueChart 
-                data={mockRevenueData} 
+                data={monthlyRevenueData} 
                 dataKey="Monthly Revenue" 
                 title="Last 7 Months Revenue" 
               />
               
               <Separator className="my-6" />
               
-              <h3 className="text-lg font-semibold mb-3">Recent Activity</h3>
+              <h3 className="text-lg font-semibold mb-3">Quick Links</h3>
               <p className="text-gray-500 mb-4">Placeholder for recent orders or system updates.</p>
               <Button variant="link" onClick={() => navigate(ordersPath)} className="p-0">
                 View All Orders <ArrowRight className="h-4 w-4 ml-1" />
@@ -130,7 +150,9 @@ const Dashboard = () => {
               <Button className="w-full" onClick={() => navigate('/admin/users')}>
                 Manage Users
               </Button>
-              <Button className="w-full" variant="outline">View Reports</Button>
+              <Button className="w-full" variant="outline" onClick={() => navigate('/admin/promocodes')}>
+                Manage Promo Codes
+              </Button>
             </CardContent>
           </Card>
         </div>
