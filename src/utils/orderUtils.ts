@@ -221,3 +221,12 @@ export const getAdminMonthlyRevenue = (): RevenueData[] => {
 
   return data;
 };
+
+export const getResellerTotalReferredSales = (resellerId: string): number => {
+  const resellerOrders = currentMockOrders.filter(order => 
+    order.resellerId === resellerId && 
+    order.status !== 'cancelled'
+  );
+  
+  return resellerOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+};

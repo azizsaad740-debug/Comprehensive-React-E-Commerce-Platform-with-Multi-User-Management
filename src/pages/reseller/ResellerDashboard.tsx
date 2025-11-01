@@ -12,7 +12,7 @@ import RevenueChart from '@/components/admin/RevenueChart';
 import { getCustomersByResellerId } from '@/utils/userUtils';
 import { getPromoCodesByResellerId } from '@/utils/promoCodeUtils';
 import ResellerCodeDisplay from '@/components/reseller/ResellerCodeDisplay';
-import { getResellerMonthlySales } from '@/utils/orderUtils';
+import { getResellerMonthlySales, getResellerTotalReferredSales } from '@/utils/orderUtils';
 
 const ResellerDashboard = () => {
   const { user } = useAuthStore();
@@ -28,7 +28,10 @@ const ResellerDashboard = () => {
     
   const activeCustomersCount = referredCustomers.length;
 
-  const totalReferredSales = referredCustomers.reduce((sum, customer) => sum + (customer.totalSales || 0), 0);
+  // Calculate total referred sales dynamically from orders
+  const totalReferredSales = resellerId 
+    ? getResellerTotalReferredSales(resellerId) 
+    : 0;
 
   const activePromoCodesCount = resellerId 
     ? getPromoCodesByResellerId(resellerId).filter(code => code.isActive).length 
