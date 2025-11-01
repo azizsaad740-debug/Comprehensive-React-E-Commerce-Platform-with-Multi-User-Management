@@ -125,52 +125,64 @@ const DesignLibraryPage = () => {
               <p className="text-gray-600">You haven't saved any designs yet.</p>
             </Card>
           ) : (
-            designs.map((design) => (
-              <Card key={design.id} className="flex flex-col">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-xl">{design.name}</CardTitle>
-                  <CardDescription>Product: {design.productName}</CardDescription>
-                </CardHeader>
-                
-                <CardContent className="flex-1 space-y-3">
-                  {/* Mock Preview */}
-                  <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center p-4 border border-dashed border-gray-300">
-                    <div className="text-center text-gray-600 text-sm">
-                      <p className="font-bold mb-1">Customization Preview</p>
-                      <p>Text: {design.customization.texts.filter(t => t.trim()).join(' | ') || 'N/A'}</p>
-                      <p>Font: {design.customization.font || 'Default'}</p>
-                      {design.customization.startDesign && (
-                        <p>Start Design: {mockStartDesigns.find(d => d.id === design.customization.startDesign)?.name}</p>
-                      )}
-                      {design.customization.endDesign && (
-                        <p>End Design: {mockEndDesigns.find(d => d.id === design.customization.endDesign)?.name}</p>
-                      )}
+            designs.map((design) => {
+              const product = getMockProductById(design.productId);
+              const imageUrl = product?.images[0] || '/placeholder.svg';
+              
+              return (
+                <Card key={design.id} className="flex flex-col">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-xl">{design.name}</CardTitle>
+                    <CardDescription>Product: {design.productName}</CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent className="flex-1 space-y-3">
+                    {/* Product Image Preview */}
+                    <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center p-4 border border-dashed border-gray-300 relative overflow-hidden">
+                      <img 
+                        src={imageUrl} 
+                        alt={design.productName} 
+                        className="w-full h-full object-cover opacity-50"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center p-2">
+                        <div className="text-center text-gray-800 text-sm bg-white/80 p-3 rounded-lg shadow-md">
+                          <p className="font-bold mb-1">Customization Preview</p>
+                          <p>Text: {design.customization.texts.filter(t => t.trim()).join(' | ') || 'N/A'}</p>
+                          <p>Font: {design.customization.font || 'Default'}</p>
+                          {design.customization.startDesign && (
+                            <p>Start Design: {mockStartDesigns.find(d => d.id === design.customization.startDesign)?.name}</p>
+                          )}
+                          {design.customization.endDesign && (
+                            <p>End Design: {mockEndDesigns.find(d => d.id === design.customization.endDesign)?.name}</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <p className="text-xs text-gray-500">
-                    Last updated: {design.updatedAt.toLocaleDateString()}
-                  </p>
-                  
-                  <div className="flex space-x-2 pt-2 border-t mt-4">
-                    <Button 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => handleReorder(design)}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Reorder
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/products/${design.productId}/design?designId=${design.id}`)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDeleteDesign(design.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                    
+                    <p className="text-xs text-gray-500">
+                      Last updated: {design.updatedAt.toLocaleDateString()}
+                    </p>
+                    
+                    <div className="flex space-x-2 pt-2 border-t mt-4">
+                      <Button 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleReorder(design)}
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Reorder
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/products/${design.productId}/design?designId=${design.id}`)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteDesign(design.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>
