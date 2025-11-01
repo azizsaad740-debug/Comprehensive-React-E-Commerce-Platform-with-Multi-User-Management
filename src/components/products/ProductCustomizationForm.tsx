@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Text, Type, Image, LayoutGrid } from 'lucide-react';
 import { getAllMockFonts, getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
+import { cn } from '@/lib/utils';
 
 interface ProductCustomizationFormProps {
   product: Product;
@@ -76,6 +77,8 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
            mockFonts.find(f => f.name === product.customizationOptions.fonts[0])?.id || 
            '';
   }, [customizationState.font, mockFonts, product.customizationOptions.fonts]);
+  
+  const isCustomizing = customizationState.texts.some(t => t.trim()) || customizationState.startDesign || customizationState.endDesign;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -204,25 +207,74 @@ const ProductCustomizationForm: React.FC<ProductCustomizationFormProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="aspect-square bg-gray-200 rounded-lg flex items-center justify-center p-4 border border-dashed border-gray-400">
-              <div className="text-center text-gray-600">
-                <p className="font-bold mb-2">Customization Preview Area</p>
-                <p className="text-sm">
-                  Text: {customizationState.texts.filter(t => t.trim()).join(' | ') || 'No Text'}
-                </p>
-                <p className="text-sm">
-                  Font: {customizationState.font || 'Default'}
-                </p>
-                <p className="text-sm">
-                  Start Design: {mockStartDesigns.find(d => d.id === customizationState.startDesign)?.name || 'None'}
-                </p>
-                <p className="text-sm">
-                  End Design: {mockEndDesigns.find(d => d.id === customizationState.endDesign)?.name || 'None'}
-                </p>
-                <p className="mt-4 text-xs text-red-500">
-                  (SVG/Canvas rendering logic will be implemented here in a later step.)
-                </p>
+            <div className="relative aspect-square bg-gray-200 rounded-lg overflow-hidden">
+              {/* Product Image Background */}
+              <img 
+                src={product.images[0] || '/placeholder.svg'} 
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Customization Overlays */}
+              <div className="absolute inset-0 flex flex-col justify-center items-center p-4">
+                {customizationState.texts.map((text, index) => {
+                  if (text.trim() === '') return null;
+                  
+                  // Simple mock positioning based on index
+                  const positionClasses = index === 0 
+                    ? 'top-1/4 left-1/2 -translate-x-1/2' 
+                    : index === 1 
+                    ? 'bottom-1/4 left-1/2 -translate-x-1/2' 
+                    : 'top-1/2 left-1/2 -translate-x-1/2';
+                    
+                  // Apply mock font style (since we don't have real font files)
+                  const fontStyle = customizationState.font || 'Arial';
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className={cn(
+                        "absolute p-1 bg-white/70 backdrop-blur-sm rounded shadow-lg text-center transition-all duration-300",
+                        positionClasses
+                      )}
+                      style={{ fontFamily: fontStyle, fontSize: '1.2rem', fontWeight: 'bold', color: 'black' }}
+                    >
+                      {text}
+                    </div>
+                  );
+                })}
+                
+                {/* Design Overlays (Simplified) */}
+                {customizationState.startDesign && (
+                  <div className="absolute top-4 left-4 p-1 bg-white/70 rounded text-xs text-blue-700 font-medium">
+                    Start Design
+                  </div>
+                )}
+                {customizationState.endDesign && (
+                  <div className="absolute bottom-4 right-4 p-1 bg-white/70 rounded text-xs text-blue-700 font-medium">
+                    End Design
+                  </div>
+                )}
+                
+                {/* Fallback if no customization */}
+                {!isCustomizing && (
+                  <div className="text-center text-gray-600 p-4 bg-white/80 rounded">
+                    <p className="font-bold mb-2">Start Customizing</p>
+                    <p className="text-sm">Your design will appear here.</p>
+                  </div>
+                )}
               </div>
+            </div>
+            
+            {/* Customization Summary */}
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+              <h4 className="font-semibold mb-2">Current Customization Summary:</h4>
+              <p className="text-sm text-gray-600">Font: <span className="font-medium">{customizationState.font || 'Default'}</span></p>
+              {customizationState.texts.map((text, index) => (
+                <p key={index} className="text-sm text-gray-600 truncate">
+                  Text {index + 1}: <span className="font-medium">{text || 'Empty'}</span>
+                </p>
+              ))}
             </div>
           </CardContent>
         </Card>
