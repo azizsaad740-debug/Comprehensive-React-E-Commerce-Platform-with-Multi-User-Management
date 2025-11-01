@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Header from './Header';
-import Footer from './Footer';
 import AdminSidebar from './AdminSidebar';
 import CartSidebar from '../cart/CartSidebar';
 
@@ -23,7 +22,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           {children}
         </main>
       </div>
-      <Footer />
       <CartSidebar />
     </div>
   );
