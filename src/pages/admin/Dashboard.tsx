@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, ShoppingBag, Users, Package, ArrowRight } from 'lucide-react';
+import { DollarSign, ShoppingBag, Users, Package, ArrowRight, Palette, Plug } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -154,6 +154,15 @@ const Dashboard = () => {
               </Button>
               <Button className="w-full" variant="outline" onClick={() => navigate('/admin/promocodes')}>
                 Manage Promo Codes
+              </Button>
+              <Separator />
+              <Button className="w-full" variant="secondary" onClick={() => navigate('/admin/theme')}>
+                <Palette className="h-4 w-4 mr-2" />
+                Theme Editor
+              </Button>
+              <Button className="w-full" variant="secondary" onClick={() => navigate('/admin/plugins')}>
+                <Plug className="h-4 w-4 mr-2" />
+                Plugin Management
               </Button>
             </CardContent>
           </Card>
