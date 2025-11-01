@@ -22,6 +22,9 @@ export const mockUsers: User[] = [
     id: 'u6', email: 'customer3@example.com', name: 'Frank Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
   },
   {
+    id: 'u7', email: 'superuser@example.com', name: 'Super Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true, // New Super Admin
+  },
+  {
     id: '00000000-0000-0000-0000-000000000001', email: 'azizsaad740@gmail.com', name: 'Super User', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
   },
 ];
