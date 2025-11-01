@@ -9,8 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
   if (!supabaseUser) return null;
   
-  console.log("Fetching profile for user ID:", supabaseUser.id);
-
   // 1. Fetch profile data from public.profiles table
   const { data: profileData, error: profileError } = await supabase
     .from('profiles')
@@ -23,8 +21,6 @@ const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
     // If fetching fails, we still try to construct a basic user object
   }
   
-  console.log("Profile data received:", profileData);
-
   // 2. Determine role and name
   // Use profile role if available, otherwise default to 'customer'
   const role: UserRole = (profileData?.role as UserRole) || 'customer';
@@ -57,8 +53,6 @@ const fetchUserProfile = async (supabaseUser: any): Promise<User | null> => {
     phone: profileData?.phone || '',
     whatsapp: profileData?.whatsapp || '',
   };
-  
-  console.log("Final user object role:", user.role);
 
   return user;
 };
