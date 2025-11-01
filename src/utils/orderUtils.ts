@@ -1,4 +1,4 @@
-import { Order, OrderItem, Address, CartItem } from '@/types';
+import { Order, OrderItem, Address, CartItem, CommissionRecord } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock Data (Centralized)
@@ -230,16 +230,6 @@ export const getResellerTotalReferredSales = (resellerId: string): number => {
   
   return resellerOrders.reduce((sum, order) => sum + order.totalAmount, 0);
 };
-
-export interface CommissionRecord {
-  id: string;
-  orderId: string;
-  date: Date;
-  saleAmount: number;
-  rate: number; // percentage
-  commissionEarned: number;
-  status: 'pending' | 'paid' | 'cancelled';
-}
 
 export const getResellerCommissionRecords = (resellerId: string, commissionRate: number): CommissionRecord[] => {
   const resellerOrders = currentMockOrders.filter(order => 
