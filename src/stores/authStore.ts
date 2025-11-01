@@ -77,6 +77,7 @@ export const useAuthStore = create<AuthState>()(
       setSession: async (session) => {
         set({ isLoading: true });
         if (session?.user) {
+          // Force a fresh profile fetch every time the session is set
           const user = await fetchUserProfile(session.user);
           set({
             user,
@@ -121,6 +122,9 @@ export const useAuthStore = create<AuthState>()(
           throw new Error(error.message);
         }
         
+        // Clear local storage state explicitly upon successful logout
+        (get as any).persist.clearStorage();
+
         set({
           user: null,
           token: null,
