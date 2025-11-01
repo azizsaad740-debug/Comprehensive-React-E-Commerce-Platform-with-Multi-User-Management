@@ -10,7 +10,7 @@ import Layout from '@/components/layout/Layout';
 import { Order } from '@/types';
 import { getMockOrderById, cancelOrder } from '@/utils/orderUtils';
 import { useToast } from '@/hooks/use-toast';
-import { getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
+import CustomizationDisplay from '@/components/products/CustomizationDisplay';
 
 const OrderDetailPage = () => {
   const { id } = useParams();
@@ -20,9 +20,6 @@ const OrderDetailPage = () => {
   // State to hold the current order data
   const [order, setOrder] = useState<Order | undefined>(undefined);
   
-  const mockStartDesigns = getAllMockStartDesigns();
-  const mockEndDesigns = getAllMockEndDesigns();
-
   useEffect(() => {
     if (id) {
       // Simulate fetching the order
@@ -151,14 +148,6 @@ const OrderDetailPage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {order.items.map((item, index) => {
-                  const customization = item.customization;
-                  const hasCustomization = customization && (
-                    customization.texts.some(text => text.trim()) ||
-                    customization.font ||
-                    customization.startDesign ||
-                    customization.endDesign
-                  );
-                  
                   return (
                     <div key={item.id} className="flex items-start space-x-4 border-b pb-4 last:border-b-0 last:pb-0">
                       {/* Mock Image */}
@@ -179,29 +168,7 @@ const OrderDetailPage = () => {
                         <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                         
                         {/* Customization */}
-                        {hasCustomization && customization && (
-                          <div className="mt-1 p-2 bg-blue-50 rounded border border-blue-200">
-                            <p className="text-xs text-blue-700 font-medium mb-1">Customization:</p>
-                            {customization.texts.filter(text => text.trim()).map((text, idx) => (
-                              <p key={idx} className="text-xs text-blue-600">
-                                Text {idx + 1}: "{text}"
-                              </p>
-                            ))}
-                            {customization.font && (
-                              <p className="text-xs text-blue-600">Font: {customization.font}</p>
-                            )}
-                            {customization.startDesign && (
-                              <p className="text-xs text-blue-600">
-                                Start Design: {mockStartDesigns.find(d => d.id === customization.startDesign)?.name || customization.startDesign}
-                              </p>
-                            )}
-                            {customization.endDesign && (
-                              <p className="text-xs text-blue-600">
-                                End Design: {mockEndDesigns.find(d => d.id === customization.endDesign)?.name || customization.endDesign}
-                              </p>
-                            )}
-                          </div>
-                        )}
+                        <CustomizationDisplay customization={item.customization} />
                       </div>
                       
                       {/* Price */}

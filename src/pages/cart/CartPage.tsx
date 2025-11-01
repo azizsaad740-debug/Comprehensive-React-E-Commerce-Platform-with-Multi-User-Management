@@ -10,7 +10,7 @@ import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
-import { getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
+import CustomizationDisplay from '@/components/products/CustomizationDisplay';
 
 const CartPage = () => {
   const { 
@@ -22,9 +22,6 @@ const CartPage = () => {
   } = useCartStore();
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  const mockStartDesigns = getAllMockStartDesigns();
-  const mockEndDesigns = getAllMockEndDesigns();
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -93,14 +90,6 @@ const CartPage = () => {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item, index) => {
-              const customization = item.customization;
-              const hasCustomization = customization && (
-                customization.texts.some(text => text.trim()) ||
-                customization.font ||
-                customization.startDesign ||
-                customization.endDesign
-              );
-
               return (
                 <Card key={`${item.productId}-${item.variantId || 'default'}-${index}`}>
                   <CardContent className="p-6">
@@ -145,31 +134,7 @@ const CartPage = () => {
                         </div>
                         
                         {/* Customization Preview */}
-                        {hasCustomization && customization && (
-                          <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                            <p className="text-xs text-blue-700 font-medium mb-1">Customization:</p>
-                            {customization.texts.filter(text => text.trim()).map((text, idx) => (
-                              <p key={idx} className="text-xs text-blue-600">
-                                Text {idx + 1}: "{text}"
-                              </p>
-                            ))}
-                            {customization.font && (
-                              <p className="text-xs text-blue-600">
-                                Font: {customization.font}
-                              </p>
-                            )}
-                            {customization.startDesign && (
-                              <p className="text-xs text-blue-600">
-                                Start Design: {mockStartDesigns.find(d => d.id === customization.startDesign)?.name || customization.startDesign}
-                              </p>
-                            )}
-                            {customization.endDesign && (
-                              <p className="text-xs text-blue-600">
-                                End Design: {mockEndDesigns.find(d => d.id === customization.endDesign)?.name || customization.endDesign}
-                              </p>
-                            )}
-                          </div>
-                        )}
+                        <CustomizationDisplay customization={item.customization} />
 
                         <div className="flex items-center justify-between mt-4">
                           <div className="flex items-center space-x-2">
