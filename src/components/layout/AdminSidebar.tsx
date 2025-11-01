@@ -6,11 +6,19 @@ import { LayoutDashboard, Users, Package, ShoppingBag, DollarSign, Settings, Tag
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
+import { UserRole } from '@/types';
 
-const navItems = [
+interface NavItem {
+  title: string;
+  href: string;
+  icon: React.ElementType;
+  roles: UserRole[];
+}
+
+const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    href: '/admin',
+    href: '/dashboard-placeholder', // Placeholder, will be replaced dynamically
     icon: LayoutDashboard,
     roles: ['admin', 'reseller'],
   },
@@ -66,9 +74,10 @@ const AdminSidebar = () => {
   const filteredNavItems = navItems.filter(item => 
     userRole && item.roles.includes(userRole)
   ).map(item => {
-    // Adjust dashboard link based on role for clarity
-    if (item.title === 'Dashboard' && userRole === 'reseller') {
-      return { ...item, href: '/reseller/dashboard' };
+    // Dynamically set the correct dashboard link
+    if (item.title === 'Dashboard') {
+      const dashboardHref = userRole === 'reseller' ? '/reseller/dashboard' : '/admin';
+      return { ...item, href: dashboardHref };
     }
     return item;
   });
