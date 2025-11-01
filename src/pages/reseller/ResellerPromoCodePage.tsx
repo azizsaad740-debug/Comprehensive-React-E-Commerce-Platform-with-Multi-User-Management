@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { ColumnDef } from "@tanstack/react-table";
 import { PromoCode } from '@/types';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -111,7 +111,7 @@ const ResellerPromoCodePage = () => {
     return <AdminLayout><div className="p-8">Access Denied.</div></AdminLayout>;
   }
   
-  const memoizedColumns = useMemo(() => columns, []);
+  // Removed useMemo wrapper around columns
 
   return (
     <AdminLayout>
@@ -142,7 +142,7 @@ const ResellerPromoCodePage = () => {
           </CardHeader>
           <CardContent>
             <DataTable 
-              columns={memoizedColumns} 
+              columns={columns} 
               data={promoCodes} 
               filterColumnId="code"
               filterPlaceholder="Filter by code..."
