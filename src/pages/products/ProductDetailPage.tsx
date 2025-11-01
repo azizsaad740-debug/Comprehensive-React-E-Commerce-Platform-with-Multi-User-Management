@@ -46,6 +46,7 @@ const ProductDetailPage = () => {
   const [initialCustomization, setInitialCustomization] = useState<ProductCustomization | null>(null);
   const [customization, setCustomization] = useState<ProductCustomization | null>(null);
   const [isMeaningful, setIsMeaningful] = useState(false);
+  const [existingDesign, setExistingDesign] = useState<SavedDesignTemplate | undefined>(undefined); // NEW state for existing design
 
   useEffect(() => {
     if (!id) return;
@@ -82,17 +83,21 @@ const ProductDetailPage = () => {
       loadedDesign = getDesignById(designId);
       if (loadedDesign && loadedDesign.productId === id) {
         loadedCustomization = loadedDesign.customization;
+        setExistingDesign(loadedDesign); // Set existing design for editing
         toast({
           title: "Design Loaded",
-          description: `Customization template "${loadedDesign.name}" loaded.`,
+          description: `Customization template "${loadedDesign.name}" loaded for editing.`,
         });
       } else if (designId) {
+        setExistingDesign(undefined);
         toast({
           title: "Design Not Found",
           description: "Could not load the specified design template.",
           variant: "destructive",
         });
       }
+    } else {
+      setExistingDesign(undefined);
     }
     
     setInitialCustomization(defaultCustom); // Keep default for comparison
@@ -109,9 +114,13 @@ const ProductDetailPage = () => {
   }, [initialCustomization]);
   
   const handleDesignSaved = (savedDesign: SavedDesignTemplate) => {
-    // Optionally update the URL to reflect the saved design ID if needed, 
-    // but for now, just confirm the save.
-    console.log('Design saved:', savedDesign);
+    // If we were editing, ensure the URL reflects the designId
+    if (savedDesign.id && savedDesign.id !== designId) {
+      // If a new design was saved, update the URL to include the new designId for continuity
+      navigate(`/products/${product?.id}?designId=${savedDesign.id}`, { replace: true });
+    }
+    // Update the local state to reflect the saved design (important if we were editing)
+    setExistingDesign(savedDesign);
   };
 
   if (!product || !customization || !initialCustomization) {
@@ -139,8 +148,9 @@ const ProductDetailPage = () => {
   const handleAddToCart = () => {
     let customizationToPass: ProductCustomization | undefined = undefined;
 
-    if (isMeaningful) {
-      // Clean up empty text fields if customization is meaningful
+    if (isMeaningful || existingDesign) {
+      // If customization is meaningful OR we loaded an existing design, pass the customization.
+      // Clean up empty text fields
       const cleanedCustomization: ProductCustomization = {
         ...customization,
         texts: customization.texts.filter(text => text.trim().length > 0),
@@ -313,6 +323,7 @@ const ProductDetailPage = () => {
                 customization={customization}
                 isCustomizationMeaningful={isMeaningful}
                 onDesignSaved={handleDesignSaved}
+                existingDesign={existingDesign} // Pass existing design here
               />
               
               <Button variant="outline" className="w-full" size="lg">

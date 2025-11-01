@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, Edit } from 'lucide-react';
 import { Product, ProductCustomization, SavedDesignTemplate } from '@/types';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,7 @@ interface SaveDesignButtonProps {
   customization: ProductCustomization;
   isCustomizationMeaningful: boolean;
   onDesignSaved: (design: SavedDesignTemplate) => void;
+  existingDesign?: SavedDesignTemplate; // NEW: Optional existing design object
 }
 
 const SaveDesignButton: React.FC<SaveDesignButtonProps> = ({
@@ -23,12 +24,23 @@ const SaveDesignButton: React.FC<SaveDesignButtonProps> = ({
   customization,
   isCustomizationMeaningful,
   onDesignSaved,
+  existingDesign,
 }) => {
   const { user, isAuthenticated } = useAuthStore();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [designName, setDesignName] = useState(product.name + ' Design');
+  const [designName, setDesignName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const isEditing = !!existingDesign;
+
+  useEffect(() => {
+    if (isEditing) {
+      setDesignName(existingDesign.name);
+    } else {
+      setDesignName(product.name + ' Design');
+    }
+  }, [isEditing, existingDesign, product.name]);
 
   const handleSave = () => {
     if (!user) {
@@ -40,7 +52,7 @@ const SaveDesignButton: React.FC<SaveDesignButtonProps> = ({
       return;
     }
 
-    if (!isCustomizationMeaningful) {
+    if (!isCustomizationMeaningful && !isEditing) {
       toast({
         title: "Nothing to Save",
         description: "Please customize your product before saving.",
@@ -59,14 +71,15 @@ const SaveDesignButton: React.FC<SaveDesignButtonProps> = ({
           designName,
           product.id,
           product.name,
-          customization
+          customization,
+          existingDesign?.id // Pass ID if editing
         );
         
         onDesignSaved(savedDesign);
         
         toast({
-          title: "Design Saved",
-          description: `Your design "${designName}" has been saved to your library.`,
+          title: isEditing ? "Design Updated" : "Design Saved",
+          description: `Your design "${designName}" has been ${isEditing ? 'updated' : 'saved'} to your library.`,
         });
         
         setIsLoading(false);
@@ -87,20 +100,20 @@ const SaveDesignButton: React.FC<SaveDesignButtonProps> = ({
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <Button 
-          variant="outline" 
+          variant={isEditing ? "default" : "outline"} 
           className="w-full" 
           size="lg"
-          disabled={!isAuthenticated || !isCustomizationMeaningful}
+          disabled={!isAuthenticated || (!isCustomizationMeaningful && !isEditing)}
         >
-          <Save className="h-5 w-5 mr-2" />
-          Save Design
+          {isEditing ? <Edit className="h-5 w-5 mr-2" /> : <Save className="h-5 w-5 mr-2" />}
+          {isEditing ? 'Update Design' : 'Save Design'}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Save Customization</DialogTitle>
+          <DialogTitle>{isEditing ? 'Update Customization' : 'Save Customization'}</DialogTitle>
           <DialogDescription>
-            Give your design a name to save it to your personal library.
+            {isEditing ? `Update the details for design: ${existingDesign.name}` : 'Give your design a name to save it to your personal library.'}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -127,7 +140,7 @@ const SaveDesignButton: React.FC<SaveDesignButtonProps> = ({
             ) : (
               <Save className="h-4 w-4 mr-2" />
             )}
-            {isLoading ? 'Saving...' : 'Confirm Save'}
+            {isLoading ? (isEditing ? 'Updating...' : 'Saving...') : (isEditing ? 'Confirm Update' : 'Confirm Save')}
           </Button>
         </DialogFooter>
       </DialogContent>
