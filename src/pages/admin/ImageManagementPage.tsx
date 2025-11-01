@@ -29,9 +29,10 @@ interface HeroSlideFormProps {
   initialSlide?: HeroSlide;
   onSave: (slide: HeroSlide) => void;
   onCancel: () => void;
+  assets: ImageAsset[];
 }
 
-const HeroSlideForm: React.FC<HeroSlideFormProps> = ({ initialSlide, onSave, onCancel }) => {
+const HeroSlideForm: React.FC<HeroSlideFormProps> = ({ initialSlide, onSave, onCancel, assets }) => {
   const [formData, setFormData] = useState<Omit<HeroSlide, 'id'>>(initialSlide || {
     heading: '',
     subheading: '',
@@ -42,9 +43,16 @@ const HeroSlideForm: React.FC<HeroSlideFormProps> = ({ initialSlide, onSave, onC
     sortOrder: 99,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [imageSource, setImageSource] = useState<'asset' | 'url'>(
+    initialSlide?.imageUrl && initialSlide.imageUrl.startsWith('/') ? 'asset' : 'url'
+  );
 
   const handleChange = (field: keyof HeroSlide, value: string | boolean | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageSelect = (url: string) => {
+    setFormData(prev => ({ ...prev, imageUrl: url }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -63,6 +71,8 @@ const HeroSlideForm: React.FC<HeroSlideFormProps> = ({ initialSlide, onSave, onC
       setIsLoading(false);
     }, 500);
   };
+
+  const availableAssets = assets.filter(a => a.type === 'hero' || a.type === 'other');
 
   return (
     <Card className="mt-4 border-primary/50">
@@ -87,11 +97,53 @@ const HeroSlideForm: React.FC<HeroSlideFormProps> = ({ initialSlide, onSave, onC
             <Textarea id="subheading" value={formData.subheading} onChange={(e) => handleChange('subheading', e.target.value)} required />
           </div>
           
+          {/* Image Selection */}
           <div className="space-y-2">
-            <Label htmlFor="imageUrl">Image URL</Label>
-            <Input id="imageUrl" value={formData.imageUrl} onChange={(e) => handleChange('imageUrl', e.target.value)} required />
-            <p className="text-xs text-gray-500">Use a URL or path to an uploaded asset (e.g., /placeholder.svg)</p>
+            <Label>Image Source</Label>
+            <Select value={imageSource} onValueChange={(val: 'asset' | 'url') => {
+              setImageSource(val);
+              // Clear URL if switching source type
+              setFormData(prev => ({ ...prev, imageUrl: '' }));
+            }}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select image source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="asset">Select from Assets</SelectItem>
+                <SelectItem value="url">Enter URL Manually</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          {imageSource === 'asset' && (
+            <div className="space-y-2">
+              <Label htmlFor="assetSelect">Select Asset</Label>
+              <Select 
+                value={formData.imageUrl} 
+                onValueChange={handleImageSelect}
+                required
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose an uploaded image asset" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableAssets.map(asset => (
+                    <SelectItem key={asset.id} value={asset.url}>
+                      {asset.name} ({asset.type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {imageSource === 'url' && (
+            <div className="space-y-2">
+              <Label htmlFor="imageUrl">Image URL</Label>
+              <Input id="imageUrl" value={formData.imageUrl} onChange={(e) => handleChange('imageUrl', e.target.value)} required />
+              <p className="text-xs text-gray-500">Enter a full URL or path (e.g., /placeholder.svg)</p>
+            </div>
+          )}
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -122,7 +174,7 @@ const HeroSlideForm: React.FC<HeroSlideFormProps> = ({ initialSlide, onSave, onC
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>Cancel</Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || !formData.imageUrl}>
               {isLoading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
               {initialSlide ? 'Update Slide' : 'Create Slide'}
             </Button>
@@ -133,14 +185,19 @@ const HeroSlideForm: React.FC<HeroSlideFormProps> = ({ initialSlide, onSave, onC
   );
 };
 
-const HeroSlideManagement = () => {
-  const [slides, setSlides] = useState(getAllHeroSlides());
+interface HeroSlideManagementProps {
+  assets: ImageAsset[];
+  slides: HeroSlide[];
+  onRefreshSlides: () => void;
+}
+
+const HeroSlideManagement: React.FC<HeroSlideManagementProps> = ({ assets, slides, onRefreshSlides }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingSlide, setEditingSlide] = useState<HeroSlide | undefined>(undefined);
   const { toast } = useToast();
 
   const handleSave = (slide: HeroSlide) => {
-    setSlides(getAllHeroSlides()); // Refresh from mock utility
+    onRefreshSlides(); // Refresh from mock utility
     setIsFormOpen(false);
     setEditingSlide(undefined);
     toast({ title: "Success", description: `Hero slide ${slide.heading} saved.` });
@@ -149,7 +206,7 @@ const HeroSlideManagement = () => {
   const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this slide?")) {
       deleteHeroSlide(id);
-      setSlides(getAllHeroSlides());
+      onRefreshSlides();
       toast({ title: "Deleted", description: "Hero slide deleted." });
     }
   };
@@ -184,6 +241,7 @@ const HeroSlideManagement = () => {
             initialSlide={editingSlide} 
             onSave={handleSave} 
             onCancel={handleCancel} 
+            assets={assets}
           />
         )}
         
@@ -224,8 +282,12 @@ const HeroSlideManagement = () => {
 
 // --- Component for managing Image Assets ---
 
-const ImageAssetManagement = () => {
-  const [assets, setAssets] = useState(getAllImageAssets());
+interface ImageAssetManagementProps {
+  assets: ImageAsset[];
+  onAssetsUpdated: () => void;
+}
+
+const ImageAssetManagement: React.FC<ImageAssetManagementProps> = ({ assets, onAssetsUpdated }) => {
   const [newAssetName, setNewAssetName] = useState('');
   const [newAssetUrl, setNewAssetUrl] = useState('');
   const [newAssetType, setNewAssetType] = useState<ImageAsset['type']>('product');
@@ -239,7 +301,7 @@ const ImageAssetManagement = () => {
     setIsUploading(true);
     setTimeout(() => {
       addImageAsset(newAssetName, newAssetUrl, newAssetType);
-      setAssets(getAllImageAssets());
+      onAssetsUpdated();
       setNewAssetName('');
       setNewAssetUrl('');
       setIsUploading(false);
@@ -250,7 +312,7 @@ const ImageAssetManagement = () => {
   const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this asset?")) {
       deleteImageAsset(id);
-      setAssets(getAllImageAssets());
+      onAssetsUpdated();
       toast({ title: "Deleted", description: "Image asset deleted." });
     }
   };
@@ -324,6 +386,12 @@ const ImageAssetManagement = () => {
 
 
 const ImageManagementPage = () => {
+  const [assets, setAssets] = useState(getAllImageAssets());
+  const [slides, setSlides] = useState(getAllHeroSlides());
+
+  const refreshAssets = () => setAssets(getAllImageAssets());
+  const refreshSlides = () => setSlides(getAllHeroSlides());
+
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
@@ -346,11 +414,11 @@ const ImageManagementPage = () => {
           </TabsList>
           
           <TabsContent value="hero" className="mt-6">
-            <HeroSlideManagement />
+            <HeroSlideManagement assets={assets} slides={slides} onRefreshSlides={refreshSlides} />
           </TabsContent>
           
           <TabsContent value="assets" className="mt-6">
-            <ImageAssetManagement />
+            <ImageAssetManagement assets={assets} onAssetsUpdated={refreshAssets} />
           </TabsContent>
         </Tabs>
       </div>
