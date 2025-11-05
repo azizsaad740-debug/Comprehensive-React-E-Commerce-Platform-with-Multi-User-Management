@@ -37,6 +37,7 @@ function LoginPage() {
         title: "Success",
         description: "Logged in successfully!",
       });
+      // Navigate to the root, which will be handled by ProtectedRoute/App.tsx
       navigate('/');
     } catch (error) {
       toast({
@@ -61,6 +62,7 @@ function LoginPage() {
         title: "Admin Login Success",
         description: "Welcome back, Admin!",
       });
+      // Navigate directly to admin dashboard after successful login
       navigate('/admin');
     } catch (error) {
       toast({
