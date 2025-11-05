@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
 import { useBrandingStore } from '@/stores/brandingStore';
+import { ThemeToggle } from './ThemeToggle';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-white shadow-sm border-b dark:bg-card dark:border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -45,19 +46,19 @@ const Header = () => {
             <nav className="hidden md:flex items-center space-x-6">
               <Link 
                 to="/products" 
-                className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground"
               >
                 Products
               </Link>
               <Link 
                 to="/categories" 
-                className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground"
               >
                 Categories
               </Link>
               <Link 
                 to="/about" 
-                className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground"
               >
                 About
               </Link>
@@ -84,6 +85,9 @@ const Header = () => {
 
           {/* Right Navigation */}
           <div className="flex items-center space-x-4">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+            
             {/* Cart (Always visible) */}
             <Button 
               variant="ghost" 
