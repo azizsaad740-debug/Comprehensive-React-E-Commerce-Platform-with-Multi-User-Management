@@ -131,3 +131,13 @@ export const getMockProductById = (id: string): Product | undefined => {
 export const getAllMockProducts = (): Product[] => {
   return mockProducts;
 };
+
+export const updateMockProductImages = (productId: string, newImages: string[]): Product | undefined => {
+  const productIndex = mockProducts.findIndex(product => product.id === productId);
+  if (productIndex !== -1) {
+    mockProducts[productIndex].images = newImages;
+    mockProducts[productIndex].updatedAt = new Date();
+    return mockProducts[productIndex];
+  }
+  return undefined;
+};
