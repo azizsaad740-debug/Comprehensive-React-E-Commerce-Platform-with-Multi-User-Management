@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Edit, Trash2, Eye, Settings, Image, Wand2, PlusCircle, RefreshCw, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getAllMockProducts, updateMockProductImages, updateMockProduct } from '@/utils/productUtils';
+import { getAllMockProducts, updateMockProductImages, updateMockProduct, deleteMockProduct } from '@/utils/productUtils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ImageGeneratorForm from '@/components/admin/ImageGeneratorForm';
 import { useToast } from '@/hooks/use-toast';
@@ -222,6 +222,25 @@ const ProductManagementPage = () => {
       setIsSavingProduct(false);
     }, 500);
   };
+  
+  const handleDeleteProduct = (productId: string, productName: string) => {
+    if (window.confirm(`Are you sure you want to delete the product: ${productName}? This action cannot be undone.`)) {
+      if (deleteMockProduct(productId)) {
+        refreshProducts();
+        toast({
+          title: "Product Deleted",
+          description: `${productName} has been permanently removed.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to delete product.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   const columns: ColumnDef<Product>[] = useMemo(() => [
     {
@@ -304,7 +323,12 @@ const ProductManagementPage = () => {
             <Button variant="outline" size="sm" onClick={() => handleOpenEditModal(product)} title="Edit Product">
               <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="destructive" size="sm" title="Delete Product">
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              title="Delete Product"
+              onClick={() => handleDeleteProduct(product.id, product.name)}
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>

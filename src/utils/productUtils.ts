@@ -170,3 +170,14 @@ export const updateMockProduct = (updatedProductData: Partial<Product>): Product
   }
   return undefined;
 };
+
+export const deleteMockProduct = (productId: string): boolean => {
+  const initialLength = mockProducts.length;
+  const index = mockProducts.findIndex(product => product.id === productId);
+  
+  if (index !== -1) {
+    mockProducts.splice(index, 1);
+  }
+  
+  return mockProducts.length < initialLength;
+};
