@@ -60,6 +60,14 @@ export interface SavedDesignTemplate {
   updatedAt: Date;
 }
 
+export interface ProductCustomizationOptions {
+  fonts: string[];
+  startDesigns?: string[];
+  endDesigns?: string[];
+  maxCharacters: number;
+  allowedColors?: string[];
+}
+
 export interface ProductVariant {
   id: string;
   name: string;
@@ -80,13 +88,7 @@ export interface Product {
   subcategory?: string;
   stockQuantity: number;
   variants: ProductVariant[];
-  customizationOptions: {
-    fonts: string[];
-    startDesigns?: string[];
-    endDesigns?: string[];
-    maxCharacters: number;
-    allowedColors?: string[];
-  };
+  customizationOptions: ProductCustomizationOptions;
   printPaths: number;
   isActive: boolean;
   tags: string[];

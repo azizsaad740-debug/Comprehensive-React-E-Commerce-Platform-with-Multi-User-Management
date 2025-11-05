@@ -1,4 +1,5 @@
 import { Product, ProductVariant } from '@/types';
+import { v4 as uuidv4 } from 'uuid';
 
 // Mock product data (Centralized)
 const mockProductVariants: ProductVariant[] = [
@@ -39,9 +40,9 @@ export const mockProducts: Product[] = [
     stockQuantity: 50,
     variants: mockProductVariants,
     customizationOptions: {
-      fonts: ['Arial', 'Times New Roman', 'Helvetica', 'Comic Sans', 'Impact'],
-      startDesigns: ['Simple', 'Floral', 'Abstract', 'Geometric', 'Vintage'],
-      endDesigns: ['Logo', 'Text', 'Pattern', 'Border', 'Frame'],
+      fonts: ['Roboto', 'Poppins', 'Inter', 'Monospace'],
+      startDesigns: ['Heart Shape', 'Star Border', 'Simple Line'],
+      endDesigns: ['Flower Icon', 'Arrow Head'],
       maxCharacters: 50,
       allowedColors: ['Red', 'Blue', 'Green', 'Black', 'White', 'Gold', 'Silver']
     },
@@ -72,7 +73,7 @@ export const mockProducts: Product[] = [
       }
     ],
     customizationOptions: {
-      fonts: ['Arial', 'Comic Sans'],
+      fonts: ['Roboto', 'Poppins', 'Inter', 'Monospace'],
       startDesigns: ['Minimalist', 'Vintage'],
       endDesigns: ['Simple', 'Clean'],
       maxCharacters: 25
@@ -99,19 +100,19 @@ export const mockProducts: Product[] = [
         id: 'v5',
         name: 'iPhone 15',
         price: 35.00,
-        stockQuantity: 3,
+        stockQuantity: 2,
         attributes: { model: 'iPhone 15' }
       },
       {
         id: 'v6',
         name: 'Samsung S24',
         price: 35.00,
-        stockQuantity: 2,
+        stockQuantity: 3,
         attributes: { model: 'Samsung S24' }
       }
     ],
     customizationOptions: {
-      fonts: ['Roboto'],
+      fonts: ['Roboto', 'Poppins', 'Inter', 'Monospace'],
       startDesigns: ['Abstract'],
       endDesigns: ['Pattern'],
       maxCharacters: 10
@@ -138,6 +139,34 @@ export const updateMockProductImages = (productId: string, newImages: string[]):
     mockProducts[productIndex].images = newImages;
     mockProducts[productIndex].updatedAt = new Date();
     return mockProducts[productIndex];
+  }
+  return undefined;
+};
+
+export const updateMockProduct = (updatedProductData: Partial<Product>): Product | undefined => {
+  const productIndex = mockProducts.findIndex(product => product.id === updatedProductData.id);
+  if (productIndex !== -1) {
+    const existingProduct = mockProducts[productIndex];
+    
+    // Merge existing product data with updated data
+    const updatedProduct: Product = {
+      ...existingProduct,
+      ...updatedProductData,
+      // Ensure nested objects are merged correctly if provided
+      customizationOptions: updatedProductData.customizationOptions 
+        ? { ...existingProduct.customizationOptions, ...updatedProductData.customizationOptions }
+        : existingProduct.customizationOptions,
+      updatedAt: new Date(),
+    } as Product; // Cast to Product to satisfy TS, as we ensure all required fields are present from existingProduct
+    
+    // Handle number conversions
+    updatedProduct.basePrice = Number(updatedProduct.basePrice);
+    updatedProduct.discountedPrice = updatedProduct.discountedPrice ? Number(updatedProduct.discountedPrice) : undefined;
+    updatedProduct.stockQuantity = Number(updatedProduct.stockQuantity);
+    updatedProduct.printPaths = Number(updatedProduct.printPaths);
+
+    mockProducts[productIndex] = updatedProduct;
+    return updatedProduct;
   }
   return undefined;
 };

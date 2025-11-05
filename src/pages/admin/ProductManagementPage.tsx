@@ -9,10 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Edit, Trash2, Eye, Settings, Image, Wand2, PlusCircle, RefreshCw, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getAllMockProducts, updateMockProductImages } from '@/utils/productUtils';
+import { getAllMockProducts, updateMockProductImages, updateMockProduct } from '@/utils/productUtils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ImageGeneratorForm from '@/components/admin/ImageGeneratorForm';
 import { useToast } from '@/hooks/use-toast';
+import ProductForm from '@/components/admin/ProductForm'; // NEW IMPORT
 
 // --- Image Management Modal Component ---
 
@@ -133,10 +134,17 @@ const ProductManagementPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Use state to hold products to allow re-rendering after image updates
+  // Use state to hold products to allow re-rendering after updates
   const [products, setProducts] = useState(getAllMockProducts());
+  
+  // State for Image Modal
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  
+  // State for Edit Modal
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
 
   const refreshProducts = () => {
     // Force a refresh of the mock data
@@ -146,6 +154,73 @@ const ProductManagementPage = () => {
   const handleOpenImageModal = (product: Product) => {
     setSelectedProduct(product);
     setIsImageModalOpen(true);
+  };
+  
+  const handleOpenEditModal = (product: Product) => {
+    setSelectedProduct(product);
+    setIsEditModalOpen(true);
+  };
+  
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setSelectedProduct(null);
+  };
+  
+  const handleSaveProduct = (productData: Partial<Product>) => {
+    if (!productData.id) {
+      // Mock creation logic (simplified)
+      const newProduct: Product = {
+        id: `p${Date.now()}`,
+        name: productData.name || 'New Product',
+        sku: productData.sku || 'NEW-SKU',
+        description: productData.description || '',
+        basePrice: productData.basePrice || 0,
+        images: ['/placeholder.svg'],
+        category: productData.category || 'General',
+        stockQuantity: productData.stockQuantity || 0,
+        variants: [],
+        customizationOptions: productData.customizationOptions || { fonts: [], maxCharacters: 50 },
+        printPaths: productData.printPaths || 1,
+        isActive: productData.isActive ?? true,
+        tags: productData.tags || [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as Product;
+      
+      // Manually push to mockProducts array (since updateMockProduct only handles updates)
+      getAllMockProducts().push(newProduct);
+      
+      refreshProducts();
+      toast({
+        title: "Success",
+        description: `Product ${newProduct.name} created successfully.`,
+      });
+      handleCloseEditModal();
+      setIsSavingProduct(false);
+      return;
+    }
+    
+    setIsSavingProduct(true);
+    
+    setTimeout(() => {
+      const updatedProduct = updateMockProduct(productData);
+      
+      if (updatedProduct) {
+        refreshProducts();
+        toast({
+          title: "Success",
+          description: `Product ${updatedProduct.name} updated successfully.`,
+        });
+        handleCloseEditModal();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update product.",
+          variant: "destructive",
+        });
+      }
+      setIsSavingProduct(false);
+    }, 500);
   };
 
   const columns: ColumnDef<Product>[] = useMemo(() => [
@@ -226,7 +301,7 @@ const ProductManagementPage = () => {
             <Button variant="secondary" size="sm" onClick={() => navigate(`/admin/products/${product.id}/variants`)} title="Manage Variants">
               <Settings className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="sm" title="Edit Product">
+            <Button variant="outline" size="sm" onClick={() => handleOpenEditModal(product)} title="Edit Product">
               <Edit className="h-4 w-4" />
             </Button>
             <Button variant="destructive" size="sm" title="Delete Product">
@@ -243,7 +318,10 @@ const ProductManagementPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Product Management</h1>
-          <Button>Add New Product</Button>
+          <Button onClick={() => handleOpenEditModal({} as Product)}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Add New Product
+          </Button>
         </div>
         <p className="text-gray-600 mb-8">Manage inventory, pricing, and product details.</p>
 
@@ -264,6 +342,23 @@ const ProductManagementPage = () => {
           onProductUpdate={refreshProducts}
         />
       )}
+      
+      {/* Product Edit Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedProduct?.id ? `Edit Product: ${selectedProduct.name}` : 'Create New Product'}</DialogTitle>
+          </DialogHeader>
+          {selectedProduct && (
+            <ProductForm
+              initialProduct={selectedProduct.id ? selectedProduct : undefined}
+              onSubmit={handleSaveProduct}
+              onCancel={handleCloseEditModal}
+              isSaving={isSavingProduct}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

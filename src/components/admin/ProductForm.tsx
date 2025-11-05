@@ -1,0 +1,305 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Product, ProductCustomizationOptions } from '@/types';
+import { Save, X, RefreshCw } from 'lucide-react';
+import { getAllMockFonts, getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
+
+interface ProductFormProps {
+  initialProduct?: Product;
+  onSubmit: (productData: Partial<Product>) => void;
+  onCancel: () => void;
+  isSaving: boolean;
+}
+
+const defaultCustomizationOptions: ProductCustomizationOptions = {
+  fonts: [],
+  startDesigns: [],
+  endDesigns: [],
+  maxCharacters: 50,
+  allowedColors: [],
+};
+
+const defaultProductData: Partial<Product> = {
+  name: '',
+  sku: '',
+  description: '',
+  basePrice: 0,
+  discountedPrice: undefined,
+  category: 'Apparel',
+  subcategory: '',
+  stockQuantity: 0,
+  printPaths: 1,
+  isActive: true,
+  tags: [],
+  customizationOptions: defaultCustomizationOptions,
+};
+
+const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onCancel, isSaving }) => {
+  const [formData, setFormData] = useState<Partial<Product>>(() => {
+    const initial = initialProduct || defaultProductData;
+    // Ensure customizationOptions is initialized
+    if (!initial.customizationOptions) {
+      initial.customizationOptions = defaultCustomizationOptions;
+    }
+    return initial;
+  });
+  
+  const [tagsInput, setTagsInput] = useState(initialProduct?.tags?.join(', ') || '');
+  const [colorsInput, setColorsInput] = useState(initialProduct?.customizationOptions?.allowedColors?.join(', ') || '');
+  
+  const mockFonts = getAllMockFonts();
+  const mockStartDesigns = getAllMockStartDesigns();
+  const mockEndDesigns = getAllMockEndDesigns();
+
+  useEffect(() => {
+    const initial = initialProduct || defaultProductData;
+    if (!initial.customizationOptions) {
+      initial.customizationOptions = defaultCustomizationOptions;
+    }
+    setFormData(initial);
+    setTagsInput(initial.tags?.join(', ') || '');
+    setColorsInput(initial.customizationOptions.allowedColors?.join(', ') || '');
+  }, [initialProduct]);
+
+  const handleChange = (field: keyof Product, value: string | number | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const handleCustomizationChange = (field: keyof ProductCustomizationOptions, value: string | number | string[]) => {
+    setFormData(prev => ({
+      ...prev,
+      customizationOptions: {
+        ...prev.customizationOptions,
+        [field]: value,
+      } as ProductCustomizationOptions,
+    }));
+  };
+
+  const handleTagInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTagsInput(e.target.value);
+    const tagsArray = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+    setFormData(prev => ({ ...prev, tags: tagsArray }));
+  };
+  
+  const handleColorsInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setColorsInput(e.target.value);
+    const colorsArray = e.target.value.split(',').map(color => color.trim()).filter(color => color.length > 0);
+    handleCustomizationChange('allowedColors', colorsArray);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.basePrice || !formData.category) {
+      alert('Please fill in required fields (Name, Base Price, Category).');
+      return;
+    }
+    
+    // Ensure customization options are correctly structured before submission
+    const customizationOptions: ProductCustomizationOptions = {
+      ...defaultCustomizationOptions,
+      ...formData.customizationOptions,
+      maxCharacters: Number(formData.customizationOptions?.maxCharacters || 50),
+      allowedColors: formData.customizationOptions?.allowedColors || [],
+      // For simplicity in this form, we only allow selecting one of each design/font type
+      // We will store the selected ID/Name as a single element array for compatibility with the Product type structure.
+      fonts: formData.customizationOptions?.fonts?.length ? [formData.customizationOptions.fonts[0]] : [],
+      startDesigns: formData.customizationOptions?.startDesigns?.length ? [formData.customizationOptions.startDesigns[0]] : [],
+      endDesigns: formData.customizationOptions?.endDesigns?.length ? [formData.customizationOptions.endDesigns[0]] : [],
+    };
+    
+    const dataToSubmit: Partial<Product> = {
+      ...formData,
+      basePrice: Number(formData.basePrice),
+      discountedPrice: formData.discountedPrice ? Number(formData.discountedPrice) : undefined,
+      stockQuantity: Number(formData.stockQuantity),
+      printPaths: Number(formData.printPaths),
+      tags: formData.tags || [],
+      customizationOptions: customizationOptions,
+    };
+    
+    onSubmit(dataToSubmit);
+  };
+  
+  // Helper to get the first selected font/design ID for the single Select component
+  const getFirstSelectedId = (names: string[], mockDesigns: { id: string, name: string }[]): string => {
+    if (!names || names.length === 0) return '';
+    return mockDesigns.find(d => d.name === names[0])?.id || '';
+  };
+  
+  // Helper to handle single selection change and store the name in the array
+  const handleSingleDesignSelect = (field: 'fonts' | 'startDesigns' | 'endDesigns', selectedId: string, mockDesigns: { id: string, name: string }[]) => {
+    const selectedName = mockDesigns.find(d => d.id === selectedId)?.name;
+    handleCustomizationChange(field, selectedName ? [selectedName] : []);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 p-4">
+      {/* General Info */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="name">Product Name</Label>
+          <Input id="name" value={formData.name || ''} onChange={(e) => handleChange('name', e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="sku">SKU</Label>
+          <Input id="sku" value={formData.sku || ''} onChange={(e) => handleChange('sku', e.target.value)} required />
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea id="description" value={formData.description || ''} onChange={(e) => handleChange('description', e.target.value)} rows={3} required />
+      </div>
+
+      {/* Pricing & Stock */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="basePrice">Base Price ($)</Label>
+          <Input id="basePrice" type="number" step="0.01" min="0" value={formData.basePrice || 0} onChange={(e) => handleChange('basePrice', e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="discountedPrice">Discounted Price ($)</Label>
+          <Input id="discountedPrice" type="number" step="0.01" min="0" value={formData.discountedPrice || ''} onChange={(e) => handleChange('discountedPrice', e.target.value)} placeholder="Optional" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="stockQuantity">Initial Stock</Label>
+          <Input id="stockQuantity" type="number" min="0" value={formData.stockQuantity || 0} onChange={(e) => handleChange('stockQuantity', Number(e.target.value))} required />
+        </div>
+      </div>
+      
+      {/* Categorization */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="category">Category</Label>
+          <Input id="category" value={formData.category || ''} onChange={(e) => handleChange('category', e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="subcategory">Subcategory</Label>
+          <Input id="subcategory" value={formData.subcategory || ''} onChange={(e) => handleChange('subcategory', e.target.value)} placeholder="Optional" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="tags">Tags (comma separated)</Label>
+          <Input id="tags" value={tagsInput} onChange={handleTagInput} placeholder="e.g., popular, new, sale" />
+        </div>
+      </div>
+      
+      {/* Customization Options */}
+      <div className="border p-4 rounded-lg space-y-4">
+        <h3 className="text-lg font-semibold">Customization Settings</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="printPaths">Number of Print Paths (Text Inputs)</Label>
+            <Input id="printPaths" type="number" min="1" value={formData.printPaths || 1} onChange={(e) => handleChange('printPaths', Number(e.target.value))} required />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="maxCharacters">Max Characters per Path</Label>
+            <Input id="maxCharacters" type="number" min="1" value={formData.customizationOptions?.maxCharacters || 50} onChange={(e) => handleCustomizationChange('maxCharacters', Number(e.target.value))} required />
+          </div>
+        </div>
+        
+        {/* Allowed Colors */}
+        <div className="space-y-2">
+          <Label htmlFor="allowedColors">Allowed Colors (comma separated)</Label>
+          <Input id="allowedColors" value={colorsInput} onChange={handleColorsInput} placeholder="e.g., Red, Blue, Black" />
+        </div>
+        
+        {/* Font Selection (Single Select) */}
+        <div className="space-y-2">
+          <Label htmlFor="fonts">Default Font</Label>
+          <Select 
+            value={getFirstSelectedId(formData.customizationOptions?.fonts || [], mockFonts)}
+            onValueChange={(value) => handleSingleDesignSelect('fonts', value, mockFonts)}
+          >
+            <SelectTrigger className="w-full mt-1">
+              <SelectValue placeholder="Choose a default font" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None / Default</SelectItem>
+              {mockFonts.map(font => (
+                <SelectItem key={font.id} value={font.id}>
+                  {font.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Start Design Selection (Single Select) */}
+        <div className="space-y-2">
+          <Label htmlFor="startDesigns">Default Start Design</Label>
+          <Select 
+            value={getFirstSelectedId(formData.customizationOptions?.startDesigns || [], mockStartDesigns)}
+            onValueChange={(value) => handleSingleDesignSelect('startDesigns', value, mockStartDesigns)}
+          >
+            <SelectTrigger className="w-full mt-1">
+              <SelectValue placeholder="Choose a default start design" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None</SelectItem>
+              {mockStartDesigns.map(design => (
+                <SelectItem key={design.id} value={design.id}>
+                  {design.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* End Design Selection (Single Select) */}
+        <div className="space-y-2">
+          <Label htmlFor="endDesigns">Default End Design</Label>
+          <Select 
+            value={getFirstSelectedId(formData.customizationOptions?.endDesigns || [], mockEndDesigns)}
+            onValueChange={(value) => handleSingleDesignSelect('endDesigns', value, mockEndDesigns)}
+          >
+            <SelectTrigger className="w-full mt-1">
+              <SelectValue placeholder="Choose a default end design" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">None</SelectItem>
+              {mockEndDesigns.map(design => (
+                <SelectItem key={design.id} value={design.id}>
+                  {design.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Status and Actions */}
+      <div className="flex justify-between items-center pt-4 border-t">
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="isActive"
+            checked={!!formData.isActive}
+            onCheckedChange={(checked) => handleChange('isActive', checked)}
+          />
+          <Label htmlFor="isActive">Product is Active/Visible</Label>
+        </div>
+        
+        <div className="flex space-x-2">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+            <X className="h-4 w-4 mr-2" />
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSaving}>
+            <Save className="h-4 w-4 mr-2" />
+            {isSaving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : (initialProduct ? 'Update Product' : 'Create Product')}
+          </Button>
+        </div>
+      </div>
+    </form>
+  );
+};
+
+export default ProductForm;
