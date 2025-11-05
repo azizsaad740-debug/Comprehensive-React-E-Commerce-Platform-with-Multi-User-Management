@@ -46,6 +46,37 @@ export const getMockUserById = (userId: string): User | undefined => {
   return mockUsers.find(user => user.id === userId);
 };
 
+export const updateMockUser = (updatedUserData: Partial<User>): User | undefined => {
+  const userIndex = mockUsers.findIndex(user => user.id === updatedUserData.id);
+  if (userIndex !== -1) {
+    const existingUser = mockUsers[userIndex];
+    
+    const updatedUser: User = {
+      ...existingUser,
+      ...updatedUserData,
+      updatedAt: new Date(),
+      // Ensure role-specific fields are handled correctly
+      commissionRate: updatedUserData.role === 'reseller' ? Number(updatedUserData.commissionRate) : undefined,
+      resellerId: updatedUserData.role === 'customer' ? updatedUserData.resellerId : undefined,
+    } as User;
+    
+    mockUsers[userIndex] = updatedUser;
+    return updatedUser;
+  }
+  return undefined;
+};
+
+export const deleteMockUser = (userId: string): boolean => {
+  const initialLength = mockUsers.length;
+  const index = mockUsers.findIndex(user => user.id === userId);
+  
+  if (index !== -1) {
+    mockUsers.splice(index, 1);
+  }
+  
+  return mockUsers.length < initialLength;
+};
+
 export const getCustomersByResellerId = (resellerId: string): User[] => {
   const referredCustomers = mockUsers.filter(user => user.role === 'customer' && user.resellerId === resellerId);
   const allOrders = getMockOrders();
