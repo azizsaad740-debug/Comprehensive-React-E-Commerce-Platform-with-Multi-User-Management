@@ -59,7 +59,7 @@ const VariantForm: React.FC<VariantFormProps> = ({ initialVariant, productId, on
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.price || formData.stockQuantity === undefined) {
+    if (!formData.name || formData.price === undefined || formData.stockQuantity === undefined) {
       alert('Please fill in all required fields (Name, Price, Stock).');
       return;
     }
