@@ -13,7 +13,8 @@ import { getAllMockProducts, updateMockProductImages, updateMockProduct, deleteM
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ImageGeneratorForm from '@/components/admin/ImageGeneratorForm';
 import { useToast } from '@/hooks/use-toast';
-import ProductForm from '@/components/admin/ProductForm'; // NEW IMPORT
+import ProductForm from '@/components/admin/ProductForm';
+import { v4 as uuidv4 } from 'uuid';
 
 // --- Image Management Modal Component ---
 
@@ -156,8 +157,14 @@ const ProductManagementPage = () => {
     setIsImageModalOpen(true);
   };
   
-  const handleOpenEditModal = (product: Product) => {
-    setSelectedProduct(product);
+  const handleOpenEditModal = (product?: Product) => {
+    // If no product is passed, prepare for creation
+    if (product) {
+      setSelectedProduct(product);
+    } else {
+      // Create a temporary object for the form to use as initial data for creation
+      setSelectedProduct({} as Product); 
+    }
     setIsEditModalOpen(true);
   };
   
@@ -167,55 +174,50 @@ const ProductManagementPage = () => {
   };
   
   const handleSaveProduct = (productData: Partial<Product>) => {
-    if (!productData.id) {
-      // Mock creation logic (simplified)
-      const newProduct: Product = {
-        id: `p${Date.now()}`,
-        name: productData.name || 'New Product',
-        sku: productData.sku || 'NEW-SKU',
-        description: productData.description || '',
-        basePrice: productData.basePrice || 0,
-        images: ['/placeholder.svg'],
-        category: productData.category || 'General',
-        stockQuantity: productData.stockQuantity || 0,
-        variants: [],
-        customizationOptions: productData.customizationOptions || { fonts: [], maxCharacters: 50 },
-        printPaths: productData.printPaths || 1,
-        isActive: productData.isActive ?? true,
-        tags: productData.tags || [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Product;
-      
-      // Manually push to mockProducts array (since updateMockProduct only handles updates)
-      getAllMockProducts().push(newProduct);
-      
-      refreshProducts();
-      toast({
-        title: "Success",
-        description: `Product ${newProduct.name} created successfully.`,
-      });
-      handleCloseEditModal();
-      setIsSavingProduct(false);
-      return;
-    }
-    
     setIsSavingProduct(true);
     
     setTimeout(() => {
-      const updatedProduct = updateMockProduct(productData);
+      let updatedProduct: Product | undefined;
+      
+      if (productData.id) {
+        // Update existing product
+        updatedProduct = updateMockProduct(productData);
+      } else {
+        // Create new product
+        const newProduct: Product = {
+          id: uuidv4(), // Generate a unique ID for new products
+          name: productData.name || 'New Product',
+          sku: productData.sku || 'NEW-SKU',
+          description: productData.description || '',
+          basePrice: productData.basePrice || 0,
+          images: ['/placeholder.svg'],
+          category: productData.category || 'General',
+          stockQuantity: productData.stockQuantity || 0,
+          variants: [],
+          customizationOptions: productData.customizationOptions || { fonts: [], maxCharacters: 50, allowedColors: [] },
+          printPaths: productData.printPaths || 1,
+          isActive: productData.isActive ?? true,
+          tags: productData.tags || [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        
+        // Manually push to mockProducts array
+        getAllMockProducts().push(newProduct);
+        updatedProduct = newProduct;
+      }
       
       if (updatedProduct) {
         refreshProducts();
         toast({
           title: "Success",
-          description: `Product ${updatedProduct.name} updated successfully.`,
+          description: `Product ${updatedProduct.name} saved successfully.`,
         });
         handleCloseEditModal();
       } else {
         toast({
           title: "Error",
-          description: "Failed to update product.",
+          description: "Failed to save product.",
           variant: "destructive",
         });
       }
@@ -342,7 +344,7 @@ const ProductManagementPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Product Management</h1>
-          <Button onClick={() => handleOpenEditModal({} as Product)}>
+          <Button onClick={() => handleOpenEditModal()}>
             <PlusCircle className="h-4 w-4 mr-2" />
             Add New Product
           </Button>
