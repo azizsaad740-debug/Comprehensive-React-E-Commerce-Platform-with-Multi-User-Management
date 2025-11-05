@@ -74,3 +74,28 @@ export const createNewPromoCode = (newCodeData: Omit<PromoCode, 'id' | 'createdA
   currentMockPromoCodes.push(newCode);
   return newCode;
 };
+
+export const updateMockPromoCode = (updatedCodeData: Partial<PromoCode>): PromoCode | undefined => {
+  const index = currentMockPromoCodes.findIndex(code => code.id === updatedCodeData.id);
+  if (index !== -1) {
+    const existingCode = currentMockPromoCodes[index];
+    const updatedCode: PromoCode = {
+      ...existingCode,
+      ...updatedCodeData,
+      discountValue: Number(updatedCodeData.discountValue || existingCode.discountValue),
+      minimumOrderValue: Number(updatedCodeData.minimumOrderValue || existingCode.minimumOrderValue),
+      usageLimit: Number(updatedCodeData.usageLimit || existingCode.usageLimit),
+      updatedAt: new Date(),
+    } as PromoCode;
+    
+    currentMockPromoCodes[index] = updatedCode;
+    return updatedCode;
+  }
+  return undefined;
+};
+
+export const deleteMockPromoCode = (codeId: string): boolean => {
+  const initialLength = currentMockPromoCodes.length;
+  currentMockPromoCodes = currentMockPromoCodes.filter(code => code.id !== codeId);
+  return currentMockPromoCodes.length < initialLength;
+};
