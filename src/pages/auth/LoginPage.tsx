@@ -18,7 +18,7 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login } = useAuthStore();
+  const { login, logout } = useAuthStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,6 +52,13 @@ function LoginPage() {
 
   // Admin login helper
   const handleAdminLogin = async () => {
+    // 1. Clear any existing session first
+    try {
+      await logout();
+    } catch (e) {
+      // Ignore logout errors if no session exists
+    }
+    
     setEmail('admin@example.com');
     setPassword('admin123');
     setIsLoading(true);
