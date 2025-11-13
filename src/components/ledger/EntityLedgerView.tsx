@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DollarSign, Package, ArrowUp, ArrowDown } from 'lucide-react';
 import TransactionForm from './TransactionForm.tsx';
 import { Button } from '@/components/ui/button';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 interface EntityLedgerViewProps {
   entity: LedgerEntity;
@@ -18,6 +19,7 @@ interface EntityLedgerViewProps {
 const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransactionAdded }) => {
   const transactions = getTransactionsByEntityId(entity.id);
   const balance = calculateEntityBalance(entity.id);
+  const { currencySymbol } = useCheckoutSettingsStore();
   
   const balanceColor = balance >= 0 ? 'text-green-600' : 'text-red-600';
   const balanceLabel = balance >= 0 ? 'Owes Us (Debt)' : 'We Owe (Credit)';
@@ -55,7 +57,7 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
             <h3 className="text-lg font-medium">Current Balance:</h3>
             <div className="text-right">
               <p className={`text-3xl font-bold ${balanceColor}`}>
-                ${Math.abs(balance).toFixed(2)}
+                {currencySymbol}{Math.abs(balance).toFixed(2)}
               </p>
               <p className={`text-sm ${balanceColor}`}>
                 {balanceLabel}
@@ -114,11 +116,11 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
                         </TableCell>
                         <TableCell className={`text-right font-medium ${amountColor}`}>
                           {isDebit ? <ArrowUp className="h-3 w-3 inline mr-1" /> : <ArrowDown className="h-3 w-3 inline mr-1" />}
-                          ${t.amount.toFixed(2)}
+                          {currencySymbol}{t.amount.toFixed(2)}
                         </TableCell>
                         <TableCell className="text-sm max-w-xs truncate">{t.details}</TableCell>
                         <TableCell className={`text-right font-bold ${balanceColor}`}>
-                          ${Math.abs(t.runningBalance).toFixed(2)}
+                          {currencySymbol}{Math.abs(t.runningBalance).toFixed(2)}
                         </TableCell>
                       </TableRow>
                     );

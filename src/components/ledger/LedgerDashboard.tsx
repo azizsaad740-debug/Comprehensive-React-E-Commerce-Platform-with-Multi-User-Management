@@ -4,6 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Users, TrendingUp, TrendingDown } from 'lucide-react';
 import { calculateOverallLedgerSummary } from '@/utils/ledgerUtils';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 interface LedgerDashboardProps {
   onRefresh: () => void;
@@ -11,6 +12,7 @@ interface LedgerDashboardProps {
 
 const LedgerDashboard: React.FC<LedgerDashboardProps> = ({ onRefresh }) => {
   const summary = calculateOverallLedgerSummary();
+  const { currencySymbol } = useCheckoutSettingsStore();
   
   const netBalanceColor = summary.netBalance >= 0 ? 'text-green-600' : 'text-red-600';
 
@@ -36,7 +38,7 @@ const LedgerDashboard: React.FC<LedgerDashboardProps> = ({ onRefresh }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-green-600">
-            ${summary.totalDebt.toFixed(2)}
+            {currencySymbol}{summary.totalDebt.toFixed(2)}
           </div>
           <p className="text-xs text-muted-foreground">Total positive balances</p>
         </CardContent>
@@ -50,7 +52,7 @@ const LedgerDashboard: React.FC<LedgerDashboardProps> = ({ onRefresh }) => {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-red-600">
-            ${summary.totalCredit.toFixed(2)}
+            {currencySymbol}{summary.totalCredit.toFixed(2)}
           </div>
           <p className="text-xs text-muted-foreground">Total negative balances</p>
         </CardContent>
@@ -64,7 +66,7 @@ const LedgerDashboard: React.FC<LedgerDashboardProps> = ({ onRefresh }) => {
         </CardHeader>
         <CardContent>
           <div className={`text-2xl font-bold ${netBalanceColor}`}>
-            ${summary.netBalance.toFixed(2)}
+            {currencySymbol}{summary.netBalance.toFixed(2)}
           </div>
           <p className="text-xs text-muted-foreground">Debt minus Credit</p>
         </CardContent>

@@ -20,9 +20,10 @@ interface RevenueChartProps {
   data: RevenueData[];
   dataKey: string;
   title: string;
+  currencySymbol?: string; // NEW PROP
 }
 
-const RevenueChart: React.FC<RevenueChartProps> = ({ data, dataKey, title }) => {
+const RevenueChart: React.FC<RevenueChartProps> = ({ data, dataKey, title, currencySymbol = '$' }) => {
   return (
     <div className="w-full h-80">
       <h3 className="text-lg font-semibold mb-4">{title}</h3>
@@ -43,10 +44,10 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ data, dataKey, title }) => 
             fontSize={12} 
             tickLine={false} 
             axisLine={false} 
-            tickFormatter={(value) => `$${value.toFixed(0)}`}
+            tickFormatter={(value) => `${currencySymbol}${value.toFixed(0)}`}
           />
           <Tooltip 
-            formatter={(value: number) => [`$${value.toFixed(2)}`, dataKey]}
+            formatter={(value: number) => [`${currencySymbol}${value.toFixed(2)}`, dataKey]}
             labelFormatter={(label) => `Date: ${label}`}
             contentStyle={{ 
               backgroundColor: 'hsl(var(--card))', 

@@ -11,6 +11,7 @@ import { Save, RefreshCw, DollarSign, Package } from 'lucide-react';
 import { LedgerEntity, TransactionType, TransactionItemType } from '@/types';
 import { addLedgerTransaction } from '@/utils/ledgerUtils';
 import { useToast } from '@/hooks/use-toast';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 interface TransactionFormProps {
   entity: LedgerEntity;
@@ -19,6 +20,7 @@ interface TransactionFormProps {
 
 const TransactionForm: React.FC<TransactionFormProps> = ({ entity, onTransactionAdded }) => {
   const { toast } = useToast();
+  const { currencySymbol } = useCheckoutSettingsStore();
   const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -126,7 +128,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ entity, onTransaction
             
             {/* Amount */}
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount ({entity.type === 'supplier' ? 'Cost' : 'Value'})</Label>
+              <Label htmlFor="amount">Amount ({entity.type === 'supplier' ? 'Cost' : 'Value'} in {currencySymbol})</Label>
               <Input
                 id="amount"
                 type="number"

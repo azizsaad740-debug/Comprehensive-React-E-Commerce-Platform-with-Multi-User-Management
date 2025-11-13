@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, useMemo from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ShoppingBag, Users, Package, ArrowRight, Palette, Plug } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -12,10 +12,12 @@ import RevenueChart from '@/components/admin/RevenueChart';
 import { getAdminMonthlyRevenue, getMockOrders } from '@/utils/orderUtils';
 import { getAllMockUsers } from '@/utils/userUtils';
 import { getAllMockProducts } from '@/utils/productUtils';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 const Dashboard = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const { currencySymbol } = useCheckoutSettingsStore();
 
   const allOrders = getMockOrders();
   const allUsers = getAllMockUsers();
@@ -71,7 +73,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${mockStats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {currencySymbol}{mockStats.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </div>
               <p className="text-xs text-muted-foreground">+20.1% from last month (Mock)</p>
             </CardContent>
@@ -125,6 +127,7 @@ const Dashboard = () => {
                 data={monthlyRevenueData} 
                 dataKey="Monthly Revenue" 
                 title="Last 7 Months Revenue" 
+                currencySymbol={currencySymbol}
               />
               
               <Separator className="my-6" />
