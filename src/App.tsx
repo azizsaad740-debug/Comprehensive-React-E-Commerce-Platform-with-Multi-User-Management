@@ -36,6 +36,7 @@ import CustomizationManagementPage from "./pages/admin/CustomizationManagementPa
 import { ThemeProvider } from "./components/layout/ThemeProvider"; // Import ThemeProvider
 import ContentPage from "./pages/ContentPage";
 import FaqPage from "./pages/FaqPage";
+import LedgerManagementPage from "./pages/admin/LedgerManagementPage";
 
 const queryClient = new QueryClient();
 
@@ -173,6 +174,14 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <PromoCodeManagementPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/ledger" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <LedgerManagementPage />
                   </ProtectedRoute>
                 } 
               />

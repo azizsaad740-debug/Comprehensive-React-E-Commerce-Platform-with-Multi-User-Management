@@ -208,3 +208,29 @@ export interface StaticPage {
   content: string; // Markdown or HTML content
   isActive: boolean;
 }
+
+// --- LEDGER TYPES ---
+
+export type LedgerEntityType = 'customer' | 'reseller' | 'supplier' | 'other';
+
+export interface LedgerEntity {
+  id: string;
+  name: string;
+  type: LedgerEntityType;
+  linkedId: string; 
+  contact: string;
+}
+
+export type TransactionType = 'we_gave' | 'we_received';
+export type TransactionItemType = 'cash' | 'product';
+
+export interface LedgerTransaction {
+  id: string;
+  entityId: string; // ID of the LedgerEntity
+  type: TransactionType;
+  itemType: TransactionItemType;
+  amount: number; // Positive value. Debit/Credit determined by type.
+  details: string;
+  productName?: string; // If itemType is 'product'
+  createdAt: Date;
+}
