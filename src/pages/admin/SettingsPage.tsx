@@ -14,10 +14,12 @@ import { useBrandingStore } from '@/stores/brandingStore';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import CheckoutSettingsForm from '@/components/admin/CheckoutSettingsForm';
+import { useNavigate } from 'react-router-dom';
 
 const SettingsPage = () => {
   const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Local state for color customization (separate from branding store)
   const [primaryColor, setPrimaryColor] = useState('#2563EB');
@@ -212,8 +214,10 @@ const SettingsPage = () => {
                 <Card>
                   <CardHeader><CardTitle>Typography</CardTitle></CardHeader>
                   <CardContent>
-                    <p className="text-gray-600">Typography selection and font upload features will be implemented here.</p>
-                    <Button variant="outline" className="mt-4">Upload Custom Font</Button>
+                    <p className="text-gray-600 mb-4">Manage global font settings and link to customization fonts.</p>
+                    <Button variant="outline" onClick={() => navigate('/admin/customization')}>
+                      <Type className="h-4 w-4 mr-2" /> Manage Customization Fonts
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -228,12 +232,15 @@ const SettingsPage = () => {
                 </Card>
               </TabsContent>
               
-              {/* Assets & Banners Tab (Placeholder) */}
+              {/* Assets & Banners Tab (Link to dedicated page) */}
               <TabsContent value="assets">
                 <Card>
                   <CardHeader><CardTitle>Assets & Banners</CardTitle></CardHeader>
                   <CardContent>
-                    <p className="text-gray-600">Upload hero banners and manage promotional sliders here.</p>
+                    <p className="text-gray-600 mb-4">Manage all image assets and the homepage hero slider on the dedicated Content Management page.</p>
+                    <Button onClick={() => navigate('/admin/content')}>
+                      <Image className="h-4 w-4 mr-2" /> Go to Content Management
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>

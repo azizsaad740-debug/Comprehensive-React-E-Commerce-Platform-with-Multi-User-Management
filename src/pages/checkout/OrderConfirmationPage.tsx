@@ -8,9 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Package, Truck, CreditCard, Mail } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import CustomizationDisplay from '@/components/products/CustomizationDisplay';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 const OrderConfirmationPage = () => {
   const navigate = useNavigate();
+  const { currencySymbol, thankYouNoteInstruction } = useCheckoutSettingsStore();
 
   // Mock order data (This should ideally come from a successful checkout state/API response)
   const orderData = {
@@ -69,7 +71,7 @@ const OrderConfirmationPage = () => {
           </div>
           <h1 className="text-3xl font-bold mb-2">Order Confirmed!</h1>
           <p className="text-gray-600">
-            Thank you for your order. We'll send you a confirmation email shortly.
+            {thankYouNoteInstruction}
           </p>
         </div>
 
@@ -133,8 +135,8 @@ const OrderConfirmationPage = () => {
                           <CustomizationDisplay customization={item.customization} title="Design Details" />
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
-                          <p className="text-sm text-gray-500">${item.price.toFixed(2)} each</p>
+                          <p className="font-medium">{currencySymbol}{(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="text-sm text-gray-500">{currencySymbol}{item.price.toFixed(2)} each</p>
                         </div>
                       </div>
                     );
@@ -184,20 +186,20 @@ const OrderConfirmationPage = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${orderData.total.toFixed(2)}</span>
+                    <span>{currencySymbol}{orderData.total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span>{orderData.shipping.cost === 0 ? 'Free' : `$${orderData.shipping.cost.toFixed(2)}`}</span>
+                    <span>{orderData.shipping.cost === 0 ? 'Free' : `${currencySymbol}${orderData.shipping.cost.toFixed(2)}`}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>${(orderData.total * 0.08).toFixed(2)}</span>
+                    <span>{currencySymbol}{(orderData.total * 0.08).toFixed(2)}</span>
                   </div>
                   <hr />
                   <div className="flex justify-between text-lg font-medium">
                     <span>Total</span>
-                    <span>${(orderData.total + (orderData.total * 0.08)).toFixed(2)}</span>
+                    <span>{currencySymbol}{(orderData.total + (orderData.total * 0.08)).toFixed(2)}</span>
                   </div>
                 </div>
 

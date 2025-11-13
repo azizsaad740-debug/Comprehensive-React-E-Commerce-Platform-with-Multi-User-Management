@@ -10,19 +10,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Truck, Shield, MapPin } from 'lucide-react';
+import { CreditCard, Truck, Shield, MapPin, MessageSquare } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { Address } from '@/types';
 import Layout from '@/components/layout/Layout';
 import { createMockOrder } from '@/utils/orderUtils';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
+  
+  // NEW: Get settings
+  const { currencySymbol, deliveryMethods, isCashOnDeliveryEnabled } = useCheckoutSettingsStore();
+  const activeDeliveryMethods = deliveryMethods.filter(m => m.isActive);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [shippingAddress, setShippingAddress] = useState<Partial<Address>>({
@@ -39,9 +44,17 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('credit-card');
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
+  
+  // NEW: Delivery method state
+  const [selectedDeliveryMethodId, setSelectedDeliveryMethodId] = useState(activeDeliveryMethods[0]?.id || 'std');
 
   const totalPrice = getTotalPrice();
-  const shippingCost = totalPrice >= 50 ? 0 : 9.99;
+  
+  // Calculate shipping cost based on selected method and free shipping threshold
+  const selectedDeliveryMethod = activeDeliveryMethods.find(m => m.id === selectedDeliveryMethodId);
+  const baseShippingCost = selectedDeliveryMethod?.cost ?? 9.99;
+  const shippingCost = totalPrice >= 50 ? 0 : baseShippingCost; 
+  
   const taxAmount = totalPrice * 0.08;
   const discountAmount = promoApplied ? totalPrice * 0.1 : 0; // 10% promo discount
   const finalTotal = totalPrice + shippingCost + taxAmount - discountAmount;
@@ -89,6 +102,7 @@ const CheckoutPage = () => {
         shippingCost: shippingCost,
         taxAmount: taxAmount,
         totalAmount: finalTotal,
+        deliveryMethod: selectedDeliveryMethod?.name || 'Standard Shipping', // Use dynamic name
       });
 
       clearCart();
@@ -139,7 +153,7 @@ const CheckoutPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <MapPin className="h-5 w-5 mr-2" />
-                    Shipping Address
+                    1. Shipping Address
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -221,14 +235,43 @@ const CheckoutPage = () => {
                 </CardContent>
               </Card>
             )}
-
-            {/* Step 2: Payment Method */}
+            
+            {/* Step 2: Delivery Method */}
             {currentStep >= 2 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center">
+                    <Truck className="h-5 w-5 mr-2" />
+                    2. Delivery Method
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Select 
+                    value={selectedDeliveryMethodId} 
+                    onValueChange={setSelectedDeliveryMethodId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select delivery method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeDeliveryMethods.map(method => (
+                        <SelectItem key={method.id} value={method.id}>
+                          {method.name} ({method.cost === 0 ? 'Free' : `${currencySymbol}${method.cost.toFixed(2)}`}) - {method.estimatedDays}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 3: Payment Method */}
+            {currentStep >= 3 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
                     <CreditCard className="h-5 w-5 mr-2" />
-                    Payment Method
+                    3. Payment Method
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -254,9 +297,22 @@ const CheckoutPage = () => {
                         <span className="font-medium">PayPal</span>
                       </div>
                     </div>
+                    
+                    {isCashOnDeliveryEnabled && (
+                      <div 
+                        className={`p-4 border rounded-lg cursor-pointer ${paymentMethod === 'cod' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}
+                        onClick={() => setPaymentMethod('cod')}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-4 h-4 rounded-full border-2 ${paymentMethod === 'cod' ? 'border-blue-500 bg-blue-500' : 'border-gray-300'}`} />
+                          <MessageSquare className="h-5 w-5" />
+                          <span className="font-medium">Cash on Delivery</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {paymentMethod === 'credit-card' && (
+                  {(paymentMethod === 'credit-card' || paymentMethod === 'paypal') && (
                     <div className="space-y-4 mt-4 p-4 bg-gray-50 rounded-lg">
                       <div>
                         <Label htmlFor="cardNumber">Card Number</Label>
@@ -297,7 +353,7 @@ const CheckoutPage = () => {
               </Card>
             )}
 
-            {/* Step 3: Review & Confirm */}
+            {/* Step 4: Review & Confirm (Now Step 3) */}
             {currentStep >= 3 && (
               <Card>
                 <CardHeader>
@@ -320,7 +376,7 @@ const CheckoutPage = () => {
                           <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                         </div>
                         <p className="font-medium">
-                          ${((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
+                          {currencySymbol}{((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
                         </p>
                       </div>
                     ))}
@@ -366,13 +422,13 @@ const CheckoutPage = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${totalPrice.toFixed(2)}</span>
+                    <span>{currencySymbol}{totalPrice.toFixed(2)}</span>
                   </div>
                   
                   {discountAmount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount (Promo Code)</span>
-                      <span>-${discountAmount.toFixed(2)}</span>
+                      <span>-{currencySymbol}{discountAmount.toFixed(2)}</span>
                     </div>
                   )}
                   
@@ -382,20 +438,20 @@ const CheckoutPage = () => {
                       Shipping
                     </span>
                     <span className={shippingCost === 0 ? 'text-green-600' : ''}>
-                      {shippingCost === 0 ? 'Free' : `$${shippingCost.toFixed(2)}`}
+                      {shippingCost === 0 ? 'Free' : `${currencySymbol}${shippingCost.toFixed(2)}`}
                     </span>
                   </div>
                   
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>${taxAmount.toFixed(2)}</span>
+                    <span>{currencySymbol}{taxAmount.toFixed(2)}</span>
                   </div>
                   
                   <Separator />
                   
                   <div className="flex justify-between text-lg font-medium">
                     <span>Total</span>
-                    <span>${finalTotal.toFixed(2)}</span>
+                    <span>{currencySymbol}{finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -437,7 +493,7 @@ const CheckoutPage = () => {
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Truck className="h-4 w-4" />
-                    <span>Estimated delivery: 5-7 business days</span>
+                    <span>Estimated delivery: {selectedDeliveryMethod?.estimatedDays || '5-7 business days'}</span>
                   </div>
                 </div>
               </CardContent>

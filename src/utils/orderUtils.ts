@@ -99,6 +99,7 @@ interface OrderCreationData {
   shippingCost: number;
   taxAmount: number;
   totalAmount: number;
+  deliveryMethod: string; // ADDED
 }
 
 export const createMockOrder = (data: OrderCreationData): Order => {
@@ -128,7 +129,7 @@ export const createMockOrder = (data: OrderCreationData): Order => {
     paymentMethod: data.paymentMethod,
     paymentStatus: 'paid', // Assuming payment is successful at checkout
     shippingAddress: data.shippingAddress,
-    deliveryMethod: 'Standard Shipping', // Mocked
+    deliveryMethod: data.deliveryMethod, // UPDATED to use dynamic data
     designFiles: orderItems.map(item => item.customization.svgFile).filter(Boolean),
     createdAt: now,
     updatedAt: now,
