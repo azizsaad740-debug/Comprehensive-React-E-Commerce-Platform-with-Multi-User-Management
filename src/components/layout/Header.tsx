@@ -25,7 +25,7 @@ const Header = () => {
   const { appName } = useBrandingStore();
   const totalItems = getTotalItems();
 
-  const isDashboardUser = isAuthenticated && (user?.role === 'admin' || user?.role === 'reseller');
+  const isDashboardUser = isAuthenticated && (user?.role === 'admin' || user?.role === 'reseller' || user?.role === 'superuser');
 
   const handleLogout = () => {
     logout();
@@ -128,7 +128,7 @@ const Header = () => {
                       Reseller Dashboard
                     </DropdownMenuItem>
                   )}
-                  {user?.role === 'admin' && (
+                  {(user?.role === 'admin' || user?.role === 'superuser') && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
                       Admin Panel
                     </DropdownMenuItem>
