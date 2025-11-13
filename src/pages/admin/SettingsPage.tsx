@@ -15,12 +15,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import CheckoutSettingsForm from '@/components/admin/CheckoutSettingsForm';
 import { useNavigate } from 'react-router-dom';
-import { hexToRawHsl } from '@/lib/colorUtils'; // NEW IMPORT
+import { hexToRawHsl } from '@/lib/colorUtils';
 
 const SettingsPage = () => {
   const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // --- State for Tab Synchronization ---
+  const [activeTab, setActiveTab] = useState('branding');
   
   // Local state for color customization (using default Tailwind primary/accent colors for initialization)
   // Note: These hex values are placeholders and don't necessarily match the current HSL values in globals.css
@@ -122,8 +125,8 @@ const SettingsPage = () => {
               <CardTitle className="text-lg">Settings Categories</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Use a separate Tabs component for vertical navigation */}
-              <Tabs defaultValue="branding" orientation="vertical">
+              {/* Use Tabs to manage navigation state */}
+              <Tabs value={activeTab} onValueChange={setActiveTab} orientation="vertical">
                 <TabsList className="flex flex-col h-auto p-0 bg-transparent space-y-1">
                   <TabsTrigger value="branding" className="w-full justify-start data-[state=active]:bg-accent">
                     <Tag className="h-4 w-4 mr-2" /> Branding & Identity
@@ -150,8 +153,8 @@ const SettingsPage = () => {
 
           {/* Theme Content Area */}
           <div className="lg:col-span-3">
-            {/* Use a separate Tabs component for content display, linked to the navigation above */}
-            <Tabs defaultValue="branding">
+            {/* Use Tabs component for content display, synchronized with activeTab state */}
+            <Tabs value={activeTab}>
               
               {/* Branding Tab */}
               <TabsContent value="branding">
