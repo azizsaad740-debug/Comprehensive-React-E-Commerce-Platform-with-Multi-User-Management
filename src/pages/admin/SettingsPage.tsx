@@ -90,6 +90,7 @@ const SettingsPage = () => {
               <CardTitle className="text-lg">Settings Categories</CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Use a separate Tabs component for vertical navigation */}
               <Tabs defaultValue="branding" orientation="vertical">
                 <TabsList className="flex flex-col h-auto p-0 bg-transparent space-y-1">
                   <TabsTrigger value="branding" className="w-full justify-start data-[state=active]:bg-accent">
@@ -117,6 +118,7 @@ const SettingsPage = () => {
 
           {/* Theme Content Area */}
           <div className="lg:col-span-3">
+            {/* Use a separate Tabs component for content display, linked to the navigation above */}
             <Tabs defaultValue="branding">
               
               {/* Branding Tab */}
@@ -200,11 +202,12 @@ const SettingsPage = () => {
                 </Card>
               </TabsContent>
               
-              {/* Checkout & Delivery Tab (NEW) */}
+              {/* Checkout & Delivery Tab */}
               <TabsContent value="checkout">
                 <CheckoutSettingsForm />
               </TabsContent>
               
+              {/* Typography Tab (Placeholder) */}
               <TabsContent value="typography">
                 <Card>
                   <CardHeader><CardTitle>Typography</CardTitle></CardHeader>
@@ -215,6 +218,7 @@ const SettingsPage = () => {
                 </Card>
               </TabsContent>
               
+              {/* Layout Presets Tab (Placeholder) */}
               <TabsContent value="layout">
                 <Card>
                   <CardHeader><CardTitle>Layout Presets</CardTitle></CardHeader>
@@ -224,6 +228,7 @@ const SettingsPage = () => {
                 </Card>
               </TabsContent>
               
+              {/* Assets & Banners Tab (Placeholder) */}
               <TabsContent value="assets">
                 <Card>
                   <CardHeader><CardTitle>Assets & Banners</CardTitle></CardHeader>
