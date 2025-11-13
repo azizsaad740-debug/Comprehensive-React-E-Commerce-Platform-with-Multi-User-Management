@@ -31,9 +31,11 @@ import SettingsPage from "./pages/admin/SettingsPage.tsx";
 import PluginManagementPage from "./pages/admin/PluginManagementPage.tsx";
 import DesignEditorPage from "./pages/products/DesignEditorPage";
 import VariantManagementPage from "./pages/admin/VariantManagementPage";
-import ImageManagementPage from "./pages/admin/ImageManagementPage";
+import ContentManagementPage from "./pages/admin/ContentManagementPage";
 import CustomizationManagementPage from "./pages/admin/CustomizationManagementPage";
 import { ThemeProvider } from "./components/layout/ThemeProvider"; // Import ThemeProvider
+import ContentPage from "./pages/ContentPage";
+import FaqPage from "./pages/FaqPage";
 
 const queryClient = new QueryClient();
 
@@ -98,6 +100,16 @@ const App = () => (
               
               <Route path="/auth/login" element={<LoginPage />} />
               <Route path="/auth/register" element={<RegisterPage />} />
+              
+              {/* Static Pages (Unprotected, reading content from store) */}
+              <Route path="/about" element={<ContentPage slug="about" />} />
+              <Route path="/contact" element={<ContentPage slug="contact" />} />
+              <Route path="/shipping" element={<ContentPage slug="shipping" />} />
+              <Route path="/returns" element={<ContentPage slug="returns" />} />
+              <Route path="/size-guide" element={<ContentPage slug="size-guide" />} />
+              <Route path="/care-instructions" element={<ContentPage slug="care-instructions" />} />
+              <Route path="/track-order" element={<ContentPage slug="track-order" />} />
+              <Route path="/faq" element={<FaqPage />} />
               
               {/* Protected Admin/Reseller Routes */}
               <Route 
@@ -192,7 +204,7 @@ const App = () => (
                 path="/admin/content" 
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
-                    <ImageManagementPage />
+                    <ContentManagementPage />
                   </ProtectedRoute>
                 } 
               />

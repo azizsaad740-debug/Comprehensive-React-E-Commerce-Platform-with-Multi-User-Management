@@ -188,3 +188,23 @@ export interface ImageAsset {
   type: 'product' | 'hero' | 'other';
   uploadedAt: Date;
 }
+
+export interface ContactInfo {
+  address: string;
+  phone: string;
+  email: string;
+}
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  sortOrder: number;
+}
+
+export interface StaticPage {
+  slug: string; // e.g., 'about', 'shipping'
+  title: string;
+  content: string; // Markdown or HTML content
+  isActive: boolean;
+}

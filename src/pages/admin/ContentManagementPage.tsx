@@ -5,12 +5,12 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Image, Upload, Trash2, PlusCircle, RefreshCw } from 'lucide-react';
+import { Image, Upload, Trash2, PlusCircle, RefreshCw, FileText, Phone, HelpCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ImageAsset } from '@/types';
+import { ImageAsset, StaticPage } from '@/types';
 import { 
   getAllHeroSlides, 
   getAllImageAssets,
@@ -19,6 +19,10 @@ import {
 } from '@/utils/imageManagementUtils';
 import { Badge } from '@/components/ui/badge';
 import HeroSlideManagement from '@/components/admin/HeroSlideManagement';
+import ContactInfoForm from '@/components/admin/ContactInfoForm';
+import StaticPageForm from '@/components/admin/StaticPageForm';
+import FaqManagement from '@/components/admin/FaqManagement';
+import { useContentStore } from '@/stores/contentStore';
 
 // --- Component for managing Image Assets ---
 
@@ -124,8 +128,46 @@ const ImageAssetManagement: React.FC<ImageAssetManagementProps> = ({ assets, onA
   );
 };
 
+// --- Component for managing Static Pages ---
 
-const ImageManagementPage = () => {
+const StaticPageManagement: React.FC<{ staticPages: StaticPage[] }> = ({ staticPages }) => {
+  const [activePageSlug, setActivePageSlug] = useState(staticPages[0]?.slug || 'about');
+  const selectedPage = staticPages.find(p => p.slug === activePageSlug);
+
+  if (!selectedPage) return <p>No static pages configured.</p>;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Static Page Content</CardTitle>
+        <CardDescription>Edit the content for informational pages linked in the footer and navigation.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activePageSlug} onValueChange={setActivePageSlug}>
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-6 overflow-x-auto">
+            {staticPages.map(page => (
+              <TabsTrigger key={page.slug} value={page.slug} className="capitalize">
+                {page.title}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          
+          <div className="mt-6">
+            {staticPages.map(page => (
+              <TabsContent key={page.slug} value={page.slug} className="mt-0">
+                <StaticPageForm initialPage={page} />
+              </TabsContent>
+            ))}
+          </div>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+};
+
+
+const ContentManagementPage = () => {
+  const { staticPages } = useContentStore();
   const [assets, setAssets] = useState(getAllImageAssets());
   const [slides, setSlides] = useState(getAllHeroSlides());
 
@@ -137,27 +179,42 @@ const ImageManagementPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold flex items-center">
-            <Image className="h-6 w-6 mr-3" />
-            Image & Content Management
+            <FileText className="h-6 w-6 mr-3" />
+            Content Management
           </h1>
         </div>
-        <p className="text-gray-600 mb-8">Manage visual assets and dynamic content sections like the homepage hero slider.</p>
+        <p className="text-gray-600 mb-8">Manage visual assets, dynamic content sections, and static page content.</p>
 
-        <Tabs defaultValue="hero">
-          <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
-            <TabsTrigger value="hero">
-              Hero Slider
+        <Tabs defaultValue="contact">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="contact">
+              <Phone className="h-4 w-4 mr-2" /> Contact Info
+            </TabsTrigger>
+            <TabsTrigger value="pages">
+              <FileText className="h-4 w-4 mr-2" /> Static Pages
+            </TabsTrigger>
+            <TabsTrigger value="faq">
+              <HelpCircle className="h-4 w-4 mr-2" /> FAQ
             </TabsTrigger>
             <TabsTrigger value="assets">
-              <Image className="h-4 w-4 mr-2" /> Image Assets
+              <Image className="h-4 w-4 mr-2" /> Assets & Slider
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="hero" className="mt-6">
-            <HeroSlideManagement assets={assets} slides={slides} onRefreshSlides={refreshSlides} />
+          <TabsContent value="contact" className="mt-6">
+            <ContactInfoForm />
           </TabsContent>
           
-          <TabsContent value="assets" className="mt-6">
+          <TabsContent value="pages" className="mt-6">
+            <StaticPageManagement staticPages={staticPages} />
+          </TabsContent>
+          
+          <TabsContent value="faq" className="mt-6">
+            <FaqManagement />
+          </TabsContent>
+          
+          <TabsContent value="assets" className="mt-6 space-y-6">
+            <HeroSlideManagement assets={assets} slides={slides} onRefreshSlides={refreshSlides} />
             <ImageAssetManagement assets={assets} onAssetsUpdated={refreshAssets} />
           </TabsContent>
         </Tabs>
@@ -166,4 +223,4 @@ const ImageManagementPage = () => {
   );
 };
 
-export default ImageManagementPage;
+export default ContentManagementPage;

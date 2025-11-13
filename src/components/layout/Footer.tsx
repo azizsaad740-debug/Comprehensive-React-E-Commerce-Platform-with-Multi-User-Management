@@ -6,9 +6,19 @@ import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBrandingStore } from '@/stores/brandingStore';
+import { useContentStore } from '@/stores/contentStore';
 
 const Footer = () => {
   const { appName, slogan } = useBrandingStore();
+  const { contactInfo, staticPages } = useContentStore();
+
+  // Filter pages for Quick Links (e.g., Products, Categories, About)
+  const quickLinks = staticPages.filter(p => ['about', 'contact'].includes(p.slug) && p.isActive);
+  
+  // Filter pages for Customer Service Links
+  const customerServiceLinks = staticPages.filter(p => 
+    ['shipping', 'returns', 'size-guide', 'care-instructions', 'track-order'].includes(p.slug) && p.isActive
+  );
 
   return (
     <footer className="bg-gray-900 text-white dark:bg-card-foreground dark:text-foreground">
@@ -47,16 +57,13 @@ const Footer = () => {
                   Categories
                 </Link>
               </li>
-              <li>
-                <Link to="/about" className="text-gray-300 hover:text-white transition-colors dark:text-muted-foreground dark:hover:text-foreground">
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-gray-300 hover:text-white transition-colors dark:text-muted-foreground dark:hover:text-foreground">
-                  Contact
-                </Link>
-              </li>
+              {quickLinks.map(page => (
+                <li key={page.slug}>
+                  <Link to={`/${page.slug}`} className="text-gray-300 hover:text-white transition-colors dark:text-muted-foreground dark:hover:text-foreground">
+                    {page.title}
+                  </Link>
+                </li>
+              ))}
               <li>
                 <Link to="/faq" className="text-gray-300 hover:text-white transition-colors dark:text-muted-foreground dark:hover:text-foreground">
                   FAQ
@@ -69,31 +76,13 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="text-lg font-semibold">Customer Service</h4>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link to="/shipping" className="text-gray-300 hover:text-white transition-colors dark:text-muted-foreground dark:hover:text-foreground">
-                  Shipping Info
-                </Link>
-              </li>
-              <li>
-                <Link to="/returns" className="text-gray-300 hover:text-white transition-colors dark:text-muted-foreground dark:hover:text-foreground">
-                  Returns & Exchanges
-                </Link>
-              </li>
-              <li>
-                <Link to="/size-guide" className="text-gray-300 hover:text-white transition-colors dark:text-muted-foreground dark:hover:text-foreground">
-                  Size Guide
-                </Link>
-              </li>
-              <li>
-                <Link to="/care-instructions" className="text-gray-300 hover:text-white transition-colors dark:text-muted-foreground dark:hover:text-foreground">
-                  Care Instructions
-                </Link>
-              </li>
-              <li>
-                <Link to="/track-order" className="text-gray-300 hover:text-white transition-colors dark:text-muted-foreground dark:hover:text-foreground">
-                  Track Your Order
-                </Link>
-              </li>
+              {customerServiceLinks.map(page => (
+                <li key={page.slug}>
+                  <Link to={`/${page.slug}`} className="text-gray-300 hover:text-white transition-colors dark:text-muted-foreground dark:hover:text-foreground">
+                    {page.title}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -103,15 +92,15 @@ const Footer = () => {
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-gray-400 dark:text-muted-foreground" />
-                <span className="text-gray-300 dark:text-muted-foreground">123 Custom St, Design City, DC 12345</span>
+                <span className="text-gray-300 dark:text-muted-foreground">{contactInfo.address}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-gray-400 dark:text-muted-foreground" />
-                <span className="text-gray-300 dark:text-muted-foreground">+1 (555) 123-4567</span>
+                <span className="text-gray-300 dark:text-muted-foreground">{contactInfo.phone}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-gray-400 dark:text-muted-foreground" />
-                <span className="text-gray-300 dark:text-muted-foreground">hello@misalicenter.com</span>
+                <span className="text-gray-300 dark:text-muted-foreground">{contactInfo.email}</span>
               </div>
             </div>
             
