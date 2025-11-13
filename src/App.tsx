@@ -27,7 +27,7 @@ import ResellerPromoCodePage from "./pages/reseller/ResellerPromoCodePage.tsx";
 import CustomerManagementPage from "./pages/reseller/CustomerManagementPage.tsx";
 import AddressBookPage from "./pages/profile/AddressBookPage.tsx";
 import DesignLibraryPage from "./pages/profile/DesignLibraryPage.tsx";
-import ThemeEditorPage from "./pages/admin/ThemeEditorPage.tsx";
+import SettingsPage from "./pages/admin/SettingsPage.tsx";
 import PluginManagementPage from "./pages/admin/PluginManagementPage.tsx";
 import DesignEditorPage from "./pages/products/DesignEditorPage";
 import VariantManagementPage from "./pages/admin/VariantManagementPage";
@@ -176,7 +176,7 @@ const App = () => (
                 path="/admin/theme" 
                 element={
                   <ProtectedRoute allowedRoles={['admin']}>
-                    <ThemeEditorPage />
+                    <SettingsPage />
                   </ProtectedRoute>
                 } 
               />

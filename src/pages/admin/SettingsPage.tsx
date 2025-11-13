@@ -5,7 +5,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image } from 'lucide-react';
+import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image, DollarSign, Truck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -13,8 +13,9 @@ import ColorInput from '@/components/admin/ColorInput';
 import { useBrandingStore } from '@/stores/brandingStore';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import CheckoutSettingsForm from '@/components/admin/CheckoutSettingsForm';
 
-const ThemeEditorPage = () => {
+const SettingsPage = () => {
   const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
   const { toast } = useToast();
   
@@ -67,7 +68,7 @@ const ThemeEditorPage = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold flex items-center">
             <Palette className="h-6 w-6 mr-3" />
-            Theme Editor
+            System Settings
           </h1>
           <div className="space-x-2">
             <Button variant="outline" onClick={handleDiscard}>
@@ -80,13 +81,13 @@ const ThemeEditorPage = () => {
             </Button>
           </div>
         </div>
-        <p className="text-gray-600 mb-8">Customize the look and feel of your storefront.</p>
+        <p className="text-gray-600 mb-8">Customize the look, feel, and core functionality of your storefront.</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Theme Settings Navigation */}
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle className="text-lg">Settings</CardTitle>
+              <CardTitle className="text-lg">Settings Categories</CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="branding" orientation="vertical">
@@ -97,6 +98,9 @@ const ThemeEditorPage = () => {
                   <TabsTrigger value="colors" className="w-full justify-start data-[state=active]:bg-accent">
                     <Palette className="h-4 w-4 mr-2" /> Colors
                   </TabsTrigger>
+                  <TabsTrigger value="checkout" className="w-full justify-start data-[state=active]:bg-accent">
+                    <DollarSign className="h-4 w-4 mr-2" /> Checkout & Delivery
+                  </TabsTrigger>
                   <TabsTrigger value="typography" className="w-full justify-start data-[state=active]:bg-accent">
                     <Type className="h-4 w-4 mr-2" /> Typography
                   </TabsTrigger>
@@ -104,7 +108,7 @@ const ThemeEditorPage = () => {
                     <LayoutGrid className="h-4 w-4 mr-2" /> Layout Presets
                   </TabsTrigger>
                   <TabsTrigger value="assets" className="w-full justify-start data-[state=active]:bg-accent">
-                    <Upload className="h-4 w-4 mr-2" /> Assets & Banners
+                    <Image className="h-4 w-4 mr-2" /> Assets & Banners
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -196,6 +200,11 @@ const ThemeEditorPage = () => {
                 </Card>
               </TabsContent>
               
+              {/* Checkout & Delivery Tab (NEW) */}
+              <TabsContent value="checkout">
+                <CheckoutSettingsForm />
+              </TabsContent>
+              
               <TabsContent value="typography">
                 <Card>
                   <CardHeader><CardTitle>Typography</CardTitle></CardHeader>
@@ -231,4 +240,4 @@ const ThemeEditorPage = () => {
   );
 };
 
-export default ThemeEditorPage;
+export default SettingsPage;
