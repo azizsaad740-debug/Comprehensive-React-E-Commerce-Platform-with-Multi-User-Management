@@ -1,6 +1,6 @@
 "use client";
 
-import React, useMemo from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, ShoppingBag, Users, Package, ArrowRight, Palette, Plug } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
