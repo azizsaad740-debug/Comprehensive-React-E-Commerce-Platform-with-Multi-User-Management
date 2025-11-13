@@ -19,14 +19,16 @@ interface ImageManagementModalProps {
 }
 
 const ImageManagementModal: React.FC<ImageManagementModalProps> = ({ product, isOpen, onClose, onProductUpdate }) => {
-  const [currentImages, setCurrentImages] = useState(product.images);
+  // Ensure initialization is always an array
+  const [currentImages, setCurrentImages] = useState<string[]>(product.images ?? []);
   const [isSaving, setIsSaving] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
   const { toast } = useToast();
 
   // Sync images when product prop changes (e.g., modal opens)
   React.useEffect(() => {
-    setCurrentImages(product.images);
+    // Use nullish coalescing to ensure we always set an array
+    setCurrentImages(product.images ?? []);
   }, [product.images]);
 
   const handleImageSelected = (imageUrl: string) => {
@@ -49,7 +51,7 @@ const ImageManagementModal: React.FC<ImageManagementModalProps> = ({ product, is
   const handleSaveImages = () => {
     setIsSaving(true);
     
-    // Ensure at least one image exists, use placeholder if empty
+    // currentImages is guaranteed to be an array here
     const imagesToSave = currentImages.length > 0 ? currentImages : ['/placeholder.svg'];
     
     const updatedProduct = updateMockProductImages(product.id, imagesToSave);
