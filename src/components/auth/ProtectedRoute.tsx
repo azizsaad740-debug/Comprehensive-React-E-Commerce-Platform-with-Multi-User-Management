@@ -36,13 +36,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
   }
 
   // 3. If authenticated but role is restricted, redirect to home
-  if (allowedRoles && user && !hasRole(allowedRoles)) {
-    toast({
-      title: "Access Denied",
-      description: "You do not have permission to view this page.",
-      variant: "destructive",
-    });
-    return <Navigate to="/" replace />;
+  if (allowedRoles && user) {
+    // Superuser bypasses all specific role checks
+    const isAuthorized = user.role === 'superuser' || hasRole(allowedRoles);
+    
+    if (!isAuthorized) {
+      toast({
+        title: "Access Denied",
+        description: "You do not have permission to view this page.",
+        variant: "destructive",
+      });
+      return <Navigate to="/" replace />;
+    }
   }
 
   // 4. Access granted
