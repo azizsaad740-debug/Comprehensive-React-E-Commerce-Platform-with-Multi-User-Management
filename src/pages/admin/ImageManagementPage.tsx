@@ -18,7 +18,7 @@ import {
   deleteImageAsset
 } from '@/utils/imageManagementUtils';
 import { Badge } from '@/components/ui/badge';
-import HeroSlideManagement from '@/components/admin/HeroSlideManagement'; // NEW IMPORT
+import HeroSlideManagement from '@/components/admin/HeroSlideManagement';
 
 // --- Component for managing Image Assets ---
 
@@ -64,9 +64,9 @@ const ImageAssetManagement: React.FC<ImageAssetManagementProps> = ({ assets, onA
         <CardDescription>Manage product images, banners, and other media assets.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Add New Asset Form */}
+        {/* Add New Asset Form (Simplified Manual Input) */}
         <form onSubmit={handleAddAsset} className="p-4 border rounded-lg space-y-3">
-          <h4 className="font-semibold flex items-center"><Upload className="h-4 w-4 mr-2" /> Add New Asset (Mock Upload)</h4>
+          <h4 className="font-semibold flex items-center"><PlusCircle className="h-4 w-4 mr-2" /> Manually Add Asset</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="assetName">Name</Label>
@@ -91,7 +91,7 @@ const ImageAssetManagement: React.FC<ImageAssetManagementProps> = ({ assets, onA
             </div>
           </div>
           <Button type="submit" disabled={isUploading || !newAssetName || !newAssetUrl}>
-            {isUploading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <PlusCircle className="h-4 w-4 mr-2" />}
+            {isUploading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
             Add Asset
           </Button>
         </form>

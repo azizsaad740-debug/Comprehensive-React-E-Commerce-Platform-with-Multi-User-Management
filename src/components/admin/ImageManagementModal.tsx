@@ -7,7 +7,8 @@ import { Image, Wand2, Save, Trash2, RefreshCw, PlusCircle, Link } from 'lucide-
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/types';
 import ImageGeneratorForm from '@/components/admin/ImageGeneratorForm';
-import { updateMockProductImages } from '@/utils/productUtils';
+import { updateMockProductImages, getMockProductById } from '@/utils/productUtils';
+import { addImageAsset } from '@/utils/imageManagementUtils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -19,7 +20,7 @@ interface ImageManagementModalProps {
 }
 
 const ImageManagementModal: React.FC<ImageManagementModalProps> = ({ product, isOpen, onClose, onProductUpdate }) => {
-  // Ensure initialization is always an array
+  // Use a local state that is initialized from the prop, but can be modified locally
   const [currentImages, setCurrentImages] = useState<string[]>(product.images ?? []);
   const [isSaving, setIsSaving] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
@@ -27,17 +28,26 @@ const ImageManagementModal: React.FC<ImageManagementModalProps> = ({ product, is
 
   // Sync images when product prop changes (e.g., modal opens)
   React.useEffect(() => {
-    // Use nullish coalescing to ensure we always set an array
-    setCurrentImages(product.images ?? []);
-  }, [product.images]);
+    // Ensure we fetch the latest product data when opening the modal
+    const latestProduct = getMockProductById(product.id);
+    setCurrentImages(latestProduct?.images ?? []);
+  }, [product.id, product.images, isOpen]);
 
   const handleImageSelected = (imageUrl: string) => {
-    // Add the new image URL to the list
+    // 1. Save the generated image as a new asset first
+    const assetName = `${product.name} AI Mockup ${new Date().toLocaleTimeString()}`;
+    addImageAsset(assetName, imageUrl, 'product');
+    
+    // 2. Add the new image URL to the product's list
     setCurrentImages(prev => [imageUrl, ...prev.filter(img => img !== '/placeholder.svg')]);
   };
   
   const handleAddManualImage = () => {
     if (manualUrl.trim()) {
+      // Save manual URL as an asset too
+      const assetName = `${product.name} Manual Image ${new Date().toLocaleTimeString()}`;
+      addImageAsset(assetName, manualUrl.trim(), 'product');
+      
       setCurrentImages(prev => [manualUrl.trim(), ...prev.filter(img => img !== '/placeholder.svg')]);
       setManualUrl('');
       toast({ title: "Image Added", description: "Image URL added to the list." });
