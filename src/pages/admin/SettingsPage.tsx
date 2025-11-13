@@ -15,15 +15,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import CheckoutSettingsForm from '@/components/admin/CheckoutSettingsForm';
 import { useNavigate } from 'react-router-dom';
+import { hexToRawHsl } from '@/lib/colorUtils'; // NEW IMPORT
 
 const SettingsPage = () => {
   const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Local state for color customization (separate from branding store)
-  const [primaryColor, setPrimaryColor] = useState('#2563EB');
-  const [accentColor, setAccentColor] = useState('#F59E0B');
+  // Local state for color customization (using default Tailwind primary/accent colors for initialization)
+  // Note: These hex values are placeholders and don't necessarily match the current HSL values in globals.css
+  const [primaryColor, setPrimaryColor] = useState('#FF6B81'); // Salmon Pink approximation
+  const [accentColor, setAccentColor] = useState('#FF6B81'); // Salmon Pink approximation (using primary for accent default)
   
   // Local state for branding form
   const [brandingData, setBrandingData] = useState({
@@ -36,12 +38,34 @@ const SettingsPage = () => {
     setBrandingData(prev => ({ ...prev, [field]: value }));
   };
 
+  const applyColorsToCSS = (primaryHex: string, accentHex: string) => {
+    const root = document.documentElement;
+    
+    const primaryHsl = hexToRawHsl(primaryHex);
+    const accentHsl = hexToRawHsl(accentHex);
+
+    if (primaryHsl) {
+      root.style.setProperty('--primary', primaryHsl);
+      root.style.setProperty('--ring', primaryHsl);
+      root.style.setProperty('--accent', primaryHsl);
+      root.style.setProperty('--sidebar-primary', primaryHsl);
+      root.style.setProperty('--sidebar-ring', primaryHsl);
+    }
+    
+    if (accentHsl) {
+      // We can use accent for secondary/muted colors if needed, but for simplicity, 
+      // we'll just set a dedicated accent variable if we had one. 
+      // Since Tailwind uses primary for most accents, we'll stick to primary for now.
+      // If we wanted a separate accent, we'd need to define it in tailwind.config.ts
+    }
+  };
+
   const handlePublish = () => {
     // 1. Update Branding Store
     updateBranding(brandingData);
     
-    // 2. Apply Color Changes (Mocked - in a real app, this would update CSS variables)
-    // For now, we just confirm the action.
+    // 2. Apply Color Changes to CSS variables
+    applyColorsToCSS(primaryColor, accentColor);
     
     toast({
       title: "Theme Published",
@@ -56,8 +80,14 @@ const SettingsPage = () => {
       slogan: slogan,
       logoUrl: logoUrl,
     });
-    setPrimaryColor('#2563EB');
-    setAccentColor('#F59E0B');
+    
+    // Note: We don't have a persistent store for colors yet, so we reset to the default hex values.
+    setPrimaryColor('#FF6B81'); 
+    setAccentColor('#FF6B81');
+    
+    // Re-apply the default colors to the CSS variables to visually reset
+    applyColorsToCSS('#FF6B81', '#FF6B81'); 
+    
     toast({
       title: "Changes Discarded",
       description: "Local changes were reset to the last published version.",
@@ -193,7 +223,7 @@ const SettingsPage = () => {
                       
                       <ColorInput
                         id="accentColor"
-                        label="Accent Color"
+                        label="Accent Color (Currently maps to Primary)"
                         value={accentColor}
                         onChange={setAccentColor}
                       />
