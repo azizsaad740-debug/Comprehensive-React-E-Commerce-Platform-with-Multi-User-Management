@@ -133,6 +133,32 @@ export const getAllMockProducts = (): Product[] => {
   return mockProducts;
 };
 
+export const createMockProduct = (newProductData: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'variants'> & { variants?: ProductVariant[] }): Product => {
+  const now = new Date();
+  const newProduct: Product = {
+    id: uuidv4(),
+    ...newProductData,
+    basePrice: Number(newProductData.basePrice),
+    discountedPrice: newProductData.discountedPrice ? Number(newProductData.discountedPrice) : undefined,
+    stockQuantity: Number(newProductData.stockQuantity),
+    printPaths: Number(newProductData.printPaths),
+    variants: newProductData.variants || [],
+    isActive: newProductData.isActive ?? true,
+    tags: newProductData.tags || [],
+    createdAt: now,
+    updatedAt: now,
+    customizationOptions: {
+      fonts: newProductData.customizationOptions?.fonts || [],
+      startDesigns: newProductData.customizationOptions?.startDesigns || [],
+      endDesigns: newProductData.customizationOptions?.endDesigns || [],
+      maxCharacters: Number(newProductData.customizationOptions?.maxCharacters || 50),
+      allowedColors: newProductData.customizationOptions?.allowedColors || [],
+    }
+  };
+  mockProducts.push(newProduct);
+  return newProduct;
+};
+
 export const updateMockProductImages = (productId: string, newImages: string[]): Product | undefined => {
   const productIndex = mockProducts.findIndex(product => product.id === productId);
   if (productIndex !== -1) {
