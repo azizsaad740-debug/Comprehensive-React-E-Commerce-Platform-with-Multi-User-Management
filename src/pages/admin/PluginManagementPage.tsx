@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Plug, Upload, Settings, Zap, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import PluginConfigurationModal from '@/components/admin/PluginConfigurationModal'; // NEW IMPORT
 
 interface Plugin {
   id: string;
@@ -15,18 +16,71 @@ interface Plugin {
   status: 'active' | 'inactive' | 'error';
   description: string;
   isBuiltIn: boolean;
+  config: Record<string, any>; // Added config field
 }
 
-const mockPlugins: Plugin[] = [
-  { id: 'p1', name: 'Stripe Payments', version: '1.2.0', status: 'active', description: 'Enables secure credit card payments via Stripe.', isBuiltIn: true },
-  { id: 'p2', name: 'WhatsApp Notifications', version: '2.1.1', status: 'inactive', description: 'Send order updates and alerts via WhatsApp (Requires Twilio).', isBuiltIn: true },
-  { id: 'p3', name: 'Google Analytics', version: '1.0.0', status: 'active', description: 'Integrate Google Analytics for traffic tracking.', isBuiltIn: true },
-  { id: 'p4', name: 'Custom Shipping Rates', version: '3.0.5', status: 'error', description: 'Define complex shipping rules based on weight and location.', isBuiltIn: false },
+const initialMockPlugins: Plugin[] = [
+  { 
+    id: 'p1', 
+    name: 'Stripe Payments', 
+    version: '1.2.0', 
+    status: 'active', 
+    description: 'Enables secure credit card payments via Stripe.', 
+    isBuiltIn: true,
+    config: {
+      apiKey: 'sk_live_xxxxxxxxxxxx',
+      webhookSecret: 'whsec_yyyyyyyyyyyy',
+      defaultCurrency: 'USD',
+    }
+  },
+  { 
+    id: 'p2', 
+    name: 'WhatsApp Notifications', 
+    version: '2.1.1', 
+    status: 'inactive', 
+    description: 'Send order updates and alerts via WhatsApp (Requires Twilio).', 
+    isBuiltIn: true,
+    config: {
+      twilioSid: '',
+      twilioAuthToken: '',
+      notificationEvents: ['order_shipped', 'order_delivered'],
+    }
+  },
+  { 
+    id: 'p3', 
+    name: 'Google Analytics', 
+    version: '1.0.0', 
+    status: 'active', 
+    description: 'Integrate Google Analytics for traffic tracking.', 
+    isBuiltIn: true,
+    config: {
+      trackingId: 'UA-12345678-1',
+      anonymizeIp: true,
+    }
+  },
+  { 
+    id: 'p4', 
+    name: 'Custom Shipping Rates', 
+    version: '3.0.5', 
+    status: 'error', 
+    description: 'Define complex shipping rules based on weight and location.', 
+    isBuiltIn: false,
+    config: {
+      rules: [
+        { zone: 'US', weightMax: 5, cost: 10.00 },
+        { zone: 'EU', weightMax: 10, cost: 25.00 },
+      ]
+    }
+  },
 ];
 
 const PluginManagementPage = () => {
-  const [plugins, setPlugins] = useState(mockPlugins);
+  const [plugins, setPlugins] = useState(initialMockPlugins);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // State for Configuration Modal
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [selectedPlugin, setSelectedPlugin] = useState<Plugin | null>(null);
 
   const togglePluginStatus = (id: string) => {
     setPlugins(prev => prev.map(p => 
@@ -34,6 +88,22 @@ const PluginManagementPage = () => {
         ? { ...p, status: p.status === 'active' ? 'inactive' : 'active' } 
         : p
     ));
+  };
+  
+  const handleOpenConfig = (plugin: Plugin) => {
+    setSelectedPlugin(plugin);
+    setIsConfigModalOpen(true);
+  };
+  
+  const handleSaveConfig = (newConfig: Record<string, any>) => {
+    if (!selectedPlugin) return;
+    
+    setPlugins(prev => prev.map(p => 
+      p.id === selectedPlugin.id 
+        ? { ...p, config: newConfig } 
+        : p
+    ));
+    setSelectedPlugin(null);
   };
 
   const handleUpload = () => {
@@ -88,7 +158,7 @@ const PluginManagementPage = () => {
                     {plugin.status}
                   </Badge>
                   
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => handleOpenConfig(plugin)}>
                     <Settings className="h-4 w-4 mr-2" />
                     Configure
                   </Button>
@@ -116,6 +186,17 @@ const PluginManagementPage = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Plugin Configuration Modal */}
+      {selectedPlugin && (
+        <PluginConfigurationModal
+          pluginName={selectedPlugin.name}
+          initialConfig={selectedPlugin.config}
+          isOpen={isConfigModalOpen}
+          onClose={() => setIsConfigModalOpen(false)}
+          onSave={handleSaveConfig}
+        />
+      )}
     </AdminLayout>
   );
 };
