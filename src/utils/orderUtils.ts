@@ -1,5 +1,6 @@
 import { Order, OrderItem, Address, CartItem, CommissionRecord } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+import { addLedgerTransaction } from './ledgerUtils';
 
 // Mock Data (Centralized)
 const mockShippingAddress: Address = {
@@ -123,8 +124,8 @@ export const createMockOrder = (data: OrderCreationData): Order => {
     items: orderItems,
     subtotal: data.subtotal,
     discountAmount: data.discountAmount,
-    taxAmount: data.taxAmount,
     shippingCost: data.shippingCost,
+    taxAmount: data.taxAmount,
     totalAmount: data.totalAmount,
     paymentMethod: data.paymentMethod,
     paymentStatus: 'paid', // Assuming payment is successful at checkout
@@ -136,6 +137,17 @@ export const createMockOrder = (data: OrderCreationData): Order => {
   };
 
   currentMockOrders.push(newOrder);
+  
+  // --- LEDGER INTEGRATION: Record payment received from customer ---
+  addLedgerTransaction({
+    entityId: data.customerId,
+    type: 'we_received',
+    itemType: 'cash',
+    amount: data.totalAmount,
+    details: `Payment received for order ${orderId}.`,
+  });
+  // ----------------------------------------------------------------
+  
   return newOrder;
 };
 
