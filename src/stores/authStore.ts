@@ -109,10 +109,15 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (!user) return false;
 
+        // Superuser has all permissions
+        if (user.role === 'superuser') {
+          return true;
+        }
+
         // Role-based permissions
         switch (user.role) {
           case 'admin':
-            return true; // Admin has all permissions
+            return true; // Admin has all standard permissions
           case 'reseller':
             return [
               'view_dashboard',

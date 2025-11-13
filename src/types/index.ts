@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 // CORE TYPES
 // =================================================================
 
-export type UserRole = 'admin' | 'reseller' | 'customer';
+export type UserRole = 'admin' | 'reseller' | 'customer' | 'superuser';
 
 export interface User {
   id: string;

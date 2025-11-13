@@ -14,7 +14,7 @@ import UserForm from '@/components/admin/UserForm';
 import { useToast } from '@/hooks/use-toast';
 
 const UserManagementPage = () => {
-  // Fetch users from centralized utility
+  // Fetch users from centralized utility (which now filters out superuser)
   const [users, setUsers] = useState(getAllMockUsers());
   const { toast } = useToast();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -42,39 +42,50 @@ const UserManagementPage = () => {
     setIsSaving(true);
     
     setTimeout(() => {
-      const updatedUser = updateMockUser(userData);
-      
-      if (updatedUser) {
-        refreshUsers();
-        toast({
-          title: "Success",
-          description: `User ${updatedUser.name} updated successfully.`,
-        });
-        handleCloseForm();
-      } else {
+      try {
+        const updatedUser = updateMockUser(userData);
+        
+        if (updatedUser) {
+          refreshUsers();
+          toast({
+            title: "Success",
+            description: `User ${updatedUser.name} updated successfully.`,
+          });
+          handleCloseForm();
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to update user.",
+            variant: "destructive",
+          });
+        }
+      } catch (error: any) {
         toast({
           title: "Error",
-          description: "Failed to update user.",
+          description: error.message,
           variant: "destructive",
         });
+      } finally {
+        setIsSaving(false);
       }
-      setIsSaving(false);
     }, 500);
   };
   
   const handleDeleteUser = (userId: string, userName: string) => {
     if (window.confirm(`Are you sure you want to delete the user: ${userName}? This action cannot be undone.`)) {
-      if (deleteMockUser(userId)) {
-        refreshUsers();
-        toast({
-          title: "User Deleted",
-          description: `${userName} has been permanently removed.`,
-          variant: "destructive",
-        });
-      } else {
+      try {
+        if (deleteMockUser(userId)) {
+          refreshUsers();
+          toast({
+            title: "User Deleted",
+            description: `${userName} has been permanently removed.`,
+            variant: "destructive",
+          });
+        }
+      } catch (error: any) {
         toast({
           title: "Error",
-          description: "Failed to delete user.",
+          description: error.message,
           variant: "destructive",
         });
       }
@@ -131,12 +142,15 @@ const UserManagementPage = () => {
       header: "Actions",
       cell: ({ row }) => {
         const user = row.original;
+        // Prevent regular admins from editing or deleting other admins/superusers (mock logic)
+        const isProtected = user.role === 'admin' || user.role === 'superuser'; 
+        
         return (
           <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={() => handleOpenForm(user)}>
+            <Button variant="outline" size="sm" onClick={() => handleOpenForm(user)} disabled={isProtected}>
               <Edit className="h-4 w-4" />
             </Button>
-            <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(user.id, user.name)}>
+            <Button variant="destructive" size="sm" onClick={() => handleDeleteUser(user.id, user.name)} disabled={isProtected}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>

@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { useBrandingStore } from '@/stores/brandingStore';
 
@@ -51,7 +51,7 @@ function LoginPage() {
   };
 
   // Admin login helper
-  const handleAdminLogin = async () => {
+  const handleAdminLogin = async (userType: 'admin' | 'superuser') => {
     // 1. Clear any existing session first
     try {
       await logout();
@@ -59,22 +59,25 @@ function LoginPage() {
       // Ignore logout errors if no session exists
     }
     
-    setEmail('admin@example.com');
-    setPassword('admin123');
+    const loginEmail = userType === 'admin' ? 'admin@example.com' : 'superuser@example.com';
+    const loginPassword = userType === 'admin' ? 'admin123' : 'super123';
+    
+    setEmail(loginEmail);
+    setPassword(loginPassword);
     setIsLoading(true);
 
     try {
-      await login('admin@example.com', 'admin123');
+      await login(loginEmail, loginPassword);
       toast({
-        title: "Admin Login Success",
-        description: "Welcome back, Admin!",
+        title: `${userType === 'superuser' ? 'Superuser' : 'Admin'} Login Success`,
+        description: `Welcome back, ${userType === 'superuser' ? 'Superuser' : 'Admin'}!`,
       });
       // Navigate directly to admin dashboard after successful login
       navigate('/admin');
     } catch (error: any) {
       toast({
-        title: "Admin Login Failed",
-        description: error.message || "Admin credentials not working.",
+        title: `${userType === 'superuser' ? 'Superuser' : 'Admin'} Login Failed`,
+        description: error.message || "Credentials not working.",
         variant: "destructive",
       });
     } finally {
@@ -157,18 +160,26 @@ function LoginPage() {
               </div>
               
               {/* Admin Quick Login */}
-              <div className="border-t pt-3">
-                <p className="text-xs text-gray-500 text-center mb-2">Testing Admin Access</p>
+              <div className="border-t pt-3 space-y-2">
+                <p className="text-xs text-gray-500 text-center mb-2">Testing Access</p>
                 <Button 
                   variant="outline" 
                   className="w-full text-sm" 
-                  onClick={handleAdminLogin}
+                  onClick={() => handleAdminLogin('admin')}
                   disabled={isLoading}
                 >
                   🔑 Quick Admin Login (Test Only)
                 </Button>
+                <Button 
+                  variant="secondary" 
+                  className="w-full text-sm" 
+                  onClick={() => handleAdminLogin('superuser')}
+                  disabled={isLoading}
+                >
+                  <Shield className="h-4 w-4 mr-2" /> Quick Superuser Login (Test Only)
+                </Button>
                 <p className="text-xs text-gray-400 text-center mt-1">
-                  Email: admin@example.com | Password: admin123
+                  Admin: admin@example.com | Superuser: superuser@example.com
                 </p>
               </div>
             </div>

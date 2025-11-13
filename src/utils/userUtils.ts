@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Mock password storage (for demonstration only)
 export const mockPasswords: Record<string, string> = {
+  'superuser@example.com': 'super123', // NEW: Super User credentials
   'admin@example.com': 'admin123',
   'reseller1@example.com': 'reseller123',
   'customer1@example.com': 'customer123',
@@ -13,6 +14,9 @@ export const mockPasswords: Record<string, string> = {
 };
 
 export const mockUsers: User[] = [
+  {
+    id: '00000000-0000-0000-0000-000000000000', email: 'superuser@example.com', name: 'System Superuser', role: 'superuser', isActive: true, createdAt: new Date(), updatedAt: new Date(),
+  },
   {
     id: '64813257-184d-4fbf-ac0a-ebff11be0200', email: 'admin@example.com', name: 'Alice Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(),
   },
@@ -78,7 +82,10 @@ export const registerMockUser = (
   return newUser;
 };
 
-export const getAllMockUsers = (): User[] => mockUsers;
+export const getAllMockUsers = (): User[] => {
+  // Filter out the Super User from standard lists
+  return mockUsers.filter(user => user.role !== 'superuser');
+};
 
 export const getMockUserById = (userId: string): User | undefined => {
   return mockUsers.find(user => user.id === userId);
@@ -88,6 +95,11 @@ export const updateMockUser = (updatedUserData: Partial<User>): User | undefined
   const userIndex = mockUsers.findIndex(user => user.id === updatedUserData.id);
   if (userIndex !== -1) {
     const existingUser = mockUsers[userIndex];
+    
+    // Prevent updating the Super User's role or status via standard means
+    if (existingUser.role === 'superuser' && updatedUserData.role !== 'superuser') {
+      throw new Error("Cannot modify Superuser role via standard update.");
+    }
     
     const updatedUser: User = {
       ...existingUser,
@@ -105,6 +117,11 @@ export const updateMockUser = (updatedUserData: Partial<User>): User | undefined
 };
 
 export const deleteMockUser = (userId: string): boolean => {
+  const userToDelete = mockUsers.find(user => user.id === userId);
+  if (userToDelete?.role === 'superuser') {
+    throw new Error("Cannot delete Superuser.");
+  }
+  
   const initialLength = mockUsers.length;
   const index = mockUsers.findIndex(user => user.id === userId);
   
