@@ -130,12 +130,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
   
   // Helper to get the first selected font/design ID for the single Select component
   const getFirstSelectedId = (names: string[], mockDesigns: { id: string, name: string }[]): string => {
-    if (!names || names.length === 0) return '';
-    return mockDesigns.find(d => d.name === names[0])?.id || '';
+    if (!names || names.length === 0) return 'none'; // Use 'none' as a non-empty placeholder value
+    return mockDesigns.find(d => d.name === names[0])?.id || 'none';
   };
   
   // Helper to handle single selection change and store the name in the array
   const handleSingleDesignSelect = (field: 'fonts' | 'startDesigns' | 'endDesigns', selectedId: string, mockDesigns: { id: string, name: string }[]) => {
+    if (selectedId === 'none') {
+      handleCustomizationChange(field, []);
+      return;
+    }
     const selectedName = mockDesigns.find(d => d.id === selectedId)?.name;
     handleCustomizationChange(field, selectedName ? [selectedName] : []);
   };
@@ -223,7 +227,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
               <SelectValue placeholder="Choose a default font" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None / Default</SelectItem>
+              <SelectItem value="none">None / Default</SelectItem>
               {mockFonts.map(font => (
                 <SelectItem key={font.id} value={font.id}>
                   {font.name}
@@ -244,7 +248,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
               <SelectValue placeholder="Choose a default start design" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {mockStartDesigns.map(design => (
                 <SelectItem key={design.id} value={design.id}>
                   {design.name}
@@ -265,7 +269,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
               <SelectValue placeholder="Choose a default end design" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               {mockEndDesigns.map(design => (
                 <SelectItem key={design.id} value={design.id}>
                   {design.name}
