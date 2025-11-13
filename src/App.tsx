@@ -29,7 +29,6 @@ import AddressBookPage from "./pages/profile/AddressBookPage.tsx";
 import DesignLibraryPage from "./pages/profile/DesignLibraryPage.tsx";
 import ThemeEditorPage from "./pages/admin/ThemeEditorPage.tsx";
 import PluginManagementPage from "./pages/admin/PluginManagementPage.tsx";
-import SupabaseAuthProvider from "./components/auth/SupabaseAuthProvider";
 import DesignEditorPage from "./pages/products/DesignEditorPage";
 import VariantManagementPage from "./pages/admin/VariantManagementPage";
 import ImageManagementPage from "./pages/admin/ImageManagementPage";
@@ -44,7 +43,6 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <BrowserRouter>
-          <SupabaseAuthProvider>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/products" element={<ProductCatalog />} />
@@ -226,7 +224,6 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </SupabaseAuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>

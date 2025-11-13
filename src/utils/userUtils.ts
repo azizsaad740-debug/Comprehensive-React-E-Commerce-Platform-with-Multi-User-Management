@@ -1,25 +1,35 @@
-import { User, Address } from '@/types';
+import { User, Address, UserRole } from '@/types';
 import { getMockOrders } from './orderUtils'; // Import order utility
 import { v4 as uuidv4 } from 'uuid';
 
+// Mock password storage (for demonstration only)
+export const mockPasswords: Record<string, string> = {
+  'admin@example.com': 'admin123',
+  'reseller1@example.com': 'reseller123',
+  'customer1@example.com': 'customer123',
+  'inactive@example.com': 'inactive123',
+  'customer2@example.com': 'customer123',
+  'customer3@example.com': 'customer123',
+};
+
 export const mockUsers: User[] = [
   {
-    id: '64813257-184d-4fbf-ac0a-ebff11be0200', email: 'admin@example.com', name: 'Alice Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
+    id: '64813257-184d-4fbf-ac0a-ebff11be0200', email: 'admin@example.com', name: 'Alice Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(),
   },
   {
-    id: 'u2', email: 'reseller1@example.com', name: 'Bob Reseller', role: 'reseller', isActive: true, createdAt: new Date(), updatedAt: new Date(), commissionRate: 15, totalEarnings: 5000, email_verified: true,
+    id: 'u2', email: 'reseller1@example.com', name: 'Bob Reseller', role: 'reseller', isActive: true, createdAt: new Date(), updatedAt: new Date(), commissionRate: 15, totalEarnings: 5000,
   },
   {
-    id: 'u3', email: 'customer1@example.com', name: 'Charlie Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true, // Promoted to Admin
+    id: 'u3', email: 'customer1@example.com', name: 'Charlie Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), // Promoted to Admin
   },
   {
-    id: 'u4', email: 'inactive@example.com', name: 'Diana Dormant', role: 'customer', isActive: false, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
+    id: 'u4', email: 'inactive@example.com', name: 'Diana Dormant', role: 'customer', isActive: false, createdAt: new Date(), updatedAt: new Date(),
   },
   {
-    id: 'u5', email: 'customer2@example.com', name: 'Eve Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), resellerId: 'u2', totalSales: 890.00, email_verified: true, // Referred by Bob
+    id: 'u5', email: 'customer2@example.com', name: 'Eve Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), resellerId: 'u2', totalSales: 890.00, // Referred by Bob
   },
   {
-    id: 'u6', email: 'customer3@example.com', name: 'Frank Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(), email_verified: true,
+    id: 'u6', email: 'customer3@example.com', name: 'Frank Customer', role: 'customer', isActive: true, createdAt: new Date(), updatedAt: new Date(),
   },
 ];
 
@@ -38,6 +48,34 @@ const mockAddresses: Record<string, Address[]> = {
       id: 'a3', fullName: 'Eve Customer', phone: '555-9999', street: '789 Home Ln', city: 'Suburbia', state: 'TX', zipCode: '77001', country: 'USA', isDefault: true,
     },
   ]
+};
+
+export const registerMockUser = (
+  email: string, 
+  password: string, 
+  name: string, 
+  role: UserRole = 'customer', 
+  resellerId?: string
+): User => {
+  if (mockUsers.some(u => u.email === email)) {
+    throw new Error("User already exists.");
+  }
+  
+  const now = new Date();
+  const newUser: User = {
+    id: uuidv4(),
+    email,
+    name,
+    role,
+    isActive: true,
+    createdAt: now,
+    updatedAt: now,
+    resellerId: resellerId || undefined,
+  };
+  
+  mockUsers.push(newUser);
+  mockPasswords[email] = password;
+  return newUser;
 };
 
 export const getAllMockUsers = (): User[] => mockUsers;

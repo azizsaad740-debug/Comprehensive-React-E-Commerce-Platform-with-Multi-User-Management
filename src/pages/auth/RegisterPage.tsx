@@ -10,8 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock, User, Loader2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
-import { supabase } from '@/integrations/supabase/client';
 import { useBrandingStore } from '@/stores/brandingStore';
+import { registerMockUser } from '@/utils/userUtils';
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -23,7 +23,6 @@ function RegisterPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [verificationSent, setVerificationSent] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -61,36 +60,24 @@ function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const [firstName, ...lastNameParts] = formData.name.split(' ');
-      const lastName = lastNameParts.join(' ');
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Force role to 'customer' for public signups
-      const role = 'customer'; 
+      // Use mock registration utility
+      registerMockUser(
+        formData.email, 
+        formData.password, 
+        formData.name, 
+        'customer', 
+        referralId || undefined
+      );
       
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            role: role,
-            resellerId: referralId,
-            first_name: firstName,
-            last_name: lastName,
-          },
-          emailRedirectTo: `${window.location.origin}/`, // Redirect after email confirmation
-        },
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Supabase sends a verification email. We inform the user.
-      setVerificationSent(true);
       toast({
-        title: "Verification Email Sent",
-        description: "Please check your email inbox (and spam folder) to confirm your account.",
+        title: "Registration Successful",
+        description: "Your account has been created. Please log in.",
       });
+      
+      navigate('/auth/login');
       
     } catch (error: any) {
       toast({
@@ -102,29 +89,6 @@ function RegisterPage() {
       setIsLoading(false);
     }
   };
-
-  if (verificationSent) {
-    return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-          <Card className="w-full max-w-md text-center">
-            <CardHeader>
-              <Mail className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-              <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
-              <CardDescription>
-                A verification link has been sent to <strong>{formData.email}</strong>. Please click the link to activate your account.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate('/auth/login')}>
-                Go to Login
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </Layout>
-    );
-  }
 
   return (
     <Layout>
@@ -169,8 +133,6 @@ function RegisterPage() {
                   />
                 </div>
               </div>
-
-              {/* Role selection removed - defaults to customer */}
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>

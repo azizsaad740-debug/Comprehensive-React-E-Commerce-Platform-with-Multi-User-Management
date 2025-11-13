@@ -32,17 +32,17 @@ function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password, referralId || undefined);
+      await login(email, password); 
       toast({
         title: "Success",
         description: "Logged in successfully!",
       });
       // Navigate to the root, which will be handled by ProtectedRoute/App.tsx
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Invalid email or password",
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       });
     } finally {
@@ -71,10 +71,10 @@ function LoginPage() {
       });
       // Navigate directly to admin dashboard after successful login
       navigate('/admin');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Admin Login Failed",
-        description: "Admin credentials not working. Please check the database setup.",
+        description: error.message || "Admin credentials not working.",
         variant: "destructive",
       });
     } finally {
