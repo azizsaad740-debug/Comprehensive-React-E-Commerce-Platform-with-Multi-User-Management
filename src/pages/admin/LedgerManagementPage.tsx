@@ -13,7 +13,8 @@ import { LedgerEntity, LedgerEntityType } from '@/types';
 import { 
   getAllLedgerEntities, 
   addExternalEntity, 
-  updateExternalEntity 
+  updateExternalEntity,
+  deleteExternalEntity // Import delete function
 } from '@/utils/ledgerUtils';
 import LedgerDashboard from '@/components/ledger/LedgerDashboard.tsx';
 import EntityList from '@/components/ledger/EntityList.tsx';
@@ -146,6 +147,25 @@ const LedgerManagementPage = () => {
     }, 500);
   };
   
+  const handleDeleteExternalEntity = (entityId: string, entityName: string) => {
+    if (window.confirm(`Are you sure you want to delete the external entity: ${entityName}? This will not delete associated transactions.`)) {
+      // Simulate deletion delay
+      setTimeout(() => {
+        if (deleteExternalEntity(entityId)) {
+          toast({ title: "Deleted", description: `${entityName} removed from ledger entities.` });
+          
+          // If the deleted entity was selected, clear selection
+          if (selectedEntityId === entityId) {
+            setSelectedEntityId(null);
+          }
+          handleRefresh();
+        } else {
+          toast({ title: "Error", description: "Failed to delete entity.", variant: "destructive" });
+        }
+      }, 300);
+    }
+  };
+  
   const handleOpenExternalForm = () => {
     setSelectedEntityId(null); // Clear selection when adding new
     setIsExternalFormOpen(true);
@@ -177,6 +197,7 @@ const LedgerManagementPage = () => {
               selectedEntityId={selectedEntityId} 
               onSelectEntity={setSelectedEntityId}
               onAddExternalEntity={handleOpenExternalForm}
+              onDeleteExternalEntity={handleDeleteExternalEntity}
             />
           </div>
 

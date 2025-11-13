@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LedgerEntity, LedgerEntityType } from '@/types';
-import { User, Package, Truck, Users, Search, PlusCircle, BookOpen } from 'lucide-react';
+import { User, Package, Truck, Users, Search, PlusCircle, BookOpen, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ interface EntityListProps {
   selectedEntityId: string | null;
   onSelectEntity: (id: string) => void;
   onAddExternalEntity: () => void;
+  onDeleteExternalEntity: (id: string, name: string) => void; // NEW PROP
 }
 
 const getEntityIcon = (type: LedgerEntityType) => {
@@ -32,7 +33,7 @@ const getEntityIcon = (type: LedgerEntityType) => {
   }
 };
 
-const EntityList: React.FC<EntityListProps> = ({ entities, selectedEntityId, onSelectEntity, onAddExternalEntity }) => {
+const EntityList: React.FC<EntityListProps> = ({ entities, selectedEntityId, onSelectEntity, onAddExternalEntity, onDeleteExternalEntity }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredEntities = useMemo(() => {
@@ -64,27 +65,48 @@ const EntityList: React.FC<EntityListProps> = ({ entities, selectedEntityId, onS
       <CardContent className="flex-1 p-0">
         <ScrollArea className="h-[calc(100vh-250px)]">
           <div className="space-y-1 p-4 pt-0">
-            {filteredEntities.map(entity => (
-              <div
-                key={entity.id}
-                className={cn(
-                  "flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors",
-                  selectedEntityId === entity.id ? "bg-primary/10 border border-primary/50" : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                )}
-                onClick={() => onSelectEntity(entity.id)}
-              >
-                <div className="flex items-center space-x-3 min-w-0">
-                  {getEntityIcon(entity.type)}
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">{entity.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{entity.contact}</p>
+            {filteredEntities.map(entity => {
+              const isExternal = entity.type === 'supplier' || entity.type === 'other';
+              
+              return (
+                <div
+                  key={entity.id}
+                  className={cn(
+                    "flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors group",
+                    selectedEntityId === entity.id ? "bg-primary/10 border border-primary/50" : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                  )}
+                  onClick={() => onSelectEntity(entity.id)}
+                >
+                  <div className="flex items-center space-x-3 min-w-0">
+                    {getEntityIcon(entity.type)}
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{entity.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{entity.contact}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="secondary" className="capitalize flex-shrink-0">
+                      {entity.type}
+                    </Badge>
+                    
+                    {isExternal && (
+                      <Button 
+                        variant="destructive" 
+                        size="icon" 
+                        className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent selecting the entity when deleting
+                          onDeleteExternalEntity(entity.id, entity.name);
+                        }}
+                        title={`Delete ${entity.name}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
-                <Badge variant="secondary" className="capitalize flex-shrink-0">
-                  {entity.type}
-                </Badge>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </ScrollArea>
       </CardContent>
