@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import { Product } from '@/types';
 import { getAllMockProducts } from '@/utils/productUtils';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 // Helper to get query parameters
 const useQuery = () => {
@@ -30,6 +31,7 @@ function ProductCatalog() {
   
   const { addItem } = useCartStore();
   const { toast } = useToast();
+  const { currencySymbol } = useCheckoutSettingsStore(); // Read currency symbol
 
   const mockProducts = getAllMockProducts();
 
@@ -165,11 +167,11 @@ function ProductCatalog() {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-2">
                       <span className="text-xl font-bold text-green-600">
-                        ${price.toFixed(2)}
+                        {currencySymbol}{price.toFixed(2)}
                       </span>
                       {hasDiscount && (
                         <span className="text-sm text-gray-500 line-through">
-                          ${product.basePrice.toFixed(2)}
+                          {currencySymbol}{product.basePrice.toFixed(2)}
                         </span>
                       )}
                     </div>

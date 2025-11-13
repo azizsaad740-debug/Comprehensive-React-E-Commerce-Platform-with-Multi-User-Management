@@ -13,6 +13,7 @@ import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
 import { Product } from '@/types';
 import HeroSlideshow from '@/components/layout/HeroSlideshow';
 import { useBrandingStore } from '@/stores/brandingStore';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 const features = [
   {
@@ -37,6 +38,7 @@ const Index = () => {
   const { addItem } = useCartStore();
   const { toast } = useToast();
   const { appName } = useBrandingStore();
+  const { currencySymbol } = useCheckoutSettingsStore(); // Read currency symbol
 
   const allProducts = getAllMockProducts();
   
@@ -137,11 +139,11 @@ const Index = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="text-xl font-bold text-green-600">
-                          ${price.toFixed(2)}
+                          {currencySymbol}{price.toFixed(2)}
                         </span>
                         {originalPrice > price && (
                           <span className="text-sm text-gray-500 line-through">
-                            ${originalPrice.toFixed(2)}
+                            {currencySymbol}{originalPrice.toFixed(2)}
                           </span>
                         )}
                       </div>

@@ -11,6 +11,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import CustomizationDisplay from '@/components/products/CustomizationDisplay';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 const CartPage = () => {
   const { 
@@ -22,6 +23,7 @@ const CartPage = () => {
   } = useCartStore();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { currencySymbol } = useCheckoutSettingsStore(); // Read currency symbol
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -53,6 +55,12 @@ const CartPage = () => {
 
   const totalPrice = getTotalPrice();
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
+  
+  // Mock shipping and tax calculation for display
+  const shippingCost = totalPrice >= 50 ? 0 : 9.99;
+  const taxAmount = totalPrice * 0.08;
+  const finalTotal = totalPrice + shippingCost + taxAmount;
+
 
   if (items.length === 0) {
     return (
@@ -167,10 +175,10 @@ const CartPage = () => {
                           
                           <div className="text-right">
                             <span className="text-lg font-medium">
-                              ${((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
+                              {currencySymbol}{((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
                             </span>
                             <p className="text-sm text-gray-500">
-                              ${(item.product.discountedPrice || item.product.basePrice).toFixed(2)} each
+                              {currencySymbol}{(item.product.discountedPrice || item.product.basePrice).toFixed(2)} each
                             </p>
                           </div>
                         </div>
@@ -200,23 +208,23 @@ const CartPage = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal ({itemCount} items)</span>
-                    <span>${totalPrice.toFixed(2)}</span>
+                    <span>{currencySymbol}{totalPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span className="text-green-600">
-                      {totalPrice >= 50 ? 'Free' : '$9.99'}
+                    <span className={shippingCost === 0 ? 'text-green-600' : ''}>
+                      {shippingCost === 0 ? 'Free' : `${currencySymbol}${shippingCost.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>${(totalPrice * 0.08).toFixed(2)}</span>
+                    <span>{currencySymbol}{taxAmount.toFixed(2)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-lg font-medium">
                     <span>Total</span>
                     <span>
-                      ${(totalPrice + (totalPrice >= 50 ? 0 : 9.99) + (totalPrice * 0.08)).toFixed(2)}
+                      {currencySymbol}{finalTotal.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -225,13 +233,13 @@ const CartPage = () => {
                 <div className="bg-blue-50 p-3 rounded-lg">
                   <div className="flex items-center space-x-2">
                     <Badge variant="secondary" className="text-xs">
-                      {totalPrice >= 50 ? 'Free Shipping' : '$50 for free shipping'}
+                      {totalPrice >= 50 ? 'Free Shipping' : `${currencySymbol}50 for free shipping`}
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-600 mt-2">
                     {totalPrice >= 50 
                       ? 'You qualify for free shipping!' 
-                      : `Add $${(50 - totalPrice).toFixed(2)} more for free shipping`
+                      : `Add ${currencySymbol}${(50 - totalPrice).toFixed(2)} more for free shipping`
                     }
                   </p>
                 </div>

@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import CustomizationDisplay from '../products/CustomizationDisplay';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 const CartSidebar = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const CartSidebar = () => {
     clearCart
   } = useCartStore();
   const { toast } = useToast();
+  const { currencySymbol } = useCheckoutSettingsStore(); // Read currency symbol
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -140,7 +142,7 @@ const CartSidebar = () => {
                             
                             <div className="text-right">
                               <span className="text-sm font-medium">
-                                ${((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
+                                {currencySymbol}{((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
                               </span>
                             </div>
                           </div>
@@ -160,7 +162,7 @@ const CartSidebar = () => {
               <div className="py-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-medium">Total:</span>
-                  <span className="text-lg font-bold">${totalPrice.toFixed(2)}</span>
+                  <span className="text-lg font-bold">{currencySymbol}{totalPrice.toFixed(2)}</span>
                 </div>
                 
                 <Button 
@@ -191,7 +193,7 @@ const CartSidebar = () => {
                   <p className="text-xs text-gray-500">
                     {totalPrice >= 50 
                       ? '🚚 Free shipping included!' 
-                      : `Add $${(50 - totalPrice).toFixed(2)} more for free shipping`
+                      : `Add ${currencySymbol}${(50 - totalPrice).toFixed(2)} more for free shipping`
                     }
                   </p>
                 </div>

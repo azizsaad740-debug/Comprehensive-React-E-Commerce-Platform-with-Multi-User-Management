@@ -16,6 +16,7 @@ import Layout from '@/components/layout/Layout';
 import { Product, ProductCustomization, SavedDesignTemplate } from '@/types';
 import { getMockProductById } from '@/utils/productUtils';
 import { getDesignById } from '@/utils/designUtils';
+import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -26,6 +27,7 @@ const ProductDetailPage = () => {
 
   const { addItem } = useCartStore();
   const { toast } = useToast();
+  const { currencySymbol } = useCheckoutSettingsStore(); // Read currency symbol
 
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<Product['variants'][number] | undefined>(undefined);
@@ -159,11 +161,11 @@ const ProductDetailPage = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <span className="text-3xl font-bold text-green-600">
-                    ${finalPrice.toFixed(2)}
+                    {currencySymbol}{finalPrice.toFixed(2)}
                   </span>
                   {hasDiscount && (
                     <span className="text-xl text-gray-500 line-through">
-                      ${originalPrice.toFixed(2)}
+                      {currencySymbol}{originalPrice.toFixed(2)}
                     </span>
                   )}
                 </div>
@@ -193,7 +195,7 @@ const ProductDetailPage = () => {
                     <SelectContent>
                       {product.variants.map(variant => (
                         <SelectItem key={variant.id} value={variant.id}>
-                          {variant.name} - ${variant.price.toFixed(2)} ({variant.stockQuantity} in stock)
+                          {variant.name} - {currencySymbol}{variant.price.toFixed(2)} ({variant.stockQuantity} in stock)
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -371,7 +373,7 @@ const ProductDetailPage = () => {
                       <ul className="space-y-1 text-sm text-gray-600">
                         <li>• Production: 2-3 business days</li>
                         <li>• Shipping: 3-5 business days</li>
-                        <li>• Free shipping on orders over $50</li>
+                        <li>• Free shipping on orders over {currencySymbol}50</li>
                         <li>• International shipping available</li>
                       </ul>
                     </div>
