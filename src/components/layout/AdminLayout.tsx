@@ -29,12 +29,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         
         {/* Mobile Menu Button and Sheet (below md) */}
         {isMobile && (
-          <div className="md:hidden p-4 border-b bg-white dark:bg-card">
+          <div className="md:hidden p-2 border-b bg-white dark:bg-card">
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Menu className="h-4 w-4 mr-2" />
-                  Menu
+                <Button variant="outline" size="icon" className="h-8 w-8 border-gray-300 dark:border-gray-700">
+                  <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-64 p-0 pt-10 bg-sidebar">

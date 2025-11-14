@@ -39,6 +39,7 @@ import FaqPage from "./pages/FaqPage";
 import LedgerManagementPage from "./pages/admin/LedgerManagementPage";
 import EntityDetailPage from "./pages/admin/EntityDetailPage";
 import POSPage from "./pages/admin/POSPage";
+import DataManagementPage from "./pages/admin/DataManagementPage";
 import { SessionContextProvider } from "./integrations/supabase/SessionContextProvider";
 
 const queryClient = new QueryClient();
@@ -234,6 +235,14 @@ const App = () => (
                   element={
                     <ProtectedRoute allowedRoles={['admin']}>
                       <ContentManagementPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin/data" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <DataManagementPage />
                     </ProtectedRoute>
                   } 
                 />
