@@ -23,11 +23,22 @@ import { useUISettingsStore } from '@/stores/uiSettingsStore'; // NEW IMPORT
 
 const Header = () => {
   const navigate = useNavigate();
-  const { getTotalItems } = useCartStore();
-  const { user, isAuthenticated, logout } = useAuthStore();
-  const { appName } = useBrandingStore();
-  const { headerVisibility } = useUISettingsStore(); // NEW HOOK
-  const totalItems = getTotalItems();
+  
+  // Zustand Selectors for Cart Store
+  const totalItems = useCartStore(state => state.getTotalItems());
+  
+  // Zustand Selectors for Auth Store
+  const { user, isAuthenticated, logout } = useAuthStore(state => ({
+    user: state.user,
+    isAuthenticated: state.isAuthenticated,
+    logout: state.logout,
+  }));
+  
+  // Zustand Selectors for Branding Store
+  const appName = useBrandingStore(state => state.appName);
+  
+  // Zustand Selectors for UI Settings Store
+  const headerVisibility = useUISettingsStore(state => state.headerVisibility);
 
   const isDashboardUser = isAuthenticated && (user?.role === 'admin' || user?.role === 'reseller' || user?.role === 'superuser');
 
