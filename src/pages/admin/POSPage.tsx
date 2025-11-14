@@ -16,6 +16,7 @@ import { CartItem, Product, User as UserType, Address, ImageSizes } from '@/type
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { createMockOrder } from '@/utils/orderUtils';
 import { v4 as uuidv4 } from 'uuid';
+import BarcodeScanner from '@/components/admin/BarcodeScanner'; // NEW IMPORT
 
 // Mock Address for POS orders
 const posAddress: Address = {
@@ -44,7 +45,7 @@ const POSPage = () => {
   const [cart, setCart] = useState<POSCartItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isLoading, setIsLoading] = useState(false);
-  const [productSearchTerm, setProductSearchTerm] = useState(''); // NEW: Search term state
+  const [productSearchTerm, setProductSearchTerm] = useState('');
 
   const selectedUser = useMemo(() => allUsers.find(u => u.id === selectedUserId), [selectedUserId, allUsers]);
 
@@ -66,7 +67,10 @@ const POSPage = () => {
 
   const handleAddProduct = (productId: string) => {
     const product = getMockProductById(productId);
-    if (!product) return;
+    if (!product) {
+      toast({ title: "Product Not Found", description: `Product ID/SKU ${productId} not found.`, variant: "destructive" });
+      return;
+    }
 
     const variant = product.variants[0]; // Use first variant for simplicity
     const price = product.discountedPrice || product.basePrice;
@@ -183,43 +187,52 @@ const POSPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Product Selection */}
-          <Card className="lg:col-span-1">
-            <CardHeader className="pb-3">
-              <CardTitle>Product Selection</CardTitle>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search product name or SKU..."
-                  value={productSearchTerm}
-                  onChange={(e) => setProductSearchTerm(e.target.value)}
-                  className="pl-10"
-                  disabled={isLoading}
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
-              {filteredProducts.map(product => (
-                <Button 
-                  key={product.id}
-                  variant="outline"
-                  className="w-full justify-between h-auto p-3"
-                  onClick={() => handleAddProduct(product.id)}
-                  disabled={isLoading || product.stockQuantity <= 0}
-                >
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium">{product.name}</span>
-                    <span className="text-xs text-gray-500">Stock: {product.stockQuantity}</span>
-                  </div>
-                  <span className="font-bold text-primary">
-                    {currencySymbol}{(product.discountedPrice || product.basePrice).toFixed(2)}
-                  </span>
-                </Button>
-              ))}
-              {filteredProducts.length === 0 && (
-                <p className="text-center text-sm text-gray-500 pt-4">No products found matching "{productSearchTerm}"</p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="lg:col-span-1 space-y-6">
+            {/* Barcode Scanner */}
+            <BarcodeScanner 
+              onProductScanned={handleAddProduct} 
+              disabled={isLoading}
+            />
+            
+            {/* Product Search */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>Product Search</CardTitle>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search product name or SKU..."
+                    value={productSearchTerm}
+                    onChange={(e) => setProductSearchTerm(e.target.value)}
+                    className="pl-10"
+                    disabled={isLoading}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3 max-h-[400px] overflow-y-auto">
+                {filteredProducts.map(product => (
+                  <Button 
+                    key={product.id}
+                    variant="outline"
+                    className="w-full justify-between h-auto p-3"
+                    onClick={() => handleAddProduct(product.id)}
+                    disabled={isLoading || product.stockQuantity <= 0}
+                  >
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">{product.name}</span>
+                      <span className="text-xs text-gray-500">Stock: {product.stockQuantity}</span>
+                    </div>
+                    <span className="font-bold text-primary">
+                      {currencySymbol}{(product.discountedPrice || product.basePrice).toFixed(2)}
+                    </span>
+                  </Button>
+                ))}
+                {filteredProducts.length === 0 && (
+                  <p className="text-center text-sm text-gray-500 pt-4">No products found matching "{productSearchTerm}"</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Right Column: Cart & Checkout */}
           <div className="lg:col-span-2 space-y-6">
