@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,10 +17,12 @@ import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { createMockOrder } from '@/utils/orderUtils';
 import { v4 as uuidv4 } from 'uuid';
 import BarcodeManualInput from '@/components/admin/BarcodeManualInput';
-import BarcodeScannerCamera from '@/components/admin/BarcodeScannerCamera'; // NEW IMPORT
+import BarcodeScannerCamera from '@/components/admin/BarcodeScannerCamera';
 import { logOperatorActivity } from '@/utils/operatorUtils';
 import { useAuthStore } from '@/stores/authStore';
-import { useIsMobile } from '@/hooks/use-mobile'; // NEW IMPORT
+import { useIsMobile } from '@/hooks/use-mobile';
+import MobileScannerLink from '@/components/admin/MobileScannerLink';
+import { pollScannedData, disconnectPOSSession } from '@/utils/posLinkUtils';
 
 // Mock Address for POS orders
 const posAddress: Address = {
@@ -45,20 +47,22 @@ const POSPage = () => {
   const { toast } = useToast();
   const { currencySymbol } = useCheckoutSettingsStore();
   const { user: operator } = useAuthStore();
-  const isMobile = useIsMobile(); // Use hook
+  const isMobile = useIsMobile();
   
   const allUsers = getAllMockUsers().filter(u => u.role === 'customer' || u.role === 'reseller');
   const allProducts = getAllMockProducts().filter(p => p.isActive);
 
-  // Initialize selectedUserId to POS_GUEST_ID instead of null for Select component compatibility
   const [selectedUserId, setSelectedUserId] = useState<string>(POS_GUEST_ID);
   const [cart, setCart] = useState<POSCartItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isLoading, setIsLoading] = useState(false);
   const [productSearchTerm, setProductSearchTerm] = useState('');
-  
-  // NEW: Tax state
   const [taxMode, setTaxMode] = useState<TaxMode>('exclude');
+  
+  // NEW: Mobile Scanner State
+  const [mobileSessionId, setMobileSessionId] = useState<string | null>(null);
+  const isMobileSessionActive = !!mobileSessionId;
+  
   const TAX_RATE = 0.08;
 
   const selectedUser = useMemo(() => allUsers.find(u => u.id === selectedUserId), [selectedUserId, allUsers]);
@@ -127,6 +131,28 @@ const POSPage = () => {
       setCart(prev => [...prev, newItem]);
     }
   };
+  
+  // --- Mobile Scanner Polling Effect ---
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (mobileSessionId) {
+      interval = setInterval(() => {
+        const scannedData = pollScannedData(mobileSessionId);
+        if (scannedData) {
+          handleAddProduct(scannedData);
+        }
+      }, 500); // Poll every 500ms
+    }
+    
+    return () => {
+      clearInterval(interval);
+      // Ensure session is disconnected if component unmounts unexpectedly
+      if (mobileSessionId) {
+        disconnectPOSSession(mobileSessionId);
+      }
+    };
+  }, [mobileSessionId]);
+  // ------------------------------------
 
   const handleQuantityChange = (index: number, quantity: number) => {
     if (quantity <= 0) {
@@ -208,6 +234,17 @@ const POSPage = () => {
       setIsLoading(false);
     }
   };
+  
+  const handleNewTransaction = () => {
+    // Ensure any active mobile session is disconnected when starting a new transaction
+    if (mobileSessionId) {
+        disconnectPOSSession(mobileSessionId);
+        setMobileSessionId(null);
+    }
+    setCart([]); 
+    setSelectedUserId(POS_GUEST_ID); 
+    setPaymentMethod('cash');
+  };
 
   return (
     <AdminLayout>
@@ -217,7 +254,7 @@ const POSPage = () => {
             <ShoppingCart className="h-6 w-6 mr-3" />
             Point of Sale (POS)
           </h1>
-          <Button variant="outline" onClick={() => { setCart([]); setSelectedUserId(POS_GUEST_ID); setPaymentMethod('cash'); }} disabled={isLoading}>
+          <Button variant="outline" onClick={handleNewTransaction} disabled={isLoading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             New Transaction
           </Button>
@@ -228,8 +265,16 @@ const POSPage = () => {
           {/* Left Column: Product Selection */}
           <div className="lg:col-span-1 space-y-6">
             
+            {/* Mobile Scanner Link */}
+            <MobileScannerLink 
+              onSessionStarted={setMobileSessionId}
+              onSessionStopped={() => setMobileSessionId(null)}
+              isSessionActive={isMobileSessionActive}
+              sessionId={mobileSessionId}
+            />
+            
             {/* Camera Scanner (Priority on Mobile) */}
-            {isMobile && (
+            {isMobile && !isMobileSessionActive && (
               <BarcodeScannerCamera 
                 onProductScanned={handleAddProduct} 
                 disabled={isLoading}

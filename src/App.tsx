@@ -41,7 +41,8 @@ import EntityDetailPage from "./pages/admin/EntityDetailPage";
 import POSPage from "./pages/admin/POSPage";
 import DataManagementPage from "./pages/admin/DataManagementPage";
 import AIBulkOperationsPage from "./pages/admin/AIBulkOperationsPage";
-import POSOperatorManagementPage from "./pages/admin/POSOperatorManagementPage"; // NEW IMPORT
+import POSOperatorManagementPage from "./pages/admin/POSOperatorManagementPage";
+import MobileScannerPage from "./pages/admin/MobileScannerPage"; // NEW IMPORT
 import { SessionContextProvider } from "./integrations/supabase/SessionContextProvider";
 
 const queryClient = new QueryClient();
@@ -135,6 +136,11 @@ const App = () => (
                       <POSPage />
                     </ProtectedRoute>
                   } 
+                />
+                {/* NEW: Mobile Scanner Route (Unprotected, accessed via local network link) */}
+                <Route 
+                  path="/admin/pos/scan" 
+                  element={<MobileScannerPage />} 
                 />
                 <Route 
                   path="/admin/pos-operators" 
