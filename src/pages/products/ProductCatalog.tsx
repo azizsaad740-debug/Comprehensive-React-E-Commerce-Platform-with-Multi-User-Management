@@ -122,7 +122,8 @@ function ProductCatalog() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Adjusted grid: grid-cols-2 by default, md:grid-cols-2, lg:grid-cols-3 */}
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredProducts.map((product) => {
             const price = product.discountedPrice || product.basePrice;
             const hasDiscount = product.discountedPrice && product.discountedPrice < product.basePrice;
@@ -155,44 +156,44 @@ function ProductCatalog() {
                   </Button>
                 </div>
 
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge variant="outline">{product.category}</Badge>
+                <CardHeader className="pb-3 p-3 md:p-6">
+                  <div className="flex items-center justify-between mb-1">
+                    <Badge variant="outline" className="text-xs">{product.category}</Badge>
                   </div>
-                  <CardTitle className="text-lg">{product.name}</CardTitle>
-                  <CardDescription>{product.description}</CardDescription>
+                  <CardTitle className="text-base md:text-lg">{product.name}</CardTitle>
+                  <CardDescription className="text-xs hidden md:block">{product.description}</CardDescription>
                 </CardHeader>
 
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 p-3 md:p-6">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xl font-bold text-green-600">
+                    <div className="flex flex-col items-start space-y-0">
+                      <span className="text-base font-bold text-green-600">
                         {currencySymbol}{price.toFixed(2)}
                       </span>
                       {hasDiscount && (
-                        <span className="text-sm text-gray-500 line-through">
+                        <span className="text-xs text-gray-500 line-through">
                           {currencySymbol}{product.basePrice.toFixed(2)}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm text-gray-600">4.5</span>
+                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      <span className="text-xs text-gray-600">4.5</span>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Button 
-                      className="w-full" 
+                      className="w-full h-8 text-xs" 
                       size="sm"
                       onClick={() => handleAddToCart(product)}
                     >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      <ShoppingCart className="h-3 w-3 mr-1" />
                       Quick Add
                     </Button>
                     <Button 
                       variant="outline" 
-                      className="w-full" 
+                      className="w-full h-8 text-xs" 
                       size="sm"
                       onClick={() => navigate(`/products/${product.id}`)}
                     >

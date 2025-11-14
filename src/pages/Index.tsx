@@ -102,7 +102,8 @@ const Index = () => {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          {/* Adjusted grid: grid-cols-2 by default, md:grid-cols-3 */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
             {featuredProducts.map((product) => {
               const price = product.discountedPrice || product.basePrice;
               const originalPrice = product.basePrice;
@@ -123,31 +124,31 @@ const Index = () => {
                       <Heart className="h-4 w-4" />
                     </Button>
                   </div>
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <Badge variant="secondary">{product.category}</Badge>
+                  <CardHeader className="p-3 pb-2 md:p-6 md:pb-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <Badge variant="secondary" className="text-xs">{product.category}</Badge>
                       <div className="flex items-center space-x-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm text-gray-600">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                        <span className="text-xs text-gray-600">
                           4.8 (124) {/* Mock rating/reviews */}
                         </span>
                       </div>
                     </div>
-                    <CardTitle className="text-lg">{product.name}</CardTitle>
+                    <CardTitle className="text-base md:text-lg">{product.name}</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xl font-bold text-green-600">
+                      <div className="flex flex-col items-start space-y-0">
+                        <span className="text-base font-bold text-green-600">
                           {currencySymbol}{price.toFixed(2)}
                         </span>
                         {originalPrice > price && (
-                          <span className="text-sm text-gray-500 line-through">
+                          <span className="text-xs text-gray-500 line-through">
                             {currencySymbol}{originalPrice.toFixed(2)}
                           </span>
                         )}
                       </div>
-                      <Button size="sm" onClick={() => navigate(`/products/${product.id}`)}>
+                      <Button size="sm" className="h-8 text-xs" onClick={() => navigate(`/products/${product.id}`)}>
                         Customize
                       </Button>
                     </div>
@@ -155,7 +156,7 @@ const Index = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1"
+                        className="flex-1 h-8 text-xs"
                         onClick={() => handleAddToCart(product)}
                       >
                         Quick Add
