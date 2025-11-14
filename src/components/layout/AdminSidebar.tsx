@@ -96,7 +96,11 @@ const navItems: NavItem[] = [
   },
 ];
 
-const AdminSidebar = () => {
+interface AdminSidebarProps {
+  onClose?: () => void; // New prop for mobile close action
+}
+
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ onClose }) => {
   const location = useLocation();
   const { user } = useAuthStore();
   const userRole = user?.role;
@@ -113,7 +117,7 @@ const AdminSidebar = () => {
   });
 
   return (
-    <div className="flex flex-col h-full border-r bg-sidebar w-64 p-4">
+    <div className="flex flex-col h-full p-4">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-sidebar-primary">
           {userRole === 'admin' ? 'Admin Panel' : 'Reseller Hub'}
@@ -129,6 +133,7 @@ const AdminSidebar = () => {
             <Link
               key={item.href}
               to={item.href}
+              onClick={onClose} // Close sidebar on navigation click
               className={cn(
                 "flex items-center p-3 rounded-lg transition-colors",
                 isActive
@@ -147,6 +152,7 @@ const AdminSidebar = () => {
       
       <Link
         to="/profile"
+        onClick={onClose}
         className={cn(
           "flex items-center p-3 rounded-lg transition-colors",
           location.pathname === '/profile'
