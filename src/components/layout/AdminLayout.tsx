@@ -43,8 +43,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </div>
         )}
         
-        {/* Main Content - Added px-2 for subtle horizontal spacing */}
-        <main className="flex-1 overflow-y-auto px-2">
+        {/* Main Content - Removed px-2 to prevent double padding with page containers */}
+        <main className="flex-1 overflow-y-auto">
           {children}
         </main>
       </div>

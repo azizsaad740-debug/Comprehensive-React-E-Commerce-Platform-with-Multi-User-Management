@@ -11,6 +11,7 @@ import DesignLoaderDialog from './DesignLoaderDialog';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
 
 interface DesignEditorProps {
   product: Product;
@@ -45,6 +46,9 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
   const [customization, setCustomization] = useState<ProductCustomization>(initialCustomization);
   const [existingDesign, setExistingDesign] = useState<SavedDesignTemplate | undefined>(initialExistingDesign);
   
+  const mockStartDesigns = getAllMockStartDesigns();
+  const mockEndDesigns = getAllMockEndDesigns();
+
   // Sync state when props change (e.g., when a design is loaded via dialog)
   useEffect(() => {
     setCustomization(initialCustomization);
@@ -105,6 +109,14 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
   
   // FIX: Access the small size URL for the preview background
   const previewImageUrl = (product.images[0] as ImageSizes)?.small || '/placeholder.svg';
+  
+  const startDesignImage = customization.startDesign 
+    ? mockStartDesigns.find(d => d.id === customization.startDesign)?.imageUrl 
+    : undefined;
+  const endDesignImage = customization.endDesign 
+    ? mockEndDesigns.find(d => d.id === customization.endDesign)?.imageUrl 
+    : undefined;
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -154,16 +166,20 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
                   );
                 })}
                 
-                {/* Design Overlays (Simplified) */}
-                {customization.startDesign && (
-                  <div className="absolute top-4 left-4 p-2 bg-white/70 rounded text-sm text-blue-700 font-medium">
-                    Start Design Applied
-                  </div>
+                {/* Design Overlays */}
+                {startDesignImage && (
+                  <img 
+                    src={startDesignImage} 
+                    alt="Start Design" 
+                    className="absolute top-4 left-4 w-16 h-16 object-contain p-1 bg-white/80 rounded shadow-md"
+                  />
                 )}
-                {customization.endDesign && (
-                  <div className="absolute bottom-4 right-4 p-2 bg-white/70 rounded text-sm text-blue-700 font-medium">
-                    End Design Applied
-                  </div>
+                {endDesignImage && (
+                  <img 
+                    src={endDesignImage} 
+                    alt="End Design" 
+                    className="absolute bottom-4 right-4 w-16 h-16 object-contain p-1 bg-white/80 rounded shadow-md"
+                  />
                 )}
                 
                 {/* Fallback if no customization */}
