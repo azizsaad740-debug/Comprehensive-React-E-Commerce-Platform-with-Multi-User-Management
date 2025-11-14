@@ -9,7 +9,7 @@ import { Order, POSBillSettings } from '@/types';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useContentStore } from '@/stores/contentStore';
-import * as QRCodeModule from 'qrcode.react'; // Reverting to * as import
+import * as QRCodeModule from 'qrcode.react';
 
 interface POSBillPreviewProps {
   order: Order;
@@ -17,8 +17,8 @@ interface POSBillPreviewProps {
   onClose: () => void;
 }
 
-// Access the component, assuming it might be nested under 'QRCode' or 'default'
-const QRCodeComponent = (QRCodeModule as any).QRCode || (QRCodeModule as any).default || QRCodeModule;
+// Safely resolve the QRCode component from the imported module
+const QRCodeComponent = (QRCodeModule as any).default || QRCodeModule;
 
 // Component for the printable bill content
 const PrintableBillContent: React.FC<{ order: Order, settings: POSBillSettings }> = ({ order, settings }) => {

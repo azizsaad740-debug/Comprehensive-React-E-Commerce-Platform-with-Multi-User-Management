@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { QrCode, Link, RefreshCw, X, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import * as QRCodeModule from 'qrcode.react'; // Reverting to * as import
+import * as QRCodeModule from 'qrcode.react';
 import { startPOSSession, disconnectPOSSession, getSessionStatus } from '@/utils/posLinkUtils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,8 +16,8 @@ interface MobileScannerLinkProps {
   sessionId: string | null;
 }
 
-// Access the component, assuming it might be nested under 'QRCode' or 'default'
-const QRCodeComponent = (QRCodeModule as any).QRCode || (QRCodeModule as any).default || QRCodeModule;
+// Safely resolve the QRCode component from the imported module
+const QRCodeComponent = (QRCodeModule as any).default || QRCodeModule;
 
 const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted, onSessionStopped, isSessionActive, sessionId }) => {
   const { toast } = useToast();
