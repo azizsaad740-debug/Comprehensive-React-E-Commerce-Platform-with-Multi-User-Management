@@ -107,12 +107,12 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Item</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead>Details</TableHead>
-                    <TableHead className="text-right">Running Balance</TableHead>
+                    <TableHead className="min-w-[100px]">Date</TableHead>
+                    <TableHead className="min-w-[100px]">Type</TableHead>
+                    <TableHead className="min-w-[150px]">Item</TableHead>
+                    <TableHead className="text-right min-w-[100px]">Amount</TableHead>
+                    <TableHead className="min-w-[200px]">Details</TableHead>
+                    <TableHead className="text-right min-w-[120px]">Running Balance</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
