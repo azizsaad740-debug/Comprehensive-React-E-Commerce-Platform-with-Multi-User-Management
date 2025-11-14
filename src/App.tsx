@@ -40,6 +40,7 @@ import LedgerManagementPage from "./pages/admin/LedgerManagementPage";
 import EntityDetailPage from "./pages/admin/EntityDetailPage";
 import POSPage from "./pages/admin/POSPage";
 import DataManagementPage from "./pages/admin/DataManagementPage";
+import AIBulkOperationsPage from "./pages/admin/AIBulkOperationsPage"; // NEW IMPORT
 import { SessionContextProvider } from "./integrations/supabase/SessionContextProvider";
 
 const queryClient = new QueryClient();
@@ -131,6 +132,14 @@ const App = () => (
                   element={
                     <ProtectedRoute allowedRoles={['admin']}>
                       <POSPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin/ai-bulk" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <AIBulkOperationsPage />
                     </ProtectedRoute>
                   } 
                 />

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, ShoppingBag, Users, Package, ArrowRight, Palette, Plug, ShoppingCart } from 'lucide-react';
+import { DollarSign, ShoppingBag, Users, Package, ArrowRight, Palette, Plug, ShoppingCart, Brain } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -157,6 +157,10 @@ const Dashboard = () => {
               </Button>
               <Button className="w-full" onClick={() => navigate('/admin/products')}>
                 Manage Products
+              </Button>
+              <Button className="w-full" onClick={() => navigate('/admin/ai-bulk')}>
+                <Brain className="h-4 w-4 mr-2" />
+                AI Bulk Operations
               </Button>
               <Button className="w-full" onClick={() => navigate('/admin/users')}>
                 Manage Users

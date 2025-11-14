@@ -100,6 +100,10 @@ export interface Product {
   updatedAt: Date;
   actionButtons: ProductActionButton[]; // NEW: Configurable action buttons
   moreInfoContent?: string; // NEW: Content for the 'more_info' popup
+  
+  // Mock properties for AI bulk creation (not part of final DB schema)
+  price?: number;
+  stock?: number;
 }
 
 export interface CartItem {

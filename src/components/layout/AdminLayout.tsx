@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import Header from './Header';
 import AdminSidebar from './AdminSidebar';
 import CartSidebar from '../cart/CartSidebar';
-import { Menu } from 'lucide-react';
+import { Menu, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import AIPopupAgent from '../admin/AIPopupAgent'; // NEW IMPORT
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const isMobile = useIsMobile();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false); // NEW STATE for AI Chat
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -49,6 +51,24 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </main>
       </div>
       <CartSidebar />
+      
+      {/* Floating AI Chat Button (Admin Only) */}
+      <Button
+        className="fixed bottom-4 right-4 w-16 h-16 rounded-full shadow-xl bg-purple-600 hover:bg-purple-700 text-white z-50"
+        onClick={() => setIsAIChatOpen(true)}
+        title="AI Assistant Chat"
+      >
+        <Brain className="h-6 w-6" />
+      </Button>
+      
+      {/* AI Chat Agent Popup */}
+      <AIPopupAgent
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
+        taskType="admin_chat"
+        initialPrompt="What is the current status of low stock items?"
+        context="admin dashboard queries"
+      />
     </div>
   );
 };

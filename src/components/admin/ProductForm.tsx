@@ -8,10 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Product, ProductCustomizationOptions, ProductActionButton } from '@/types';
-import { Save, X, RefreshCw, Check, ShoppingCart, Palette, Info, MessageSquare } from 'lucide-react';
+import { Save, X, RefreshCw, Check, ShoppingCart, Palette, Info, MessageSquare, Brain } from 'lucide-react';
 import { getAllMockFonts, getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import AIPopupAgent from './AIPopupAgent'; // NEW IMPORT
 
 interface ProductFormProps {
   initialProduct?: Product;
@@ -67,6 +68,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
   
   const [tagsInput, setTagsInput] = useState(initialProduct?.tags?.join(', ') || '');
   const [colorsInput, setColorsInput] = useState(initialProduct?.customizationOptions?.allowedColors?.join(', ') || '');
+  const [isAIPopupOpen, setIsAIPopupOpen] = useState(false); // NEW STATE
   
   const mockFonts = getAllMockFonts();
   const mockStartDesigns = getAllMockStartDesigns();
@@ -177,206 +179,232 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
     const selectedName = mockDesigns.find(d => d.id === selectedId)?.name;
     handleCustomizationChange(field, selectedName ? [selectedName] : []);
   };
+  
+  const handleGeneratedText = (text: string) => {
+    handleChange('description', text);
+  };
 
   const hasMoreInfoButton = formData.actionButtons?.includes('more_info');
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 p-4">
-      {/* General Info */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="name">Product Name</Label>
-          <Input id="name" value={formData.name || ''} onChange={(e) => handleChange('name', e.target.value)} required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="sku">SKU</Label>
-          <Input id="sku" value={formData.sku || ''} onChange={(e) => handleChange('sku', e.target.value)} required />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea id="description" value={formData.description || ''} onChange={(e) => handleChange('description', e.target.value)} rows={3} required />
-      </div>
-
-      {/* Pricing & Stock */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="basePrice">Base Price ($)</Label>
-          <Input id="basePrice" type="number" step="0.01" min="0" value={formData.basePrice || 0} onChange={(e) => handleChange('basePrice', e.target.value)} required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="discountedPrice">Discounted Price ($)</Label>
-          <Input id="discountedPrice" type="number" step="0.01" min="0" value={formData.discountedPrice || ''} onChange={(e) => handleChange('discountedPrice', e.target.value)} placeholder="Optional" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="stockQuantity">Initial Stock</Label>
-          <Input id="stockQuantity" type="number" min="0" value={formData.stockQuantity || 0} onChange={(e) => handleChange('stockQuantity', Number(e.target.value))} required />
-        </div>
-      </div>
-      
-      {/* Categorization */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="category">Category</Label>
-          <Input id="category" value={formData.category || ''} onChange={(e) => handleChange('category', e.target.value)} required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="subcategory">Subcategory</Label>
-          <Input id="subcategory" value={formData.subcategory || ''} onChange={(e) => handleChange('subcategory', e.target.value)} placeholder="Optional" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="tags">Tags (comma separated)</Label>
-          <Input id="tags" value={tagsInput} onChange={handleTagInput} placeholder="e.g., popular, new, sale" />
-        </div>
-      </div>
-      
-      {/* Action Buttons Configuration */}
-      <div className="border p-4 rounded-lg space-y-4">
-        <h3 className="text-lg font-semibold">Product Page Actions</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {actionButtonOptions.map(option => {
-            const Icon = option.icon;
-            const isChecked = formData.actionButtons?.includes(option.value);
-            
-            return (
-              <div key={option.value} className="flex items-center space-x-2">
-                <Checkbox 
-                  id={`btn-${option.value}`}
-                  checked={isChecked}
-                  onCheckedChange={(checked) => handleActionButtonToggle(option.value, checked as boolean)}
-                />
-                <Label htmlFor={`btn-${option.value}`} className="flex items-center text-sm">
-                  <Icon className="h-4 w-4 mr-1 text-gray-500" />
-                  {option.label}
-                </Label>
-              </div>
-            );
-          })}
-        </div>
-        
-        {hasMoreInfoButton && (
-          <div className="space-y-2 pt-4 border-t">
-            <Label htmlFor="moreInfoContent">More Info Popup Content</Label>
-            <Textarea 
-              id="moreInfoContent" 
-              value={formData.moreInfoContent || ''} 
-              onChange={(e) => handleChange('moreInfoContent', e.target.value)} 
-              rows={3} 
-              placeholder="Enter detailed information for the popup (e.g., material specs, sizing details)."
-            />
+    <>
+      <form onSubmit={handleSubmit} className="space-y-6 p-4">
+        {/* General Info */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="name">Product Name</Label>
+            <Input id="name" value={formData.name || ''} onChange={(e) => handleChange('name', e.target.value)} required />
           </div>
-        )}
-      </div>
-      
-      {/* Customization Options */}
-      <div className="border p-4 rounded-lg space-y-4">
-        <h3 className="text-lg font-semibold">Customization Settings</h3>
+          <div className="space-y-2">
+            <Label htmlFor="sku">SKU</Label>
+            <Input id="sku" value={formData.sku || ''} onChange={(e) => handleChange('sku', e.target.value)} required />
+          </div>
+        </div>
         
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <Label htmlFor="description">Description</Label>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsAIPopupOpen(true)}
+            >
+              <Brain className="h-4 w-4 mr-2" />
+              Generate with AI
+            </Button>
+          </div>
+          <Textarea id="description" value={formData.description || ''} onChange={(e) => handleChange('description', e.target.value)} rows={3} required />
+        </div>
+
+        {/* Pricing & Stock */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="printPaths">Number of Print Paths (Text Inputs)</Label>
-            <Input id="printPaths" type="number" min="1" value={formData.printPaths || 1} onChange={(e) => handleChange('printPaths', Number(e.target.value))} required />
+            <Label htmlFor="basePrice">Base Price ($)</Label>
+            <Input id="basePrice" type="number" step="0.01" min="0" value={formData.basePrice || 0} onChange={(e) => handleChange('basePrice', e.target.value)} required />
           </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="maxCharacters">Max Characters per Path</Label>
-            <Input id="maxCharacters" type="number" min="1" value={formData.customizationOptions?.maxCharacters || 50} onChange={(e) => handleCustomizationChange('maxCharacters', Number(e.target.value))} required />
+          <div className="space-y-2">
+            <Label htmlFor="discountedPrice">Discounted Price ($)</Label>
+            <Input id="discountedPrice" type="number" step="0.01" min="0" value={formData.discountedPrice || ''} onChange={(e) => handleChange('discountedPrice', e.target.value)} placeholder="Optional" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stockQuantity">Initial Stock</Label>
+            <Input id="stockQuantity" type="number" min="0" value={formData.stockQuantity || 0} onChange={(e) => handleChange('stockQuantity', Number(e.target.value))} required />
           </div>
         </div>
         
-        {/* Allowed Colors */}
-        <div className="space-y-2">
-          <Label htmlFor="allowedColors">Allowed Colors (comma separated)</Label>
-          <Input id="allowedColors" value={colorsInput} onChange={handleColorsInput} placeholder="e.g., Red, Blue, Black" />
+        {/* Categorization */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Input id="category" value={formData.category || ''} onChange={(e) => handleChange('category', e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="subcategory">Subcategory</Label>
+            <Input id="subcategory" value={formData.subcategory || ''} onChange={(e) => handleChange('subcategory', e.target.value)} placeholder="Optional" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tags">Tags (comma separated)</Label>
+            <Input id="tags" value={tagsInput} onChange={handleTagInput} placeholder="e.g., popular, new, sale" />
+          </div>
         </div>
         
-        {/* Font Selection (Single Select) */}
-        <div className="space-y-2">
-          <Label htmlFor="fonts">Default Font</Label>
-          <Select 
-            value={getFirstSelectedId(formData.customizationOptions?.fonts || [], mockFonts)}
-            onValueChange={(value) => handleSingleDesignSelect('fonts', value, mockFonts)}
-          >
-            <SelectTrigger className="w-full mt-1">
-              <SelectValue placeholder="Choose a default font" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None / Default</SelectItem>
-              {mockFonts.map(font => (
-                <SelectItem key={font.id} value={font.id}>
-                  {font.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Action Buttons Configuration */}
+        <div className="border p-4 rounded-lg space-y-4">
+          <h3 className="text-lg font-semibold">Product Page Actions</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {actionButtonOptions.map(option => {
+              const Icon = option.icon;
+              const isChecked = formData.actionButtons?.includes(option.value);
+              
+              return (
+                <div key={option.value} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`btn-${option.value}`}
+                    checked={isChecked}
+                    onCheckedChange={(checked) => handleActionButtonToggle(option.value, checked as boolean)}
+                  />
+                  <Label htmlFor={`btn-${option.value}`} className="flex items-center text-sm">
+                    <Icon className="h-4 w-4 mr-1 text-gray-500" />
+                    {option.label}
+                  </Label>
+                </div>
+              );
+            })}
+          </div>
+          
+          {hasMoreInfoButton && (
+            <div className="space-y-2 pt-4 border-t">
+              <Label htmlFor="moreInfoContent">More Info Popup Content</Label>
+              <Textarea 
+                id="moreInfoContent" 
+                value={formData.moreInfoContent || ''} 
+                onChange={(e) => handleChange('moreInfoContent', e.target.value)} 
+                rows={3} 
+                placeholder="Enter detailed information for the popup (e.g., material specs, sizing details)."
+              />
+            </div>
+          )}
         </div>
         
-        {/* Start Design Selection (Single Select) */}
-        <div className="space-y-2">
-          <Label htmlFor="startDesigns">Default Start Design</Label>
-          <Select 
-            value={getFirstSelectedId(formData.customizationOptions?.startDesigns || [], mockStartDesigns)}
-            onValueChange={(value) => handleSingleDesignSelect('startDesigns', value, mockStartDesigns)}
-          >
-            <SelectTrigger className="w-full mt-1">
-              <SelectValue placeholder="Choose a default start design" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {mockStartDesigns.map(design => (
-                <SelectItem key={design.id} value={design.id}>
-                  {design.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Customization Options */}
+        <div className="border p-4 rounded-lg space-y-4">
+          <h3 className="text-lg font-semibold">Customization Settings</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="printPaths">Number of Print Paths (Text Inputs)</Label>
+              <Input id="printPaths" type="number" min="1" value={formData.printPaths || 1} onChange={(e) => handleChange('printPaths', e.target.value)} required />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="maxCharacters">Max Characters per Path</Label>
+              <Input id="maxCharacters" type="number" min="1" value={formData.customizationOptions?.maxCharacters || 50} onChange={(e) => handleCustomizationChange('maxCharacters', Number(e.target.value))} required />
+            </div>
+          </div>
+          
+          {/* Allowed Colors */}
+          <div className="space-y-2">
+            <Label htmlFor="allowedColors">Allowed Colors (comma separated)</Label>
+            <Input id="allowedColors" value={colorsInput} onChange={handleColorsInput} placeholder="e.g., Red, Blue, Black" />
+          </div>
+          
+          {/* Font Selection (Single Select) */}
+          <div className="space-y-2">
+            <Label htmlFor="fonts">Default Font</Label>
+            <Select 
+              value={getFirstSelectedId(formData.customizationOptions?.fonts || [], mockFonts)}
+              onValueChange={(value) => handleSingleDesignSelect('fonts', value, mockFonts)}
+            >
+              <SelectTrigger className="w-full mt-1">
+                <SelectValue placeholder="Choose a default font" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None / Default</SelectItem>
+                {mockFonts.map(font => (
+                  <SelectItem key={font.id} value={font.id}>
+                    {font.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Start Design Selection (Single Select) */}
+          <div className="space-y-2">
+            <Label htmlFor="startDesigns">Default Start Design</Label>
+            <Select 
+              value={getFirstSelectedId(formData.customizationOptions?.startDesigns || [], mockStartDesigns)}
+              onValueChange={(value) => handleSingleDesignSelect('startDesigns', value, mockStartDesigns)}
+            >
+              <SelectTrigger className="w-full mt-1">
+                <SelectValue placeholder="Choose a default start design" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {mockStartDesigns.map(design => (
+                  <SelectItem key={design.id} value={design.id}>
+                    {design.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* End Design Selection (Single Select) */}
+          <div className="space-y-2">
+            <Label htmlFor="endDesigns">Default End Design</Label>
+            <Select 
+              value={getFirstSelectedId(formData.customizationOptions?.endDesigns || [], mockEndDesigns)}
+              onValueChange={(value) => handleSingleDesignSelect('endDesigns', value, mockEndDesigns)}
+            >
+              <SelectTrigger className="w-full mt-1">
+                <SelectValue placeholder="Choose a default end design" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {mockEndDesigns.map(design => (
+                  <SelectItem key={design.id} value={design.id}>
+                    {design.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        
-        {/* End Design Selection (Single Select) */}
-        <div className="space-y-2">
-          <Label htmlFor="endDesigns">Default End Design</Label>
-          <Select 
-            value={getFirstSelectedId(formData.customizationOptions?.endDesigns || [], mockEndDesigns)}
-            onValueChange={(value) => handleSingleDesignSelect('endDesigns', value, mockEndDesigns)}
-          >
-            <SelectTrigger className="w-full mt-1">
-              <SelectValue placeholder="Choose a default end design" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">None</SelectItem>
-              {mockEndDesigns.map(design => (
-                <SelectItem key={design.id} value={design.id}>
-                  {design.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
 
-      {/* Status and Actions */}
-      <div className="flex justify-between items-center pt-4 border-t">
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="isActive"
-            checked={!!formData.isActive}
-            onCheckedChange={(checked) => handleChange('isActive', checked)}
-          />
-          <Label htmlFor="isActive">Product is Active/Visible</Label>
+        {/* Status and Actions */}
+        <div className="flex justify-between items-center pt-4 border-t">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isActive"
+              checked={!!formData.isActive}
+              onCheckedChange={(checked) => handleChange('isActive', checked)}
+            />
+            <Label htmlFor="isActive">Product is Active/Visible</Label>
+          </div>
+          
+          <div className="flex space-x-2">
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : (initialProduct ? 'Update Product' : 'Create Product')}
+            </Button>
+          </div>
         </div>
-        
-        <div className="flex space-x-2">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isSaving}>
-            <Save className="h-4 w-4 mr-2" />
-            {isSaving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : (initialProduct ? 'Update Product' : 'Create Product')}
-          </Button>
-        </div>
-      </div>
-    </form>
+      </form>
+      
+      <AIPopupAgent
+        isOpen={isAIPopupOpen}
+        onClose={() => setIsAIPopupOpen(false)}
+        taskType="text_generation"
+        initialPrompt={`Generate a compelling, SEO-friendly product description for a ${formData.name || 'new product'} in the ${formData.category || 'general'} category.`}
+        context="product description"
+        onTextGenerated={handleGeneratedText}
+      />
+    </>
   );
 };
 

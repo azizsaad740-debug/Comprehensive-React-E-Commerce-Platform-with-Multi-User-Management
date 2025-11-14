@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plug, Upload, Settings, Zap, RefreshCw } from 'lucide-react';
+import { Plug, Upload, Settings, Zap, RefreshCw, Brain } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import PluginConfigurationModal from '@/components/admin/PluginConfigurationModal';
@@ -88,6 +88,19 @@ const initialMockPlugins: Plugin[] = [
     customCss: '.product-card { border: 2px solid var(--primary); }',
     customJs: 'document.querySelectorAll(".product-card").forEach(card => card.addEventListener("click", () => console.log("Card clicked!")));',
   },
+  { 
+    id: 'p6', 
+    name: 'Gemini AI Integration', 
+    version: '1.0.0', 
+    status: 'inactive', 
+    description: 'Enables AI features like content generation, bulk data operations, and admin insights.', 
+    isBuiltIn: true,
+    config: {
+      GEMINI_API_KEY: 'YOUR_API_KEY_HERE',
+      GOOGLE_AI_API_KEY: 'YOUR_API_KEY_HERE', // For voice/speech recognition mock
+      defaultModel: 'gemini-2.5-flash',
+    }
+  },
 ];
 
 const PluginManagementPage = () => {
@@ -167,7 +180,7 @@ const PluginManagementPage = () => {
                 className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg space-y-3 sm:space-y-0"
               >
                 <div className="flex items-start space-x-4 min-w-0 flex-1">
-                  <Plug className="h-6 w-6 text-primary flex-shrink-0" />
+                  {plugin.id === 'p6' ? <Brain className="h-6 w-6 text-purple-500 flex-shrink-0" /> : <Plug className="h-6 w-6 text-primary flex-shrink-0" />}
                   <div className="min-w-0">
                     <h3 className="font-semibold truncate">{plugin.name} <Badge variant="outline" className="ml-2 text-xs">{plugin.version}</Badge></h3>
                     <p className="text-sm text-gray-500 truncate">{plugin.description}</p>
