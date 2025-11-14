@@ -50,7 +50,8 @@ const POSPage = () => {
   const allUsers = getAllMockUsers().filter(u => u.role === 'customer' || u.role === 'reseller');
   const allProducts = getAllMockProducts().filter(p => p.isActive);
 
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  // Initialize selectedUserId to POS_GUEST_ID instead of null for Select component compatibility
+  const [selectedUserId, setSelectedUserId] = useState<string>(POS_GUEST_ID);
   const [cart, setCart] = useState<POSCartItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isLoading, setIsLoading] = useState(false);
@@ -159,7 +160,7 @@ const POSPage = () => {
     setIsLoading(true);
     
     // Determine customer ID for order and ledger
-    const customerId = selectedUser?.id || POS_GUEST_ID;
+    const customerId = selectedUserId; // Use the selected ID (which defaults to POS_GUEST_ID)
     const customerName = selectedUser?.name || 'POS Guest';
 
     try {
@@ -194,7 +195,7 @@ const POSPage = () => {
 
       // Reset POS state
       setCart([]);
-      setSelectedUserId(null);
+      setSelectedUserId(POS_GUEST_ID); // Reset to guest ID
       setPaymentMethod('cash');
 
     } catch (error) {
@@ -216,7 +217,7 @@ const POSPage = () => {
             <ShoppingCart className="h-6 w-6 mr-3" />
             Point of Sale (POS)
           </h1>
-          <Button variant="outline" onClick={() => { setCart([]); setSelectedUserId(null); setPaymentMethod('cash'); }} disabled={isLoading}>
+          <Button variant="outline" onClick={() => { setCart([]); setSelectedUserId(POS_GUEST_ID); setPaymentMethod('cash'); }} disabled={isLoading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             New Transaction
           </Button>
@@ -293,7 +294,7 @@ const POSPage = () => {
               </CardHeader>
               <CardContent>
                 <Select 
-                  value={selectedUserId || ''} 
+                  value={selectedUserId} 
                   onValueChange={setSelectedUserId}
                   disabled={isLoading}
                 >
@@ -301,7 +302,7 @@ const POSPage = () => {
                     <SelectValue placeholder="Select Customer (Optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">-- POS Guest --</SelectItem>
+                    <SelectItem value={POS_GUEST_ID}>-- POS Guest --</SelectItem>
                     {allUsers.map(user => (
                       <SelectItem key={user.id} value={user.id}>
                         {user.name} ({user.email})
