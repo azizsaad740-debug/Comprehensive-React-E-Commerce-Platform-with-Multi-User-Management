@@ -23,9 +23,11 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white dark:bg-card-foreground dark:text-foreground">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div className="space-y-4">
+        {/* Responsive Grid: 2 columns on mobile, 4 columns on medium/large */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          
+          {/* Company Info (Full width on mobile) */}
+          <div className="col-span-2 md:col-span-1 space-y-4">
             <h3 className="text-xl font-bold">{appName}</h3>
             <p className="text-gray-300 text-sm dark:text-muted-foreground">
               {slogan}
@@ -43,7 +45,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Links (1/2 width on mobile) */}
           <div className="space-y-4">
             <h4 className="text-lg font-semibold">Quick Links</h4>
             <ul className="space-y-2 text-sm">
@@ -72,7 +74,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Customer Service */}
+          {/* Customer Service (1/2 width on mobile) */}
           <div className="space-y-4">
             <h4 className="text-lg font-semibold">Customer Service</h4>
             <ul className="space-y-2 text-sm">
@@ -86,8 +88,8 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Info */}
-          <div className="space-y-4">
+          {/* Contact Info (Full width on mobile, spans 2 columns) */}
+          <div className="col-span-2 md:col-span-1 space-y-4">
             <h4 className="text-lg font-semibold">Contact Info</h4>
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
