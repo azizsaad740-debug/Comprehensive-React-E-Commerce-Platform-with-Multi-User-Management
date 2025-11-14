@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BarcodeScannerCamera from '@/components/admin/BarcodeScannerCamera';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button'; // ADDED: Missing Button import
 import { AlertTriangle, QrCode, ArrowLeft } from 'lucide-react';
 import { connectMobileScanner, sendScannedData } from '@/utils/posLinkUtils';
 import { useToast } from '@/hooks/use-toast';
