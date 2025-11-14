@@ -30,7 +30,7 @@ const BarcodeScannerCamera: React.FC<BarcodeScannerCameraProps> = ({ onProductSc
     
     // Check for camera permission/availability
     try {
-      const devices = await Html5QrcodeScanner.getCameras();
+      const devices = await (Html5QrcodeScanner as any).getCameras();
       if (devices && devices.length) {
         // Camera found, proceed to initialize scanner
         const html5QrcodeScanner = new Html5QrcodeScanner(
