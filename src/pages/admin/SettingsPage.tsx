@@ -20,6 +20,7 @@ import { useUISettingsStore, HeaderVisibilitySettings } from '@/stores/uiSetting
 import { Switch } from '@/components/ui/switch';
 import { useThemeStore } from '@/stores/themeStore';
 import { POSBillSettings } from '@/types';
+import FaviconManager from '@/components/admin/FaviconManager'; // NEW IMPORT
 
 // --- POS Bill Settings Form Component ---
 const POSBillSettingsForm: React.FC = () => {
@@ -122,7 +123,7 @@ const POSBillSettingsForm: React.FC = () => {
 
 
 const SettingsPage = () => {
-  const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
+  const { appName, slogan, logoUrl, faviconUrl, updateBranding } = useBrandingStore();
   const { homepageSections, headerVisibility, updateHomepageSections, updateHeaderVisibility } = useUISettingsStore();
   const { primaryColorHex, updateThemeColors } = useThemeStore();
   const { toast } = useToast();
@@ -140,20 +141,42 @@ const SettingsPage = () => {
     appName: appName,
     slogan: slogan,
     logoUrl: logoUrl,
+    faviconUrl: faviconUrl, // NEW
   });
   
   // Local state for UI settings
   const [localHomepageSections, setLocalHomepageSections] = useState(homepageSections);
   const [localHeaderVisibility, setLocalHeaderVisibility] = useState(headerVisibility);
+  
+  const [isSavingFavicon, setIsSavingFavicon] = useState(false);
 
   // Sync local color state when store changes (e.g., on initial load or external change)
   useEffect(() => {
     setPrimaryColor(primaryColorHex);
     setAccentColor(primaryColorHex);
   }, [primaryColorHex]);
+  
+  // Sync local branding state when store changes
+  useEffect(() => {
+    setBrandingData({
+      appName: appName,
+      slogan: slogan,
+      logoUrl: logoUrl,
+      faviconUrl: faviconUrl,
+    });
+  }, [appName, slogan, logoUrl, faviconUrl]);
 
-  const handleBrandingChange = (field: 'appName' | 'slogan' | 'logoUrl', value: string) => {
+  const handleBrandingChange = (field: 'appName' | 'slogan' | 'logoUrl' | 'faviconUrl', value: string) => {
     setBrandingData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const handleSaveFavicon = (url: string) => {
+    setIsSavingFavicon(true);
+    setTimeout(() => {
+      handleBrandingChange('faviconUrl', url);
+      toast({ title: "Favicon URL Saved", description: "Remember to Publish Theme to apply changes." });
+      setIsSavingFavicon(false);
+    }, 500);
   };
   
   const handleUISectionToggle = (section: keyof typeof homepageSections, checked: boolean) => {
@@ -190,6 +213,7 @@ const SettingsPage = () => {
       appName: appName,
       slogan: slogan,
       logoUrl: logoUrl,
+      faviconUrl: faviconUrl,
     });
     setLocalHomepageSections(homepageSections);
     setLocalHeaderVisibility(headerVisibility);
@@ -316,6 +340,10 @@ const SettingsPage = () => {
                       </div>
                       <p className="text-xs text-gray-500">Use the Content & Images section to upload new logos.</p>
                     </div>
+                    
+                    <Separator />
+                    
+                    <FaviconManager onSave={handleSaveFavicon} isSaving={isSavingFavicon} />
                     
                     <p className="text-sm text-gray-500">Note: Changes require publishing the theme to take effect across the site.</p>
                   </CardContent>
