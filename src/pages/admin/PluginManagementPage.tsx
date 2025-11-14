@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Plug, Upload, Settings, Zap, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import PluginConfigurationModal from '@/components/admin/PluginConfigurationModal'; // NEW IMPORT
+import PluginConfigurationModal from '@/components/admin/PluginConfigurationModal';
 
 interface Plugin {
   id: string;
@@ -16,7 +16,9 @@ interface Plugin {
   status: 'active' | 'inactive' | 'error';
   description: string;
   isBuiltIn: boolean;
-  config: Record<string, any>; // Added config field
+  config: Record<string, any>;
+  customCss?: string; // NEW
+  customJs?: string;  // NEW
 }
 
 const initialMockPlugins: Plugin[] = [
@@ -72,6 +74,20 @@ const initialMockPlugins: Plugin[] = [
       ]
     }
   },
+  { 
+    id: 'p5', 
+    name: 'Custom Page Injector', 
+    version: '1.0.0', 
+    status: 'active', 
+    description: 'Inject custom CSS and JS into the Product Catalog page.', 
+    isBuiltIn: false,
+    config: {
+      targetPage: '/products',
+      notes: 'Use this section for page-specific styling or scripts.',
+    },
+    customCss: '.product-card { border: 2px solid var(--primary); }',
+    customJs: 'document.querySelectorAll(".product-card").forEach(card => card.addEventListener("click", () => console.log("Card clicked!")));',
+  },
 ];
 
 const PluginManagementPage = () => {
@@ -95,12 +111,17 @@ const PluginManagementPage = () => {
     setIsConfigModalOpen(true);
   };
   
-  const handleSaveConfig = (newConfig: Record<string, any>) => {
+  const handleSaveConfig = (data: { config: Record<string, any>, customCss?: string, customJs?: string }) => {
     if (!selectedPlugin) return;
     
     setPlugins(prev => prev.map(p => 
       p.id === selectedPlugin.id 
-        ? { ...p, config: newConfig } 
+        ? { 
+            ...p, 
+            config: data.config,
+            customCss: data.customCss,
+            customJs: data.customJs,
+          } 
         : p
     ));
     setSelectedPlugin(null);
@@ -141,16 +162,19 @@ const PluginManagementPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {plugins.map(plugin => (
-              <div key={plugin.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <Plug className="h-6 w-6 text-primary" />
-                  <div>
-                    <h3 className="font-semibold">{plugin.name} <Badge variant="outline" className="ml-2 text-xs">{plugin.version}</Badge></h3>
-                    <p className="text-sm text-gray-500">{plugin.description}</p>
+              <div 
+                key={plugin.id} 
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg space-y-3 sm:space-y-0"
+              >
+                <div className="flex items-start space-x-4 min-w-0 flex-1">
+                  <Plug className="h-6 w-6 text-primary flex-shrink-0" />
+                  <div className="min-w-0">
+                    <h3 className="font-semibold truncate">{plugin.name} <Badge variant="outline" className="ml-2 text-xs">{plugin.version}</Badge></h3>
+                    <p className="text-sm text-gray-500 truncate">{plugin.description}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-wrap items-center space-x-3 sm:justify-end pt-3 sm:pt-0">
                   <Badge 
                     variant={plugin.status === 'active' ? 'default' : plugin.status === 'error' ? 'destructive' : 'secondary'}
                     className="capitalize"
@@ -192,6 +216,8 @@ const PluginManagementPage = () => {
         <PluginConfigurationModal
           pluginName={selectedPlugin.name}
           initialConfig={selectedPlugin.config}
+          initialCss={selectedPlugin.customCss}
+          initialJs={selectedPlugin.customJs}
           isOpen={isConfigModalOpen}
           onClose={() => setIsConfigModalOpen(false)}
           onSave={handleSaveConfig}
