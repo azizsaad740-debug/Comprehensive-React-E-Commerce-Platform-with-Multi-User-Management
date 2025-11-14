@@ -22,14 +22,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <Header />
       <div className="flex flex-1">
         
-        {/* Desktop Sidebar (md and up) */}
-        <div className="hidden md:flex flex-col h-full border-r bg-sidebar w-64 flex-shrink-0">
+        {/* Desktop Sidebar (md and up) - Removed border-r */}
+        <div className="hidden md:flex flex-col h-full bg-sidebar w-64 flex-shrink-0">
           <AdminSidebar />
         </div>
         
-        {/* Mobile Menu Button and Sheet (below md) */}
+        {/* Mobile Menu Button and Sheet (below md) - Removed border-b */}
         {isMobile && (
-          <div className="md:hidden p-2 border-b bg-white dark:bg-card">
+          <div className="md:hidden p-2 bg-white dark:bg-card">
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon" className="h-8 w-8 border-gray-300 dark:border-gray-700">
@@ -43,8 +43,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </div>
         )}
         
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto">
+        {/* Main Content - Added px-2 for subtle horizontal spacing */}
+        <main className="flex-1 overflow-y-auto px-2">
           {children}
         </main>
       </div>
