@@ -46,8 +46,8 @@ const App = () => (
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <TooltipProvider>
         <Toaster />
-        <SessionContextProvider> {/* Moved SessionContextProvider here */}
-          <BrowserRouter>
+        <BrowserRouter>
+          <SessionContextProvider> {/* CORRECT: SessionContextProvider is now inside BrowserRouter */}
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/products" element={<ProductCatalog />} />
@@ -247,8 +247,8 @@ const App = () => (
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-          </BrowserRouter>
-        </SessionContextProvider>
+          </SessionContextProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
