@@ -15,7 +15,7 @@ interface EntityListProps {
   selectedEntityId: string | null;
   onSelectEntity: (id: string) => void;
   onAddExternalEntity: () => void;
-  onDeleteExternalEntity: (id: string, name: string) => void; // NEW PROP
+  onDeleteExternalEntity: (id: string, name: string) => void;
 }
 
 const getEntityIcon = (type: LedgerEntityType) => {
@@ -63,7 +63,7 @@ const EntityList: React.FC<EntityListProps> = ({ entities, selectedEntityId, onS
         </div>
       </CardHeader>
       <CardContent className="flex-1 p-0">
-        <ScrollArea className="h-[calc(100vh-250px)]">
+        <ScrollArea className="h-[calc(100vh-250px)] md:h-[calc(100vh-250px)]">
           <div className="space-y-1 p-4 pt-0">
             {filteredEntities.map(entity => {
               const isExternal = entity.type === 'supplier' || entity.type === 'other';

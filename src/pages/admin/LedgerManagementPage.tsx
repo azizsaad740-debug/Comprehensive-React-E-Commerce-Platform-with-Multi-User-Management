@@ -14,12 +14,14 @@ import {
   getAllLedgerEntities, 
   addExternalEntity, 
   updateExternalEntity,
-  deleteExternalEntity // Import delete function
+  deleteExternalEntity
 } from '@/utils/ledgerUtils';
 import LedgerDashboard from '@/components/ledger/LedgerDashboard.tsx';
 import EntityList from '@/components/ledger/EntityList.tsx';
-import EntityLedgerView from '@/components/ledger/EntityLedgerView.tsx';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
+import EntityLedgerView from '@/components/ledger/EntityLedgerView'; // FIX 2
 
 // --- External Entity Form Component (Internal to Page) ---
 
@@ -96,6 +98,9 @@ const ExternalEntityForm: React.FC<ExternalEntityFormProps> = ({ initialEntity, 
 
 const LedgerManagementPage = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  
   const [entities, setEntities] = useState<LedgerEntity[]>([]);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -107,11 +112,11 @@ const LedgerManagementPage = () => {
     const allEntities = getAllLedgerEntities();
     setEntities(allEntities);
     
-    // Select the first entity by default if none is selected
-    if (!selectedEntityId && allEntities.length > 0) {
+    // Select the first entity by default on desktop
+    if (!isMobile && !selectedEntityId && allEntities.length > 0) {
       setSelectedEntityId(allEntities[0].id);
     }
-  }, [refreshKey]);
+  }, [refreshKey, isMobile]);
 
   const selectedEntity = useMemo(() => {
     return entities.find(e => e.id === selectedEntityId);
@@ -119,6 +124,16 @@ const LedgerManagementPage = () => {
   
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
+  };
+  
+  const handleSelectEntity = (entityId: string) => {
+    if (isMobile) {
+      // On mobile, navigate to the detail page
+      navigate(`/admin/ledger/${entityId}`);
+    } else {
+      // On desktop, update the selected entity in the same view
+      setSelectedEntityId(entityId);
+    }
   };
   
   const handleSaveExternalEntity = (data: Omit<LedgerEntity, 'id' | 'linkedId'>) => {
@@ -149,12 +164,10 @@ const LedgerManagementPage = () => {
   
   const handleDeleteExternalEntity = (entityId: string, entityName: string) => {
     if (window.confirm(`Are you sure you want to delete the external entity: ${entityName}? This will not delete associated transactions.`)) {
-      // Simulate deletion delay
       setTimeout(() => {
         if (deleteExternalEntity(entityId)) {
           toast({ title: "Deleted", description: `${entityName} removed from ledger entities.` });
           
-          // If the deleted entity was selected, clear selection
           if (selectedEntityId === entityId) {
             setSelectedEntityId(null);
           }
@@ -186,37 +199,39 @@ const LedgerManagementPage = () => {
         </div>
         <p className="text-gray-600 mb-8">Track financial transactions (cash/product) with customers, resellers, suppliers, and other entities.</p>
 
-        {/* Overall Dashboard Summary */}
+        {/* Overall Dashboard Summary (Always visible) */}
         <LedgerDashboard onRefresh={handleRefresh} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-          {/* Left Column: Entity List */}
-          <div className="lg:col-span-1">
+          {/* Left Column: Entity List (Full width on mobile) */}
+          <div className={isMobile ? "lg:col-span-3" : "lg:col-span-1"}>
             <EntityList 
               entities={entities} 
               selectedEntityId={selectedEntityId} 
-              onSelectEntity={setSelectedEntityId}
+              onSelectEntity={handleSelectEntity}
               onAddExternalEntity={handleOpenExternalForm}
               onDeleteExternalEntity={handleDeleteExternalEntity}
             />
           </div>
 
-          {/* Right Column: Ledger View */}
-          <div className="lg:col-span-2">
-            {selectedEntity ? (
-              <EntityLedgerView 
-                entity={selectedEntity} 
-                onTransactionAdded={handleRefresh}
-              />
-            ) : (
-              <Card className="h-full flex items-center justify-center">
-                <CardContent className="text-center p-12">
-                  <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600">Select an entity from the list to view or add transactions.</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          {/* Right Column: Ledger View (Hidden on mobile, shown in detail page) */}
+          {!isMobile && (
+            <div className="lg:col-span-2">
+              {selectedEntity ? (
+                <EntityLedgerView 
+                  entity={selectedEntity} 
+                  onTransactionAdded={handleRefresh}
+                />
+              ) : (
+                <Card className="h-full flex items-center justify-center">
+                  <CardContent className="text-center p-12">
+                    <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600">Select an entity from the list to view or add transactions.</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </div>
       </div>
       

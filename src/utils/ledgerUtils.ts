@@ -1,6 +1,7 @@
 import { LedgerEntity, LedgerTransaction, LedgerEntityType, TransactionType, TransactionItemType } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { getAllMockUsers } from './userUtils';
+import { updateProductStock } from './productUtils'; // Import stock update utility
 
 // --- Mock Data Stores ---
 
@@ -18,9 +19,9 @@ const initialTransactions: LedgerTransaction[] = [
   // Transaction for Supplier 1 (We Gave Cash - Debt to us)
   { id: uuidv4(), entityId: 'e1', type: 'we_gave', itemType: 'cash', amount: 500.00, details: 'Advance payment for raw materials.', createdAt: new Date(Date.now() - 86400000 * 10) },
   // Transaction for Supplier 1 (We Received Product - Credit to us)
-  { id: uuidv4(), entityId: 'e1', type: 'we_received', itemType: 'product', amount: 300.00, details: 'Received 100 units of cotton fabric.', productName: 'Cotton Fabric', createdAt: new Date(Date.now() - 86400000 * 5) },
+  { id: uuidv4(), entityId: 'e1', type: 'we_received', itemType: 'product', amount: 300.00, details: 'Received 100 units of cotton fabric.', productName: 'Cotton Fabric', productId: '1', quantity: 100, purchasePrice: 3.00, createdAt: new Date(Date.now() - 86400000 * 5) },
   // Transaction for Reseller u2 (We Gave Product - Debt to us)
-  { id: uuidv4(), entityId: 'u2', type: 'we_gave', itemType: 'product', amount: 150.00, details: 'Sample products provided to reseller.', productName: 'Sample T-Shirts', createdAt: new Date(Date.now() - 86400000 * 3) },
+  { id: uuidv4(), entityId: 'u2', type: 'we_gave', itemType: 'product', amount: 150.00, details: 'Sample products provided to reseller.', productName: 'Sample T-Shirts', productId: '1', quantity: 5, salePrice: 30.00, createdAt: new Date(Date.now() - 86400000 * 3) },
   // Transaction for Customer u3 (We Received Cash - Credit to us)
   { id: uuidv4(), entityId: 'u3', type: 'we_received', itemType: 'cash', amount: 42.39, details: 'Payment for order CP-2024-001236.', createdAt: new Date(Date.now() - 86400000 * 10) },
 ];
@@ -66,6 +67,17 @@ export const addLedgerTransaction = (data: Omit<LedgerTransaction, 'id' | 'creat
     id: uuidv4(),
     createdAt: new Date(),
   };
+  
+  // --- STOCK INTEGRATION ---
+  if (newTransaction.itemType === 'product' && newTransaction.productId && newTransaction.quantity) {
+    const quantityChange = newTransaction.type === 'we_received' 
+      ? newTransaction.quantity // We received product -> Stock increases
+      : -newTransaction.quantity; // We gave product -> Stock decreases
+      
+    updateProductStock(newTransaction.productId, quantityChange);
+  }
+  // -------------------------
+  
   currentTransactions.unshift(newTransaction); // Add to the beginning
   return newTransaction;
 };

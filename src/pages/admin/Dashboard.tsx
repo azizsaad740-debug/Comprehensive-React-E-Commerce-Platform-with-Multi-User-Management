@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, ShoppingBag, Users, Package, ArrowRight, Palette, Plug } from 'lucide-react';
+import { DollarSign, ShoppingBag, Users, Package, ArrowRight, Palette, Plug, ShoppingCart } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
@@ -146,6 +146,10 @@ const Dashboard = () => {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              <Button className="w-full" onClick={() => navigate('/admin/pos')}>
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Point of Sale (POS)
+              </Button>
               <Button className="w-full" onClick={() => navigate('/admin/orders')}>
                 Manage Orders
               </Button>

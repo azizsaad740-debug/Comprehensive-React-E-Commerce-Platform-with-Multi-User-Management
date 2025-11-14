@@ -21,7 +21,7 @@ export const mockUsers: User[] = [
     id: '64813257-184d-4fbf-ac0a-ebff11be0200', email: 'admin@example.com', name: 'Alice Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(),
   },
   {
-    id: 'u2', email: 'reseller1@example.com', name: 'Bob Reseller', role: 'reseller', isActive: true, createdAt: new Date(), updatedAt: new Date(), commissionRate: 15, totalEarnings: 5000,
+    id: 'u2', email: 'reseller1@example.com', name: 'Bob Reseller', role: 'reseller', isActive: true, createdAt: new Date(), updatedAt: new Date(), commissionRate: 15,
   },
   {
     id: 'u3', email: 'customer1@example.com', name: 'Charlie Admin', role: 'admin', isActive: true, createdAt: new Date(), updatedAt: new Date(), // Promoted to Admin

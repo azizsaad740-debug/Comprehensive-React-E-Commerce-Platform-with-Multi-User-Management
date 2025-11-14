@@ -197,6 +197,17 @@ export const updateMockProduct = (updatedProductData: Partial<Product>): Product
   return undefined;
 };
 
+export const updateProductStock = (productId: string, quantityChange: number): Product | undefined => {
+  const productIndex = mockProducts.findIndex(product => product.id === productId);
+  if (productIndex !== -1) {
+    const product = mockProducts[productIndex];
+    product.stockQuantity = Math.max(0, product.stockQuantity + quantityChange);
+    product.updatedAt = new Date();
+    return product;
+  }
+  return undefined;
+};
+
 export const deleteMockProduct = (productId: string): boolean => {
   const initialLength = mockProducts.length;
   const index = mockProducts.findIndex(product => product.id === productId);

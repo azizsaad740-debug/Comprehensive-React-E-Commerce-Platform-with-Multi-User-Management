@@ -37,7 +37,9 @@ import { ThemeProvider } from "./components/layout/ThemeProvider";
 import ContentPage from "./pages/ContentPage";
 import FaqPage from "./pages/FaqPage";
 import LedgerManagementPage from "./pages/admin/LedgerManagementPage";
-import { SessionContextProvider } from "./integrations/supabase/SessionContextProvider"; // Import SessionContextProvider
+import EntityDetailPage from "./pages/admin/EntityDetailPage";
+import POSPage from "./pages/admin/POSPage";
+import { SessionContextProvider } from "./integrations/supabase/SessionContextProvider";
 
 const queryClient = new QueryClient();
 
@@ -47,7 +49,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <BrowserRouter>
-          <SessionContextProvider> {/* CORRECT: SessionContextProvider is now inside BrowserRouter */}
+          <SessionContextProvider>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/products" element={<ProductCatalog />} />
@@ -124,6 +126,14 @@ const App = () => (
                   } 
                 />
                 <Route 
+                  path="/admin/pos" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <POSPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
                   path="/reseller/dashboard" 
                   element={
                     <ProtectedRoute allowedRoles={['reseller', 'admin']}>
@@ -184,6 +194,14 @@ const App = () => (
                   element={
                     <ProtectedRoute allowedRoles={['admin']}>
                       <LedgerManagementPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin/ledger/:entityId" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <EntityDetailPage />
                     </ProtectedRoute>
                   } 
                 />

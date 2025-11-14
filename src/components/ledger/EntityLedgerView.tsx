@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { LedgerEntity, LedgerTransaction } from '@/types';
+import { LedgerEntity, LedgerTransaction, TransactionType } from '@/types';
 import { calculateEntityBalance, getTransactionsByEntityId } from '@/utils/ledgerUtils';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DollarSign, Package, ArrowUp, ArrowDown } from 'lucide-react';
+import { DollarSign, Package, ArrowUp, ArrowDown, PlusCircle, MinusCircle } from 'lucide-react';
 import TransactionForm from './TransactionForm.tsx';
 import { Button } from '@/components/ui/button';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface EntityLedgerViewProps {
   entity: LedgerEntity;
@@ -21,8 +22,16 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
   const balance = calculateEntityBalance(entity.id);
   const { currencySymbol } = useCheckoutSettingsStore();
   
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formType, setFormType] = useState<TransactionType>('we_gave');
+
   const balanceColor = balance >= 0 ? 'text-green-600' : 'text-red-600';
   const balanceLabel = balance >= 0 ? 'Owes Us (Debt)' : 'We Owe (Credit)';
+
+  const handleOpenForm = (type: TransactionType) => {
+    setFormType(type);
+    setIsFormOpen(true);
+  };
 
   // Calculate running balance for display
   const transactionsWithRunningBalance = useMemo(() => {
@@ -67,13 +76,23 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
         </CardContent>
       </Card>
 
-      {/* New Transaction Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Record New Transaction</CardTitle>
-        </CardHeader>
-        <TransactionForm entity={entity} onTransactionAdded={onTransactionAdded} />
-      </Card>
+      {/* Floating Action Buttons (FABs) for Mobile/Quick Entry */}
+      <div className="fixed bottom-4 right-4 md:hidden flex flex-col space-y-3 z-50">
+        <Button 
+          className="w-16 h-16 rounded-full shadow-lg bg-green-600 hover:bg-green-700 text-white"
+          onClick={() => handleOpenForm('we_received')}
+          title="Record Credit (We Received)"
+        >
+          <PlusCircle className="h-6 w-6" />
+        </Button>
+        <Button 
+          className="w-16 h-16 rounded-full shadow-lg bg-red-600 hover:bg-red-700 text-white"
+          onClick={() => handleOpenForm('we_gave')}
+          title="Record Debit (We Gave)"
+        >
+          <MinusCircle className="h-6 w-6" />
+        </Button>
+      </div>
 
       {/* Transaction History */}
       <Card>
@@ -106,13 +125,15 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
                       <TableRow key={t.id}>
                         <TableCell className="text-sm">{t.createdAt.toLocaleDateString()}</TableCell>
                         <TableCell>
-                          <Badge variant={isDebit ? 'default' : 'secondary'} className="capitalize">
+                          <Badge variant={isDebit ? 'destructive' : 'default'} className="capitalize">
                             {t.type.replace('_', ' ')}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-sm capitalize flex items-center space-x-1">
                           {t.itemType === 'cash' ? <DollarSign className="h-4 w-4" /> : <Package className="h-4 w-4" />}
-                          <span>{t.itemType === 'product' ? t.productName : 'Cash'}</span>
+                          <span>
+                            {t.itemType === 'product' ? `${t.productName} (x${t.quantity})` : 'Cash'}
+                          </span>
                         </TableCell>
                         <TableCell className={`text-right font-medium ${amountColor}`}>
                           {isDebit ? <ArrowUp className="h-3 w-3 inline mr-1" /> : <ArrowDown className="h-3 w-3 inline mr-1" />}
@@ -131,6 +152,23 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
           )}
         </CardContent>
       </Card>
+      
+      {/* Transaction Form Sheet */}
+      <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>Record {formType === 'we_gave' ? 'Debit (We Gave)' : 'Credit (We Received)'}</SheetTitle>
+          </SheetHeader>
+          <div className="py-4">
+            <TransactionForm 
+              entity={entity} 
+              initialType={formType}
+              onTransactionAdded={onTransactionAdded} 
+              onClose={() => setIsFormOpen(false)}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
