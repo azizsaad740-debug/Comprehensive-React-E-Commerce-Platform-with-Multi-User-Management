@@ -16,9 +16,9 @@ interface MobileScannerLinkProps {
   sessionId: string | null;
 }
 
-// Access the component, handling potential default export structure
-// We rely on the module object itself or its default property for the component.
-const QRCodeComponent = (QRCodeModule as any).default || QRCodeModule;
+// Access the component, assuming it might be nested under 'QRCode' or 'default'
+// We use a fallback to ensure we get a function/class component.
+const QRCodeComponent = (QRCodeModule as any).QRCode || (QRCodeModule as any).default || QRCodeModule;
 
 const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted, onSessionStopped, isSessionActive, sessionId }) => {
   const { toast } = useToast();
@@ -30,7 +30,7 @@ const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted,
     let interval: NodeJS.Timeout;
     if (isSessionActive && sessionId) {
       // Start polling for connection status
-      interval = setInterval(() => {
+      interval = setInterval(async () => {
         // Note: getSessionStatus is synchronous in the mock utility
         const status = getSessionStatus(sessionId);
         setIsConnected(status);
