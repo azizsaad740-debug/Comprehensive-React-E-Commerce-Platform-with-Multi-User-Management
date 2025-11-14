@@ -19,12 +19,14 @@ import { useBrandingStore } from '@/stores/brandingStore';
 import { ThemeToggle } from './ThemeToggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
+import { useUISettingsStore } from '@/stores/uiSettingsStore'; // NEW IMPORT
 
 const Header = () => {
   const navigate = useNavigate();
   const { getTotalItems } = useCartStore();
   const { user, isAuthenticated, logout } = useAuthStore();
   const { appName } = useBrandingStore();
+  const { headerVisibility } = useUISettingsStore(); // NEW HOOK
   const totalItems = getTotalItems();
 
   const isDashboardUser = isAuthenticated && (user?.role === 'admin' || user?.role === 'reseller' || user?.role === 'superuser');
@@ -35,7 +37,6 @@ const Header = () => {
   };
   
   const handleSearchClick = () => {
-    // Navigate to product catalog, potentially triggering a search UI element there
     navigate('/products?search=true');
   };
   
@@ -89,22 +90,28 @@ const Header = () => {
       {!isDashboardUser && (
         <nav className="flex flex-col space-y-2">
           <h3 className="font-semibold text-gray-700 dark:text-gray-300">Navigation</h3>
-          <Link to="/products" className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground p-2">
-            Products
-          </Link>
-          <Link to="/categories" className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground p-2">
-            Categories
-          </Link>
-          <Link to="/about" className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground p-2">
-            About
-          </Link>
-          <Link to="/contact" className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground p-2">
-            Contact
-          </Link>
+          {headerVisibility.showProductsLink && (
+            <Link to="/products" className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground p-2">
+              Products
+            </Link>
+          )}
+          {headerVisibility.showCategoriesLink && (
+            <Link to="/categories" className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground p-2">
+              Categories
+            </Link>
+          )}
+          {headerVisibility.showAboutLink && (
+            <Link to="/about" className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground p-2">
+              About
+            </Link>
+          )}
+          {headerVisibility.showContactLink && (
+            <Link to="/contact" className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground p-2">
+              Contact
+            </Link>
+          )}
         </nav>
       )}
-      
-      {/* Removed Mobile Search Input Field */}
     </div>
   );
 
@@ -115,39 +122,61 @@ const Header = () => {
         {/* Main Header Row: Relative positioning for mobile centering */}
         <div className="flex items-center justify-between h-16 relative">
           
-          {/* Logo (Centered on mobile, left on desktop) */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 md:static md:translate-x-0">
+          {/* Left Side (Desktop Nav) */}
+          <div className="hidden md:flex items-center space-x-6">
+            {/* Logo (Left on desktop) */}
+            <Link to="/" className="flex items-center space-x-4">
+              <h1 className="text-xl font-bold text-primary">{appName}</h1>
+            </Link>
+            
+            {/* Desktop Navigation Links (Hidden for Dashboard Users) */}
+            {!isDashboardUser && (
+              <nav className="flex items-center space-x-6">
+                {headerVisibility.showProductsLink && (
+                  <Link 
+                    to="/products" 
+                    className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground"
+                  >
+                    Products
+                  </Link>
+                )}
+                {headerVisibility.showCategoriesLink && (
+                  <Link 
+                    to="/categories" 
+                    className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground"
+                  >
+                    Categories
+                  </Link>
+                )}
+                {headerVisibility.showAboutLink && (
+                  <Link 
+                    to="/about" 
+                    className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground"
+                  >
+                    About
+                  </Link>
+                )}
+                {headerVisibility.showContactLink && (
+                  <Link 
+                    to="/contact" 
+                    className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground"
+                  >
+                    Contact
+                  </Link>
+                )}
+              </nav>
+            )}
+          </div>
+          
+          {/* Center (Mobile Logo) */}
+          <div className="md:hidden absolute left-1/2 transform -translate-x-1/2">
             <Link to="/" className="flex items-center space-x-4">
               <h1 className="text-xl font-bold text-primary">{appName}</h1>
             </Link>
           </div>
 
-          {/* Desktop Navigation Links (Hidden for Dashboard Users) */}
-          {!isDashboardUser && (
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link 
-                to="/products" 
-                className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground"
-              >
-                Products
-              </Link>
-              <Link 
-                to="/categories" 
-                className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground"
-              >
-                Categories
-              </Link>
-              <Link 
-                to="/about" 
-                className="text-gray-600 hover:text-gray-900 font-medium transition-colors dark:text-muted-foreground dark:hover:text-foreground"
-              >
-                About
-              </Link>
-            </nav>
-          )}
-
-          {/* Search Bar (Desktop only, Hidden for Dashboard Users) */}
-          {!isDashboardUser && (
+          {/* Desktop Search Bar (Center on desktop, Hidden for Dashboard Users) */}
+          {!isDashboardUser && headerVisibility.showSearchIcon && (
             <div className="flex-1 max-w-md mx-8 hidden md:block">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -164,8 +193,8 @@ const Header = () => {
           {isDashboardUser && <div className="flex-1 max-w-md mx-8 hidden md:block"></div>}
 
 
-          {/* Right Navigation (Always visible, contains Cart + Desktop User/Theme + Mobile Menu) */}
-          <div className="flex items-center space-x-2 md:space-x-4">
+          {/* Right Navigation (Always visible, contains Cart + Desktop User/Theme + Mobile Icons) */}
+          <div className="flex items-center space-x-2 md:space-x-4 ml-auto">
             
             {/* Desktop Theme Toggle & User Menu (Hidden on mobile) */}
             <div className="hidden md:flex items-center space-x-4">
@@ -213,8 +242,8 @@ const Header = () => {
               )}
             </div>
             
-            {/* Mobile Search Icon (NEW) - Order 1 (Leftmost on right side) */}
-            {!isDashboardUser && (
+            {/* Mobile Search Icon (Visible on mobile, hidden on desktop) */}
+            {!isDashboardUser && headerVisibility.showSearchIcon && (
                 <Button 
                     variant="ghost" 
                     size="sm" 
@@ -225,7 +254,7 @@ const Header = () => {
                 </Button>
             )}
             
-            {/* Cart (Order 2) */}
+            {/* Cart (Always visible) */}
             <Button 
               variant="ghost" 
               size="sm" 
@@ -243,7 +272,7 @@ const Header = () => {
               )}
             </Button>
 
-            {/* Mobile Hamburger Menu (Order 3 - Rightmost on right side) */}
+            {/* Mobile Hamburger Menu (Hidden on desktop) */}
             <div className="md:hidden">
               <Sheet>
                 <SheetTrigger asChild>

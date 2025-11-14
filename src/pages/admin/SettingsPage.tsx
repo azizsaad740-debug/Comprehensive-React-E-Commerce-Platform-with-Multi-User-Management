@@ -5,7 +5,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image, DollarSign, Truck, Home } from 'lucide-react';
+import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image, DollarSign, Truck, Home, Link } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -16,12 +16,12 @@ import { useToast } from '@/hooks/use-toast';
 import CheckoutSettingsForm from '@/components/admin/CheckoutSettingsForm';
 import { useNavigate } from 'react-router-dom';
 import { hexToRawHsl } from '@/lib/colorUtils';
-import { useUISettingsStore } from '@/stores/uiSettingsStore'; // NEW IMPORT
+import { useUISettingsStore, HeaderVisibilitySettings } from '@/stores/uiSettingsStore'; // UPDATED IMPORT
 import { Switch } from '@/components/ui/switch'; // Ensure Switch is imported
 
 const SettingsPage = () => {
   const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
-  const { homepageSections, updateHomepageSections } = useUISettingsStore(); // NEW HOOK
+  const { homepageSections, headerVisibility, updateHomepageSections, updateHeaderVisibility } = useUISettingsStore(); // UPDATED HOOK
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -42,6 +42,7 @@ const SettingsPage = () => {
   
   // Local state for UI settings
   const [localHomepageSections, setLocalHomepageSections] = useState(homepageSections);
+  const [localHeaderVisibility, setLocalHeaderVisibility] = useState(headerVisibility); // NEW STATE
 
   const handleBrandingChange = (field: 'appName' | 'slogan' | 'logoUrl', value: string) => {
     setBrandingData(prev => ({ ...prev, [field]: value }));
@@ -49,6 +50,10 @@ const SettingsPage = () => {
   
   const handleUISectionToggle = (section: keyof typeof homepageSections, checked: boolean) => {
     setLocalHomepageSections(prev => ({ ...prev, [section]: checked }));
+  };
+  
+  const handleHeaderVisibilityToggle = (field: keyof HeaderVisibilitySettings, checked: boolean) => {
+    setLocalHeaderVisibility(prev => ({ ...prev, [field]: checked }));
   };
 
   const applyColorsToCSS = (primaryHex: string, accentHex: string) => {
@@ -79,6 +84,7 @@ const SettingsPage = () => {
     
     // 2. Update UI Settings Store
     updateHomepageSections(localHomepageSections);
+    updateHeaderVisibility(localHeaderVisibility); // NEW: Save header visibility settings
     
     // 3. Apply Color Changes to CSS variables
     applyColorsToCSS(primaryColor, accentColor);
@@ -97,6 +103,7 @@ const SettingsPage = () => {
       logoUrl: logoUrl,
     });
     setLocalHomepageSections(homepageSections);
+    setLocalHeaderVisibility(headerVisibility); // NEW: Reset header visibility
     
     // Note: We don't have a persistent store for colors yet, so we reset to the default hex values.
     setPrimaryColor('#FF6B81'); 
@@ -262,46 +269,101 @@ const SettingsPage = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Home className="h-5 w-5" />
-                      <span>Homepage Section Visibility</span>
+                      <span>Page Section Visibility</span>
                     </CardTitle>
-                    <CardDescription>Toggle visibility for predefined sections on the main homepage.</CardDescription>
+                    <CardDescription>Control which sections and navigation elements are visible to customers.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6">
                     
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <Label htmlFor="featuresSection">Features Section ("Why Choose Us?")</Label>
-                      <Switch
-                        id="featuresSection"
-                        checked={localHomepageSections.featuresSection}
-                        onCheckedChange={(checked) => handleUISectionToggle('featuresSection', checked)}
-                      />
+                    {/* Header Visibility Controls */}
+                    <div className="space-y-4 border p-4 rounded-lg">
+                      <h4 className="font-semibold flex items-center text-lg">
+                        <Link className="h-5 w-5 mr-2" /> Header Navigation
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center justify-between p-2 border rounded-lg">
+                          <Label htmlFor="showProductsLink">Products Link</Label>
+                          <Switch
+                            id="showProductsLink"
+                            checked={localHeaderVisibility.showProductsLink}
+                            onCheckedChange={(checked) => handleHeaderVisibilityToggle('showProductsLink', checked)}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between p-2 border rounded-lg">
+                          <Label htmlFor="showCategoriesLink">Categories Link</Label>
+                          <Switch
+                            id="showCategoriesLink"
+                            checked={localHeaderVisibility.showCategoriesLink}
+                            onCheckedChange={(checked) => handleHeaderVisibilityToggle('showCategoriesLink', checked)}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between p-2 border rounded-lg">
+                          <Label htmlFor="showAboutLink">About Link</Label>
+                          <Switch
+                            id="showAboutLink"
+                            checked={localHeaderVisibility.showAboutLink}
+                            onCheckedChange={(checked) => handleHeaderVisibilityToggle('showAboutLink', checked)}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between p-2 border rounded-lg">
+                          <Label htmlFor="showContactLink">Contact Link</Label>
+                          <Switch
+                            id="showContactLink"
+                            checked={localHeaderVisibility.showContactLink}
+                            onCheckedChange={(checked) => handleHeaderVisibilityToggle('showContactLink', checked)}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between p-2 border rounded-lg md:col-span-2">
+                          <Label htmlFor="showSearchIcon">Search Icon (Mobile/Desktop)</Label>
+                          <Switch
+                            id="showSearchIcon"
+                            checked={localHeaderVisibility.showSearchIcon}
+                            onCheckedChange={(checked) => handleHeaderVisibilityToggle('showSearchIcon', checked)}
+                          />
+                        </div>
+                      </div>
                     </div>
                     
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <Label htmlFor="featuredProductsSection">Featured Products Section</Label>
-                      <Switch
-                        id="featuredProductsSection"
-                        checked={localHomepageSections.featuredProductsSection}
-                        onCheckedChange={(checked) => handleUISectionToggle('featuredProductsSection', checked)}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <Label htmlFor="categoriesPreviewSection">Categories Preview Section</Label>
-                      <Switch
-                        id="categoriesPreviewSection"
-                        checked={localHomepageSections.categoriesPreviewSection}
-                        onCheckedChange={(checked) => handleUISectionToggle('categoriesPreviewSection', checked)}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <Label htmlFor="ctaSection">Call to Action (CTA) Section</Label>
-                      <Switch
-                        id="ctaSection"
-                        checked={localHomepageSections.ctaSection}
-                        onCheckedChange={(checked) => handleUISectionToggle('ctaSection', checked)}
-                      />
+                    {/* Homepage Visibility Controls */}
+                    <div className="space-y-4 border p-4 rounded-lg">
+                      <h4 className="font-semibold flex items-center text-lg">
+                        <Home className="h-5 w-5 mr-2" /> Homepage Sections
+                      </h4>
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <Label htmlFor="featuresSection">Features Section ("Why Choose Us?")</Label>
+                        <Switch
+                          id="featuresSection"
+                          checked={localHomepageSections.featuresSection}
+                          onCheckedChange={(checked) => handleUISectionToggle('featuresSection', checked)}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <Label htmlFor="featuredProductsSection">Featured Products Section</Label>
+                        <Switch
+                          id="featuredProductsSection"
+                          checked={localHomepageSections.featuredProductsSection}
+                          onCheckedChange={(checked) => handleUISectionToggle('featuredProductsSection', checked)}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <Label htmlFor="categoriesPreviewSection">Categories Preview Section</Label>
+                        <Switch
+                          id="categoriesPreviewSection"
+                          checked={localHomepageSections.categoriesPreviewSection}
+                          onCheckedChange={(checked) => handleUISectionToggle('categoriesPreviewSection', checked)}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <Label htmlFor="ctaSection">Call to Action (CTA) Section</Label>
+                        <Switch
+                          id="ctaSection"
+                          checked={localHomepageSections.ctaSection}
+                          onCheckedChange={(checked) => handleUISectionToggle('ctaSection', checked)}
+                        />
+                      </div>
                     </div>
                     
                     <p className="text-sm text-gray-500 pt-4">Note: Changes require publishing the theme to take effect.</p>
