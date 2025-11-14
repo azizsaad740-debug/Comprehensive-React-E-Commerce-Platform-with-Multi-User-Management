@@ -5,6 +5,7 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface SessionContextType {
   session: Session | null;
@@ -26,49 +27,36 @@ interface SessionContextProviderProps {
 
 export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [initialSyncDone, setInitialSyncDone] = useState(false); // Local flag to ensure initial sync runs only once
-  
-  const { logout, setLoading, syncUser } = useAuthStore();
+  const { isAuthenticated, logout, setLoading } = useAuthStore();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Only run initial sync logic if it hasn't been done yet
-    if (!initialSyncDone) {
-      setLoading(true);
-      
-      supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-        setSession(initialSession);
-        setInitialSyncDone(true); // Mark initial check as done
-        
-        if (initialSession?.user?.id) {
-          // Sync user profile (which handles setting isLoading=false internally)
-          syncUser(initialSession.user.id);
-        } else {
-          // No session, stop loading
-          setLoading(false);
-        }
-      });
-    }
+    // Set initial loading state to true while checking session
+    setLoading(true);
+    
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
 
-    // 2. Handle real-time auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
+      setLoading(false);
 
-      if (event === 'SIGNED_IN' && currentSession?.user?.id) {
-        // Note: syncUser handles setting isLoading=true/false internally
-        syncUser(currentSession.user.id);
+      if (event === 'SIGNED_IN' && currentSession) {
+        // Handle successful sign-in (AuthStore will handle user profile sync later)
+        console.log('Supabase SIGNED_IN event');
       } else if (event === 'SIGNED_OUT') {
+        // Clear local auth state on sign out
         logout();
+        toast({ title: "Logged Out", description: "You have been successfully logged out." });
         navigate('/auth/login');
-      } else if (event === 'INITIAL_SESSION' && !currentSession) {
-        // Fallback to ensure loading is false if initial session is null
-        setLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [initialSyncDone, setLoading, logout, syncUser, navigate]);
-
+  }, [setLoading, logout, navigate, toast]);
 
   return (
     <SessionContext.Provider value={{ session }}>

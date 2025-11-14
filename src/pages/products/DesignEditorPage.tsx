@@ -59,6 +59,8 @@ const DesignEditorPage = () => {
       return;
     }
 
+    setProduct(fetchedProduct);
+    
     // 1. Define the default customization based on product options
     const defaultCustom: ProductCustomization = {
       texts: Array(fetchedProduct.printPaths).fill(''),
@@ -77,8 +79,8 @@ const DesignEditorPage = () => {
       loadedDesign = getDesignById(designId);
       if (loadedDesign && loadedDesign.productId === id) {
         loadedCustomization = loadedDesign.customization;
+        setExistingDesign(loadedDesign);
       } else if (designId) {
-        // Only show toast if designId was explicitly requested but not found
         toast({
           title: "Design Not Found",
           description: "Could not load the specified design template.",
@@ -108,17 +110,10 @@ const DesignEditorPage = () => {
         loadedCustomization.font = fetchedProduct.customizationOptions.fonts[0];
     }
     
-    // 4. Only update state if the values are different to prevent unnecessary re-renders
-    setProduct(prev => (prev?.id !== fetchedProduct.id ? fetchedProduct : prev));
-    setExistingDesign(prev => (prev?.id !== loadedDesign?.id ? loadedDesign : prev));
-    
-    // Deep comparison for customization might be complex, but we can rely on the product/design ID changes for now.
-    // We set initialCustomization last to ensure it reflects the final state.
     setInitialCustomization(loadedCustomization);
-    
     setIsLoading(false);
     
-  }, [id, navigate, toast, designId]); // Removed location.search as designId covers it
+  }, [id, navigate, toast, designId, location.search]);
 
   if (isLoading || !product || !initialCustomization) {
     return (
