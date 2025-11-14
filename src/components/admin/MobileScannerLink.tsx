@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { QrCode, Link, RefreshCw, X, CheckCircle } from 'lucide-react';
-import QRCode from 'qrcode.react';
+import { Badge } from '@/components/ui/badge';
+import * as QRCodeModule from 'qrcode.react';
 import { startPOSSession, disconnectPOSSession, getSessionStatus } from '@/utils/posLinkUtils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,6 +15,9 @@ interface MobileScannerLinkProps {
   isSessionActive: boolean;
   sessionId: string | null;
 }
+
+// Safely resolve the QRCode component from the imported module
+const QRCodeComponent = (QRCodeModule as any).default || QRCodeModule;
 
 const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted, onSessionStopped, isSessionActive, sessionId }) => {
   const { toast } = useToast();
@@ -26,6 +30,7 @@ const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted,
     if (isSessionActive && sessionId) {
       // Start polling for connection status
       interval = setInterval(async () => {
+        // Note: getSessionStatus is synchronous in the mock utility
         const status = getSessionStatus(sessionId);
         setIsConnected(status);
       }, 1000);
@@ -66,7 +71,7 @@ const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted,
         <CardContent className="space-y-4 text-center">
           <div className="flex justify-center">
             <div className="p-2 border border-gray-300 rounded-lg bg-white">
-              <QRCode value={localUrl} size={180} level="H" />
+              <QRCodeComponent value={localUrl} size={180} level="H" />
             </div>
           </div>
           
