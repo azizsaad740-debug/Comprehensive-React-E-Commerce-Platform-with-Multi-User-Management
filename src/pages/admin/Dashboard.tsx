@@ -63,8 +63,8 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
         <p className="text-gray-600 mb-8">Welcome back, {user?.name}. Here is an overview of the system.</p>
 
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        {/* Stats Grid: Changed grid-cols-1 md:grid-cols-2 lg:grid-cols-4 */}
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mb-8">
           {/* Total Revenue Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
