@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Save, RefreshCw, DollarSign, Package, X } from 'lucide-react';
-import { LedgerEntity, TransactionType, TransactionItemType } from '@/types';
-import { addLedgerTransaction } from '@/utils/ledgerUtils';
+import { LedgerEntity, TransactionType, TransactionItemType, LedgerTransaction } from '@/types';
+import { addLedgerTransaction, updateLedgerTransaction } from '@/utils/ledgerUtils';
 import { useToast } from '@/hooks/use-toast';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { getAllMockProducts } from '@/utils/productUtils';
@@ -17,34 +17,52 @@ import { getAllMockProducts } from '@/utils/productUtils';
 interface TransactionFormProps {
   entity: LedgerEntity;
   initialType: TransactionType;
+  initialTransaction?: LedgerTransaction; // NEW: Optional transaction for editing
   onTransactionAdded: () => void;
   onClose: () => void;
 }
 
-const TransactionForm: React.FC<TransactionFormProps> = ({ entity, initialType, onTransactionAdded, onClose }) => {
+const TransactionForm: React.FC<TransactionFormProps> = ({ entity, initialType, initialTransaction, onTransactionAdded, onClose }) => {
   const { toast } = useToast();
   const { currencySymbol } = useCheckoutSettingsStore();
   const allProducts = getAllMockProducts();
   
   const [isLoading, setIsLoading] = useState(false);
   
+  const isEditing = !!initialTransaction;
+
   const [formData, setFormData] = useState({
-    type: initialType,
-    itemType: 'cash' as TransactionItemType,
-    amount: 0,
-    details: '',
-    productId: '',
-    productName: '',
-    quantity: 1,
-    purchasePrice: 0,
-    salePrice: 0,
+    type: initialTransaction?.type || initialType,
+    itemType: initialTransaction?.itemType || 'cash' as TransactionItemType,
+    amount: initialTransaction?.amount || 0,
+    details: initialTransaction?.details || '',
+    productId: initialTransaction?.productId || '',
+    productName: initialTransaction?.productName || '',
+    quantity: initialTransaction?.quantity || 1,
+    purchasePrice: initialTransaction?.purchasePrice || 0,
+    salePrice: initialTransaction?.salePrice || 0,
   });
+  
+  useEffect(() => {
+    if (initialTransaction) {
+      setFormData({
+        type: initialTransaction.type,
+        itemType: initialTransaction.itemType,
+        amount: initialTransaction.amount,
+        details: initialTransaction.details,
+        productId: initialTransaction.productId || '',
+        productName: initialTransaction.productName || '',
+        quantity: initialTransaction.quantity || 1,
+        purchasePrice: initialTransaction.purchasePrice || 0,
+        salePrice: initialTransaction.salePrice || 0,
+      });
+    }
+  }, [initialTransaction]);
 
   const isProductTransaction = formData.itemType === 'product';
   const isWeGave = formData.type === 'we_gave'; // Giving product/cash (Debit to entity)
   const isWeReceived = formData.type === 'we_received'; // Receiving product/cash (Credit to entity)
 
-  // FIX 3, 4, 5: Define handleChange function
   const handleChange = (field: keyof typeof formData, value: string | number | TransactionItemType) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -52,16 +70,22 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ entity, initialType, 
   const handleProductSelect = (productId: string) => {
     const product = allProducts.find(p => p.id === productId);
     if (product) {
-      setFormData(prev => ({
-        ...prev,
-        productId: product.id,
-        productName: product.name,
-        // Set default prices based on transaction type
-        purchasePrice: product.basePrice,
-        salePrice: product.discountedPrice || product.basePrice,
-        // Calculate initial amount based on default quantity (1)
-        amount: isWeGave ? (product.discountedPrice || product.basePrice) : product.basePrice,
-      }));
+      setFormData(prev => {
+        const defaultPrice = product.basePrice;
+        const defaultSalePrice = product.discountedPrice || product.basePrice;
+        
+        const pricePerUnit = isWeGave ? defaultSalePrice : defaultPrice;
+        const newAmount = pricePerUnit * prev.quantity;
+        
+        return {
+          ...prev,
+          productId: product.id,
+          productName: product.name,
+          purchasePrice: defaultPrice,
+          salePrice: defaultSalePrice,
+          amount: newAmount,
+        };
+      });
     } else {
       setFormData(prev => ({
         ...prev,
@@ -111,7 +135,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ entity, initialType, 
 
     try {
       setTimeout(() => {
-        addLedgerTransaction({
+        const transactionData = {
           entityId: entity.id,
           type: formData.type,
           itemType: formData.itemType,
@@ -124,23 +148,35 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ entity, initialType, 
           quantity: isProductTransaction ? formData.quantity : undefined,
           purchasePrice: isProductTransaction ? formData.purchasePrice : undefined,
           salePrice: isProductTransaction ? formData.salePrice : undefined,
-        });
+        };
         
-        toast({
-          title: "Transaction Recorded",
-          description: `${entity.name}'s ledger updated. Stock updated if applicable.`,
-        });
+        let result;
+        if (isEditing && initialTransaction) {
+          result = updateLedgerTransaction({ ...transactionData, id: initialTransaction.id });
+        } else {
+          result = addLedgerTransaction(transactionData);
+        }
         
-        onTransactionAdded();
-        onClose();
+        if (result) {
+          toast({
+            title: isEditing ? "Transaction Updated" : "Transaction Recorded",
+            description: `${entity.name}'s ledger updated. Stock updated if applicable.`,
+          });
+          
+          onTransactionAdded();
+          onClose();
+        } else {
+          throw new Error(isEditing ? "Failed to update transaction." : "Failed to add transaction.");
+        }
+        
         setIsLoading(false);
       }, 500);
       
-    } catch (error) {
+    } catch (error: any) {
       setIsLoading(false);
       toast({
         title: "Error",
-        description: "Failed to record transaction.",
+        description: error.message || "Failed to record transaction.",
         variant: "destructive",
       });
     }
@@ -165,7 +201,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ entity, initialType, 
           <Select 
             value={formData.itemType} 
             onValueChange={(val: TransactionItemType) => handleChange('itemType', val)}
-            disabled={isLoading}
+            disabled={isLoading || isEditing} // Prevent changing item type when editing
           >
             <SelectTrigger>
               <SelectValue placeholder="Select item type" />
@@ -275,7 +311,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ entity, initialType, 
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-          Record Transaction
+          {isEditing ? 'Update Transaction' : 'Record Transaction'}
         </Button>
       </div>
     </form>

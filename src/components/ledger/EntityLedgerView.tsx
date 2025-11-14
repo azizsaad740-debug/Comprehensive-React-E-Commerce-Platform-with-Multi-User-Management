@@ -11,6 +11,7 @@ import TransactionForm from './TransactionForm.tsx';
 import { Button } from '@/components/ui/button';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import TransactionDetailDialog from './TransactionDetailDialog'; // NEW IMPORT
 
 interface EntityLedgerViewProps {
   entity: LedgerEntity;
@@ -24,6 +25,10 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formType, setFormType] = useState<TransactionType>('we_gave');
+  
+  // State for detail dialog
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<LedgerTransaction | null>(null);
 
   const balanceColor = balance >= 0 ? 'text-green-600' : 'text-red-600';
   const balanceLabel = balance >= 0 ? 'Owes Us (Debt)' : 'We Owe (Credit)';
@@ -31,6 +36,16 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
   const handleOpenForm = (type: TransactionType) => {
     setFormType(type);
     setIsFormOpen(true);
+  };
+  
+  const handleOpenDetail = (transaction: LedgerTransaction) => {
+    setSelectedTransaction(transaction);
+    setIsDetailOpen(true);
+  };
+  
+  const handleCloseDetail = () => {
+    setSelectedTransaction(null);
+    setIsDetailOpen(false);
   };
 
   // Calculate running balance for display
@@ -109,10 +124,8 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
                   <TableRow>
                     <TableHead className="min-w-[100px]">Date</TableHead>
                     <TableHead className="min-w-[100px]">Type</TableHead>
-                    <TableHead className="min-w-[150px]">Item</TableHead>
                     <TableHead className="text-right min-w-[100px]">Amount</TableHead>
-                    <TableHead className="min-w-[200px]">Details</TableHead>
-                    <TableHead className="text-right min-w-[120px]">Running Balance</TableHead>
+                    <TableHead className="text-right min-w-[120px] hidden sm:table-cell">Running Balance</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -122,25 +135,22 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
                     const balanceColor = t.runningBalance >= 0 ? 'text-green-600' : 'text-red-600';
                     
                     return (
-                      <TableRow key={t.id}>
+                      <TableRow 
+                        key={t.id} 
+                        onClick={() => handleOpenDetail(t)}
+                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
                         <TableCell className="text-sm">{t.createdAt.toLocaleDateString()}</TableCell>
                         <TableCell>
                           <Badge variant={isDebit ? 'destructive' : 'default'} className="capitalize">
                             {t.type.replace('_', ' ')}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm capitalize flex items-center space-x-1">
-                          {t.itemType === 'cash' ? <DollarSign className="h-4 w-4" /> : <Package className="h-4 w-4" />}
-                          <span>
-                            {t.itemType === 'product' ? `${t.productName} (x${t.quantity})` : 'Cash'}
-                          </span>
-                        </TableCell>
                         <TableCell className={`text-right font-medium ${amountColor}`}>
                           {isDebit ? <ArrowUp className="h-3 w-3 inline mr-1" /> : <ArrowDown className="h-3 w-3 inline mr-1" />}
                           {currencySymbol}{t.amount.toFixed(2)}
                         </TableCell>
-                        <TableCell className="text-sm max-w-xs truncate">{t.details}</TableCell>
-                        <TableCell className={`text-right font-bold ${balanceColor}`}>
+                        <TableCell className={`text-right font-bold ${balanceColor} hidden sm:table-cell`}>
                           {currencySymbol}{Math.abs(t.runningBalance).toFixed(2)}
                         </TableCell>
                       </TableRow>
@@ -153,7 +163,7 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
         </CardContent>
       </Card>
       
-      {/* Transaction Form Sheet */}
+      {/* Transaction Form Sheet (for creation) */}
       <Sheet open={isFormOpen} onOpenChange={setIsFormOpen}>
         <SheetContent side="right" className="w-full sm:max-w-lg">
           <SheetHeader>
@@ -169,6 +179,17 @@ const EntityLedgerView: React.FC<EntityLedgerViewProps> = ({ entity, onTransacti
           </div>
         </SheetContent>
       </Sheet>
+      
+      {/* Transaction Detail Dialog (for view/edit/delete) */}
+      {selectedTransaction && (
+        <TransactionDetailDialog
+          transaction={selectedTransaction}
+          entity={entity}
+          isOpen={isDetailOpen}
+          onClose={handleCloseDetail}
+          onTransactionUpdated={onTransactionAdded}
+        />
+      )}
     </div>
   );
 };

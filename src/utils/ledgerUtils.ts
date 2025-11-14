@@ -55,10 +55,25 @@ export const getEntityById = (entityId: string): LedgerEntity | undefined => {
   return getAllLedgerEntities().find(e => e.id === entityId);
 };
 
+export const getTransactionById = (transactionId: string): LedgerTransaction | undefined => {
+  return currentTransactions.find(t => t.id === transactionId);
+};
+
 export const getTransactionsByEntityId = (entityId: string): LedgerTransaction[] => {
   return currentTransactions
     .filter(t => t.entityId === entityId)
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+};
+
+// Helper to reverse stock changes if a transaction is deleted or updated
+const reverseStockChange = (transaction: LedgerTransaction) => {
+  if (transaction.itemType === 'product' && transaction.productId && transaction.quantity) {
+    const quantityChange = transaction.type === 'we_received' 
+      ? -transaction.quantity // Reverse: We received product -> Stock decreases
+      : transaction.quantity; // Reverse: We gave product -> Stock increases
+      
+    updateProductStock(transaction.productId, quantityChange);
+  }
 };
 
 export const addLedgerTransaction = (data: Omit<LedgerTransaction, 'id' | 'createdAt'>): LedgerTransaction => {
@@ -81,6 +96,56 @@ export const addLedgerTransaction = (data: Omit<LedgerTransaction, 'id' | 'creat
   currentTransactions.unshift(newTransaction); // Add to the beginning
   return newTransaction;
 };
+
+export const updateLedgerTransaction = (updatedData: Partial<LedgerTransaction>): LedgerTransaction | undefined => {
+  const index = currentTransactions.findIndex(t => t.id === updatedData.id);
+  if (index !== -1) {
+    const existingTransaction = currentTransactions[index];
+    
+    // 1. Reverse the stock change of the existing transaction
+    reverseStockChange(existingTransaction);
+    
+    // 2. Update the transaction data
+    const updatedTransaction: LedgerTransaction = {
+      ...existingTransaction,
+      ...updatedData,
+      amount: Number(updatedData.amount || existingTransaction.amount),
+      quantity: Number(updatedData.quantity || existingTransaction.quantity),
+      purchasePrice: Number(updatedData.purchasePrice || existingTransaction.purchasePrice),
+      salePrice: Number(updatedData.salePrice || existingTransaction.salePrice),
+      createdAt: existingTransaction.createdAt, // Keep original creation date
+    } as LedgerTransaction;
+    
+    currentTransactions[index] = updatedTransaction;
+    
+    // 3. Apply the new stock change
+    if (updatedTransaction.itemType === 'product' && updatedTransaction.productId && updatedTransaction.quantity) {
+      const quantityChange = updatedTransaction.type === 'we_received' 
+        ? updatedTransaction.quantity 
+        : -updatedTransaction.quantity;
+        
+      updateProductStock(updatedTransaction.productId, quantityChange);
+    }
+    
+    return updatedTransaction;
+  }
+  return undefined;
+};
+
+export const deleteLedgerTransaction = (transactionId: string): boolean => {
+  const index = currentTransactions.findIndex(t => t.id === transactionId);
+  if (index !== -1) {
+    const transactionToDelete = currentTransactions[index];
+    
+    // Reverse the stock change before deleting
+    reverseStockChange(transactionToDelete);
+    
+    currentTransactions.splice(index, 1);
+    return true;
+  }
+  return false;
+};
+
 
 /**
  * Calculates the current balance for a given entity.
