@@ -18,13 +18,12 @@ import { useNavigate } from 'react-router-dom';
 import { hexToRawHsl } from '@/lib/colorUtils';
 import { useUISettingsStore, HeaderVisibilitySettings } from '@/stores/uiSettingsStore';
 import { Switch } from '@/components/ui/switch';
-import SupabaseConfigForm from '@/components/admin/SupabaseConfigForm';
-import { useThemeStore } from '@/stores/themeStore'; // NEW IMPORT
+import { useThemeStore } from '@/stores/themeStore';
 
 const SettingsPage = () => {
   const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
   const { homepageSections, headerVisibility, updateHomepageSections, updateHeaderVisibility } = useUISettingsStore();
-  const { primaryColorHex, updateThemeColors } = useThemeStore(); // NEW HOOK
+  const { primaryColorHex, updateThemeColors } = useThemeStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -153,8 +152,8 @@ const SettingsPage = () => {
                   <TabsTrigger value="assets" className="w-full justify-start data-[state=active]:bg-accent">
                     <Image className="h-4 w-4 mr-2" /> Assets & Banners
                   </TabsTrigger>
-                  <TabsTrigger value="integrations" className="w-full justify-start data-[state=active]:bg-accent">
-                    <Database className="h-4 w-4 mr-2" /> Integrations
+                  <TabsTrigger value="plugins" className="w-full justify-start data-[state=active]:bg-accent">
+                    <Plug className="h-4 w-4 mr-2" /> Plugins
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -386,14 +385,13 @@ const SettingsPage = () => {
                 </Card>
               </TabsContent>
               
-              {/* Integrations Tab (NEW) */}
-              <TabsContent value="integrations">
-                <SupabaseConfigForm />
-                <Card className="mt-6">
+              {/* Plugins Tab */}
+              <TabsContent value="plugins">
+                <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Plug className="h-5 w-5" />
-                      <span>Other Integrations</span>
+                      <span>Plugin Management</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>

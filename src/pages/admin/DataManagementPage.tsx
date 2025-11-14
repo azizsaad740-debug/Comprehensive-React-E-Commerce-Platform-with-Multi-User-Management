@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import DataExportButton from '@/components/admin/DataExportButton';
+import SupabaseConfigForm from '@/components/admin/SupabaseConfigForm'; // NEW IMPORT
 
 // Mock data structure for the entire application state (simplified)
 interface AppDataBackup {
@@ -141,8 +142,8 @@ const DataManagementPage = () => {
           {/* Local Backup/Restore */}
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Local Backup & Restore</CardTitle>
-              <CardDescription>Download a complete backup file or restore data from a local file.</CardDescription>
+              <CardTitle>Local Backup & Export</CardTitle>
+              <CardDescription>Download a complete backup file or export specific data to CSV.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex justify-between items-center">
@@ -195,60 +196,67 @@ const DataManagementPage = () => {
             </CardContent>
           </Card>
           
-          {/* Google Drive Integration */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Cloud className="h-5 w-5 text-blue-500" />
-                <span>Google Drive Integration</span>
-              </CardTitle>
-              <CardDescription>Automate backups to your linked Google Drive account.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isDriveAttached ? (
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 text-green-600 font-medium">
-                    <CheckCircle className="h-5 w-5" />
-                    <span>Drive Attached (misali-backup@gmail.com)</span>
+          {/* Right Column: Supabase & Cloud Integrations */}
+          <div className="lg:col-span-1 space-y-6">
+            
+            {/* Supabase Configuration Card */}
+            <SupabaseConfigForm />
+
+            {/* Google Drive Integration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Cloud className="h-5 w-5 text-blue-500" />
+                  <span>Google Drive Integration</span>
+                </CardTitle>
+                <CardDescription>Automate backups to your linked Google Drive account.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isDriveAttached ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 text-green-600 font-medium">
+                      <CheckCircle className="h-5 w-5" />
+                      <span>Drive Attached (misali-backup@gmail.com)</span>
+                    </div>
+                    
+                    <Button 
+                      className="w-full" 
+                      onClick={handleDriveBackup} 
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                      Backup to Drive
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="w-full" 
+                      onClick={handleDriveRestore} 
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                      Restore from Drive
+                    </Button>
                   </div>
-                  
-                  <Button 
-                    className="w-full" 
-                    onClick={handleDriveBackup} 
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                    Backup to Drive
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full" 
-                    onClick={handleDriveRestore} 
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                    Restore from Drive
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-2 text-red-500 font-medium">
-                    <AlertTriangle className="h-5 w-5" />
-                    <span>Drive Not Attached</span>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2 text-red-500 font-medium">
+                      <AlertTriangle className="h-5 w-5" />
+                      <span>Drive Not Attached</span>
+                    </div>
+                    <Button 
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
+                      onClick={handleAttachDrive} 
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Link className="h-4 w-4 mr-2" />}
+                      Attach Google Drive
+                    </Button>
                   </div>
-                  <Button 
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
-                    onClick={handleAttachDrive} 
-                    disabled={isProcessing}
-                  >
-                    {isProcessing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Link className="h-4 w-4 mr-2" />}
-                    Attach Google Drive
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </AdminLayout>
