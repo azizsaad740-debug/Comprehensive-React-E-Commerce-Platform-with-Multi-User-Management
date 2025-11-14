@@ -9,16 +9,13 @@ import { Order, POSBillSettings } from '@/types';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useContentStore } from '@/stores/contentStore';
-import * as QRCodeModule from 'qrcode.react';
+import { QRCode } from 'qrcode.react'; // Changed to named import
 
 interface POSBillPreviewProps {
   order: Order;
   isOpen: boolean;
   onClose: () => void;
 }
-
-// Safely resolve the QRCode component from the imported module
-const QRCodeComponent = (QRCodeModule as any).default || QRCodeModule;
 
 // Component for the printable bill content
 const PrintableBillContent: React.FC<{ order: Order, settings: POSBillSettings }> = ({ order, settings }) => {
@@ -92,7 +89,7 @@ const PrintableBillContent: React.FC<{ order: Order, settings: POSBillSettings }
         
         {settings.showQrCode && (
           <div className="flex justify-center">
-            <QRCodeComponent value={order.id} size={80} level="L" />
+            <QRCode value={order.id} size={80} level="L" />
           </div>
         )}
         
