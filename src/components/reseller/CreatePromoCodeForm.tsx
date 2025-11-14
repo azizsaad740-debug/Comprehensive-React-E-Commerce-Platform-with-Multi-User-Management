@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,7 @@ import { PromoCode } from '@/types';
 import { createNewPromoCode } from '@/utils/promoCodeUtils';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
+import { getAllMockProducts } from '@/utils/productUtils';
 
 interface CreatePromoCodeFormProps {
   onCodeCreated: (code: PromoCode) => void;
@@ -25,6 +26,12 @@ const CreatePromoCodeForm: React.FC<CreatePromoCodeFormProps> = ({ onCodeCreated
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
+  const allProducts = getAllMockProducts();
+  const availableCategories = useMemo(() => {
+    const categories = Array.from(new Set(allProducts.map(p => p.category)));
+    return ['all', ...categories];
+  }, [allProducts]);
+  
   const [formData, setFormData] = useState({
     code: '',
     name: '',
@@ -33,6 +40,7 @@ const CreatePromoCodeForm: React.FC<CreatePromoCodeFormProps> = ({ onCodeCreated
     minimumOrderValue: 0,
     usageLimit: 100,
     validTo: new Date(Date.now() + 86400000 * 30), // Default 30 days validity
+    targetCategory: 'all', // NEW FIELD
   });
 
   const handleChange = (field: string, value: string | number) => {
@@ -60,6 +68,7 @@ const CreatePromoCodeForm: React.FC<CreatePromoCodeFormProps> = ({ onCodeCreated
       isActive: true,
       resellerId: user.id,
       autoAssignReseller: true,
+      targetCategory: formData.targetCategory, // Include new field
     };
 
     try {
@@ -80,6 +89,7 @@ const CreatePromoCodeForm: React.FC<CreatePromoCodeFormProps> = ({ onCodeCreated
         minimumOrderValue: 0,
         usageLimit: 100,
         validTo: new Date(Date.now() + 86400000 * 30),
+        targetCategory: 'all',
       });
 
     } catch (error) {
@@ -167,7 +177,7 @@ const CreatePromoCodeForm: React.FC<CreatePromoCodeFormProps> = ({ onCodeCreated
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Minimum Order Value */}
             <div className="space-y-2">
               <Label htmlFor="minimumOrderValue">Minimum Order Value ($)</Label>
@@ -205,6 +215,25 @@ const CreatePromoCodeForm: React.FC<CreatePromoCodeFormProps> = ({ onCodeCreated
                   />
                 </PopoverContent>
               </Popover>
+            </div>
+            {/* Target Category */}
+            <div className="space-y-2">
+              <Label htmlFor="targetCategory">Target Category</Label>
+              <Select 
+                value={formData.targetCategory} 
+                onValueChange={(val) => handleChange('targetCategory', val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableCategories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

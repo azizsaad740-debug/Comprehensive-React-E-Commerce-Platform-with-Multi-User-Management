@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { CalendarIcon, Save, RefreshCw, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { PromoCode } from '@/types';
+import { getAllMockProducts } from '@/utils/productUtils'; // Import utility to get categories
 
 interface PromoCodeFormProps {
   initialCode?: PromoCode;
@@ -30,15 +31,23 @@ const defaultCodeData: Partial<PromoCode> = {
   isActive: true,
   autoAssignReseller: false,
   resellerId: undefined,
+  targetCategory: 'all', // NEW DEFAULT
 };
 
 const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialCode, onSubmit, onCancel, isSaving }) => {
+  const allProducts = getAllMockProducts();
+  const availableCategories = useMemo(() => {
+    const categories = Array.from(new Set(allProducts.map(p => p.category)));
+    return ['all', ...categories];
+  }, [allProducts]);
+  
   const [formData, setFormData] = useState<Partial<PromoCode>>(() => {
     // Ensure dates are Date objects if coming from initialCode
     const initial = initialCode ? { 
       ...initialCode, 
       validFrom: initialCode.validFrom ? new Date(initialCode.validFrom) : undefined,
       validTo: initialCode.validTo ? new Date(initialCode.validTo) : undefined,
+      targetCategory: initialCode.targetCategory || 'all', // Ensure category is set
     } : defaultCodeData;
     return initial;
   });
@@ -48,6 +57,7 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialCode, onSubmit, on
       ...initialCode, 
       validFrom: initialCode.validFrom ? new Date(initialCode.validFrom) : undefined,
       validTo: initialCode.validTo ? new Date(initialCode.validTo) : undefined,
+      targetCategory: initialCode.targetCategory || 'all',
     } : defaultCodeData;
     setFormData(initial);
   }, [initialCode]);
@@ -78,6 +88,7 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialCode, onSubmit, on
       validFrom: formData.validFrom || new Date(),
       isActive: formData.isActive ?? true,
       autoAssignReseller: formData.autoAssignReseller ?? false,
+      targetCategory: formData.targetCategory || 'all',
     };
 
     onSubmit(dataToSubmit);
@@ -193,6 +204,28 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialCode, onSubmit, on
             </PopoverContent>
           </Popover>
         </div>
+        {/* Target Category */}
+        <div className="space-y-2">
+          <Label htmlFor="targetCategory">Target Category</Label>
+          <Select 
+            value={formData.targetCategory || 'all'} 
+            onValueChange={(val) => handleChange('targetCategory', val)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableCategories.map(category => (
+                <SelectItem key={category} value={category}>
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Reseller ID (Optional) */}
         <div className="space-y-2">
           <Label htmlFor="resellerId">Reseller ID (Optional)</Label>
@@ -204,7 +237,7 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialCode, onSubmit, on
           />
         </div>
       </div>
-      
+
       {/* Status and Actions */}
       <div className="flex justify-between items-center pt-4 border-t">
         <div className="flex items-center space-x-4">

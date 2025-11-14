@@ -169,6 +169,7 @@ export interface PromoCode {
   isActive: boolean;
   resellerId?: string;
   autoAssignReseller: boolean;
+  targetCategory?: string; // NEW: Category this promo code applies to (e.g., 'Apparel', 'all')
   createdAt: Date;
   updatedAt: Date;
 }

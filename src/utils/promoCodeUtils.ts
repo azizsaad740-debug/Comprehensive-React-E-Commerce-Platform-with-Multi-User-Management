@@ -17,6 +17,7 @@ const initialMockPromoCodes: PromoCode[] = [
     createdAt: new Date(),
     updatedAt: new Date(),
     autoAssignReseller: false,
+    targetCategory: 'Apparel', // NEW: Applies only to Apparel
   },
   {
     id: 'p2',
@@ -33,6 +34,7 @@ const initialMockPromoCodes: PromoCode[] = [
     createdAt: new Date(),
     updatedAt: new Date(),
     autoAssignReseller: false,
+    targetCategory: 'all', // NEW: Applies to all categories
   },
   {
     id: 'p3',
@@ -50,6 +52,7 @@ const initialMockPromoCodes: PromoCode[] = [
     createdAt: new Date(),
     updatedAt: new Date(),
     autoAssignReseller: true,
+    targetCategory: 'all', // NEW: Applies to all categories
   },
 ];
 
@@ -70,6 +73,7 @@ export const createNewPromoCode = (newCodeData: Omit<PromoCode, 'id' | 'createdA
     createdAt: new Date(),
     updatedAt: new Date(),
     usedCount: 0,
+    targetCategory: newCodeData.targetCategory || 'all',
   };
   currentMockPromoCodes.push(newCode);
   return newCode;
@@ -85,6 +89,7 @@ export const updateMockPromoCode = (updatedCodeData: Partial<PromoCode>): PromoC
       discountValue: Number(updatedCodeData.discountValue || existingCode.discountValue),
       minimumOrderValue: Number(updatedCodeData.minimumOrderValue || existingCode.minimumOrderValue),
       usageLimit: Number(updatedCodeData.usageLimit || existingCode.usageLimit),
+      targetCategory: updatedCodeData.targetCategory || existingCode.targetCategory || 'all',
       updatedAt: new Date(),
     } as PromoCode;
     
