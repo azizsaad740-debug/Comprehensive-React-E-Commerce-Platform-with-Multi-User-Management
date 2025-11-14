@@ -5,7 +5,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image, DollarSign, Truck, Home, Link, Plug, Database } from 'lucide-react';
+import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image, DollarSign, Truck, Home, Link, Plug, Database, FileText, QrCode, Clock, Phone } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -19,6 +19,107 @@ import { hexToRawHsl } from '@/lib/colorUtils';
 import { useUISettingsStore, HeaderVisibilitySettings } from '@/stores/uiSettingsStore';
 import { Switch } from '@/components/ui/switch';
 import { useThemeStore } from '@/stores/themeStore';
+import { POSBillSettings } from '@/types';
+
+// --- POS Bill Settings Form Component ---
+const POSBillSettingsForm: React.FC = () => {
+  const { posBillSettings, updatePOSBillSettings } = useThemeStore();
+  const { toast } = useToast();
+  
+  const [formData, setFormData] = useState(posBillSettings);
+
+  useEffect(() => {
+    setFormData(posBillSettings);
+  }, [posBillSettings]);
+
+  const handleChange = (field: keyof POSBillSettings, value: string | boolean) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    updatePOSBillSettings(formData);
+    toast({ title: "Settings Saved", description: "POS Bill customization updated." });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <FileText className="h-5 w-5" />
+          <span>POS Bill Customization</span>
+        </CardTitle>
+        <CardDescription>Design the header and footer of printed POS receipts.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        
+        {/* Header Settings */}
+        <div className="space-y-4 border p-4 rounded-lg">
+          <h4 className="font-semibold">Header Content</h4>
+          <div className="space-y-2">
+            <Label htmlFor="headerTitle">Title (Brand Name)</Label>
+            <Input id="headerTitle" value={formData.headerTitle} onChange={(e) => handleChange('headerTitle', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="headerTagline">Tagline</Label>
+            <Input id="headerTagline" value={formData.headerTagline} onChange={(e) => handleChange('headerTagline', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="headerLogoUrl">Logo URL / Path (Small)</Label>
+            <Input id="headerLogoUrl" value={formData.headerLogoUrl} onChange={(e) => handleChange('headerLogoUrl', e.target.value)} />
+          </div>
+        </div>
+        
+        {/* Footer Settings */}
+        <div className="space-y-4 border p-4 rounded-lg">
+          <h4 className="font-semibold">Footer Content</h4>
+          <div className="space-y-2">
+            <Label htmlFor="footerMessage">Thank You / Instructions Note</Label>
+            <Textarea id="footerMessage" value={formData.footerMessage} onChange={(e) => handleChange('footerMessage', e.target.value)} rows={3} />
+          </div>
+        </div>
+        
+        {/* Visibility Toggles */}
+        <div className="space-y-4 border p-4 rounded-lg">
+          <h4 className="font-semibold">Visibility Options</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-2 border rounded-lg">
+              <Label htmlFor="showQrCode" className="flex items-center space-x-2"><QrCode className="h-4 w-4" /> <span>Show Order QR Code</span></Label>
+              <Switch
+                id="showQrCode"
+                checked={formData.showQrCode}
+                onCheckedChange={(checked) => handleChange('showQrCode', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between p-2 border rounded-lg">
+              <Label htmlFor="showContactInfo" className="flex items-center space-x-2"><Phone className="h-4 w-4" /> <span>Show Contact Info</span></Label>
+              <Switch
+                id="showContactInfo"
+                checked={formData.showContactInfo}
+                onCheckedChange={(checked) => handleChange('showContactInfo', checked)}
+              />
+            </div>
+            <div className="flex items-center justify-between p-2 border rounded-lg">
+              <Label htmlFor="showDateTime" className="flex items-center space-x-2"><Clock className="h-4 w-4" /> <span>Show Date & Time</span></Label>
+              <Switch
+                id="showDateTime"
+                checked={formData.showDateTime}
+                onCheckedChange={(checked) => handleChange('showDateTime', checked)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <Button type="button" onClick={handleSave}>
+            <Save className="h-4 w-4 mr-2" />
+            Save Bill Settings
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 
 const SettingsPage = () => {
   const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
@@ -143,6 +244,9 @@ const SettingsPage = () => {
                   <TabsTrigger value="checkout" className="w-full justify-start data-[state=active]:bg-accent">
                     <DollarSign className="h-4 w-4 mr-2" /> Checkout & Delivery
                   </TabsTrigger>
+                  <TabsTrigger value="pos-bill" className="w-full justify-start data-[state=active]:bg-accent">
+                    <FileText className="h-4 w-4 mr-2" /> POS Bill
+                  </TabsTrigger>
                   <TabsTrigger value="layout" className="w-full justify-start data-[state=active]:bg-accent">
                     <LayoutGrid className="h-4 w-4 mr-2" /> Page Layout
                   </TabsTrigger>
@@ -249,6 +353,11 @@ const SettingsPage = () => {
               {/* Checkout & Delivery Tab */}
               <TabsContent value="checkout">
                 <CheckoutSettingsForm />
+              </TabsContent>
+              
+              {/* POS Bill Tab (NEW) */}
+              <TabsContent value="pos-bill">
+                <POSBillSettingsForm />
               </TabsContent>
               
               {/* Page Layout Tab */}

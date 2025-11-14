@@ -8,11 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, User, Package, Plus, Minus, Trash2, CheckCircle, RefreshCw, Search, DollarSign } from 'lucide-react';
+import { ShoppingCart, User, Package, Plus, Minus, Trash2, CheckCircle, RefreshCw, Search, DollarSign, Tag, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getAllMockUsers } from '@/utils/userUtils';
 import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
-import { CartItem, Product, User as UserType, Address, ImageSizes, POS_GUEST_ID } from '@/types';
+import { CartItem, Product, User as UserType, Address, ImageSizes, POS_GUEST_ID, PromoCode, Order } from '@/types';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { createMockOrder } from '@/utils/orderUtils';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,6 +23,8 @@ import { useAuthStore } from '@/stores/authStore';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MobileScannerLink from '@/components/admin/MobileScannerLink';
 import { pollScannedData, disconnectPOSSession } from '@/utils/posLinkUtils';
+import { applyPromoCode, incrementPromoCodeUsage } from '@/utils/promoCodeUtils';
+import POSBillPreview from '@/components/admin/POSBillPreview';
 
 // Mock Address for POS orders
 const posAddress: Address = {
@@ -59,7 +61,15 @@ const POSPage = () => {
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [taxMode, setTaxMode] = useState<TaxMode>('exclude');
   
-  // NEW: Mobile Scanner State
+  // Promo Code State
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<{ code: PromoCode | null, amount: number }>({ code: null, amount: 0 });
+  
+  // Bill Preview State
+  const [isBillPreviewOpen, setIsBillPreviewOpen] = useState(false);
+  const [lastOrder, setLastOrder] = useState<Order | null>(null);
+  
+  // Mobile Scanner State
   const [mobileSessionId, setMobileSessionId] = useState<string | null>(null);
   const isMobileSessionActive = !!mobileSessionId;
   
@@ -78,27 +88,30 @@ const POSPage = () => {
   const cartSummary = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + item.lineTotal, 0);
     
+    // 1. Apply Discount to Subtotal
+    const subtotalAfterDiscount = subtotal - appliedPromo.amount;
+    
     let taxAmount = 0;
-    let total = subtotal;
+    let total = subtotalAfterDiscount;
     
     if (taxMode !== 'hide') {
       if (taxMode === 'exclude') {
-        taxAmount = subtotal * TAX_RATE;
-        total = subtotal + taxAmount;
+        taxAmount = subtotalAfterDiscount * TAX_RATE;
+        total = subtotalAfterDiscount + taxAmount;
       } else if (taxMode === 'include') {
         // If tax is included, the subtotal already contains the tax amount
-        taxAmount = subtotal * (TAX_RATE / (1 + TAX_RATE));
-        total = subtotal;
+        taxAmount = subtotalAfterDiscount * (TAX_RATE / (1 + TAX_RATE));
+        total = subtotalAfterDiscount;
       }
     }
     
     return { 
-      subtotal: taxMode === 'include' ? subtotal - taxAmount : subtotal, 
+      subtotal: subtotalAfterDiscount, 
       taxAmount, 
       total,
-      displaySubtotal: subtotal, // The sum of line totals before tax adjustment
+      displaySubtotal: subtotal, // The sum of line totals before discount/tax adjustment
     };
-  }, [cart, taxMode]);
+  }, [cart, taxMode, appliedPromo]);
 
   const handleAddProduct = (productId: string) => {
     const product = getMockProductById(productId);
@@ -131,6 +144,36 @@ const POSPage = () => {
       setCart(prev => [...prev, newItem]);
     }
   };
+  
+  // --- Promo Code Logic ---
+  const handleApplyPromo = () => {
+    if (!promoCodeInput.trim()) {
+      setAppliedPromo({ code: null, amount: 0 });
+      toast({ title: "Promo Cleared", description: "Promo code removed." });
+      return;
+    }
+    
+    const { appliedCode, discountAmount, error } = applyPromoCode(
+      promoCodeInput, 
+      cart, 
+      cartSummary.displaySubtotal // Use the total before any discount/tax calculation
+    );
+    
+    if (error) {
+      setAppliedPromo({ code: null, amount: 0 });
+      toast({ title: "Promo Error", description: error, variant: "destructive" });
+    } else if (appliedCode) {
+      setAppliedPromo({ code: appliedCode, amount: discountAmount });
+      toast({ title: "Promo Applied", description: `${appliedCode.name} applied, saving ${currencySymbol}${discountAmount.toFixed(2)}.` });
+    }
+  };
+  
+  const handleRemovePromo = () => {
+    setPromoCodeInput('');
+    setAppliedPromo({ code: null, amount: 0 });
+    toast({ title: "Promo Cleared", description: "Promo code removed." });
+  };
+  // ------------------------
   
   // --- Mobile Scanner Polling Effect ---
   useEffect(() => {
@@ -185,29 +228,34 @@ const POSPage = () => {
 
     setIsLoading(true);
     
-    // Determine customer ID for order and ledger
-    const customerId = selectedUserId; // Use the selected ID (which defaults to POS_GUEST_ID)
+    const customerId = selectedUserId;
     const customerName = selectedUser?.name || 'POS Guest';
 
     try {
-      // Create a mock order object
+      // 1. Increment promo code usage if applied
+      if (appliedPromo.code) {
+          incrementPromoCodeUsage(appliedPromo.code.id);
+      }
+      
+      // 2. Create a mock order object
       const orderData = {
         customerId: customerId,
         resellerId: selectedUser?.resellerId,
         cartItems: cart,
         shippingAddress: posAddress,
         paymentMethod: paymentMethod,
-        subtotal: cartSummary.subtotal,
-        discountAmount: 0,
+        subtotal: cartSummary.displaySubtotal, // Subtotal before discount
+        discountAmount: appliedPromo.amount,
         shippingCost: 0,
         taxAmount: cartSummary.taxAmount,
         totalAmount: cartSummary.total,
         deliveryMethod: 'POS Pickup',
+        promoCodeApplied: appliedPromo.code?.code, // NEW: Store applied code
       };
 
       const newOrder = createMockOrder(orderData);
       
-      // Log POS Sale Activity
+      // 3. Log POS Sale Activity
       logOperatorActivity(
           operator.id, 
           'sale', 
@@ -216,13 +264,19 @@ const POSPage = () => {
 
       toast({
         title: "POS Order Placed",
-        description: `Order ${newOrder.id} recorded for ${customerName}. Stock and Ledger updated.`,
+        description: `Order ${newOrder.id} recorded for ${customerName}.`,
       });
 
-      // Reset POS state
+      // 4. Set last order and open bill preview
+      setLastOrder(newOrder);
+      setIsBillPreviewOpen(true);
+
+      // 5. Reset POS state
       setCart([]);
-      setSelectedUserId(POS_GUEST_ID); // Reset to guest ID
+      setSelectedUserId(POS_GUEST_ID);
       setPaymentMethod('cash');
+      setPromoCodeInput('');
+      setAppliedPromo({ code: null, amount: 0 });
 
     } catch (error) {
       toast({
@@ -236,7 +290,6 @@ const POSPage = () => {
   };
   
   const handleNewTransaction = () => {
-    // Ensure any active mobile session is disconnected when starting a new transaction
     if (mobileSessionId) {
         disconnectPOSSession(mobileSessionId);
         setMobileSessionId(null);
@@ -244,6 +297,9 @@ const POSPage = () => {
     setCart([]); 
     setSelectedUserId(POS_GUEST_ID); 
     setPaymentMethod('cash');
+    setPromoCodeInput('');
+    setAppliedPromo({ code: null, amount: 0 });
+    setLastOrder(null);
   };
 
   return (
@@ -418,6 +474,38 @@ const POSPage = () => {
                 <CardTitle className="text-lg">Payment & Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                
+                {/* Promo Code Input */}
+                <div className="space-y-2 border p-3 rounded-lg">
+                  <Label htmlFor="promoCodeInput" className="flex items-center space-x-2">
+                    <Tag className="h-4 w-4" />
+                    <span>Apply Promo Code</span>
+                  </Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="promoCodeInput"
+                      value={promoCodeInput}
+                      onChange={(e) => setPromoCodeInput(e.target.value)}
+                      placeholder="Enter code"
+                      disabled={isLoading || !!appliedPromo.code}
+                    />
+                    {appliedPromo.code ? (
+                      <Button variant="destructive" onClick={handleRemovePromo} disabled={isLoading}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button onClick={handleApplyPromo} disabled={isLoading || !promoCodeInput.trim() || cart.length === 0}>
+                        Apply
+                      </Button>
+                    )}
+                  </div>
+                  {appliedPromo.code && (
+                    <p className="text-sm text-green-600 font-medium">
+                      {appliedPromo.code.code} applied: Saving {currencySymbol}{appliedPromo.amount.toFixed(2)}
+                    </p>
+                  )}
+                </div>
+                
                 {/* Tax Configuration */}
                 <div className="space-y-2 border p-3 rounded-lg">
                   <Label htmlFor="taxMode" className="flex items-center space-x-2">
@@ -466,6 +554,18 @@ const POSPage = () => {
                     <span>{currencySymbol}{cartSummary.displaySubtotal.toFixed(2)}</span>
                   </div>
                   
+                  {appliedPromo.amount > 0 && (
+                    <div className="flex justify-between text-green-600 font-medium">
+                      <span>Discount ({appliedPromo.code?.discountValue}{appliedPromo.code?.discountType === 'percentage' ? '%' : ''})</span>
+                      <span>-{currencySymbol}{appliedPromo.amount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between">
+                    <span>Subtotal After Discount</span>
+                    <span>{currencySymbol}{cartSummary.subtotal.toFixed(2)}</span>
+                  </div>
+                  
                   {taxMode !== 'hide' && (
                     <div className="flex justify-between">
                       <span>Tax ({TAX_RATE * 100}%)</span>
@@ -495,6 +595,15 @@ const POSPage = () => {
           </div>
         </div>
       </div>
+      
+      {/* POS Bill Preview Modal */}
+      {lastOrder && (
+        <POSBillPreview
+          order={lastOrder}
+          isOpen={isBillPreviewOpen}
+          onClose={() => setIsBillPreviewOpen(false)}
+        />
+      )}
     </AdminLayout>
   );
 };

@@ -1,4 +1,4 @@
-import { PromoCode } from '@/types';
+import { PromoCode, CartItem } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 const initialMockPromoCodes: PromoCode[] = [
@@ -103,4 +103,77 @@ export const deleteMockPromoCode = (codeId: string): boolean => {
   const initialLength = currentMockPromoCodes.length;
   currentMockPromoCodes = currentMockPromoCodes.filter(code => code.id !== codeId);
   return currentMockPromoCodes.length < initialLength;
+};
+
+/**
+ * Validates a promo code against a cart and calculates the discount.
+ * @param codeString The promo code string.
+ * @param cartItems The items in the cart (must include product details).
+ * @param subtotal The total price of items before tax/shipping.
+ * @returns {PromoCode | null, number} The applied code and the discount amount, or null/0.
+ */
+export const applyPromoCode = (
+  codeString: string, 
+  cartItems: CartItem[], 
+  subtotal: number
+): { appliedCode: PromoCode | null, discountAmount: number, error?: string } => {
+  const code = currentMockPromoCodes.find(c => c.code.toUpperCase() === codeString.toUpperCase());
+
+  if (!code) {
+    return { appliedCode: null, discountAmount: 0, error: "Invalid promo code." };
+  }
+  if (!code.isActive || code.validTo < new Date() || code.usedCount >= code.usageLimit) {
+    return { appliedCode: null, discountAmount: 0, error: "Promo code is inactive or expired." };
+  }
+  if (subtotal < code.minimumOrderValue) {
+    return { appliedCode: null, discountAmount: 0, error: `Minimum order value of $${code.minimumOrderValue.toFixed(2)} not met.` };
+  }
+
+  let applicableSubtotal = 0;
+  
+  if (code.targetCategory && code.targetCategory !== 'all') {
+    // Calculate subtotal only for items matching the target category
+    applicableSubtotal = cartItems.reduce((sum, item) => {
+      if (item.product.category.toLowerCase() === code.targetCategory?.toLowerCase()) {
+        const price = item.product.discountedPrice || item.product.basePrice;
+        return sum + (price * item.quantity);
+      }
+      return sum;
+    }, 0);
+    
+    if (applicableSubtotal === 0) {
+        return { appliedCode: null, discountAmount: 0, error: `Code only applies to ${code.targetCategory} products.` };
+    }
+  } else {
+    // Apply to the entire subtotal
+    applicableSubtotal = subtotal;
+  }
+
+  let discountAmount = 0;
+
+  if (code.discountType === 'percentage') {
+    discountAmount = applicableSubtotal * (code.discountValue / 100);
+  } else if (code.discountType === 'fixed') {
+    discountAmount = code.discountValue;
+  }
+  
+  // Ensure discount doesn't exceed the applicable subtotal
+  discountAmount = Math.min(discountAmount, applicableSubtotal);
+
+  return { 
+    appliedCode: code, 
+    discountAmount: Math.round(discountAmount * 100) / 100 
+  };
+};
+
+/**
+ * Increments the usage count for a promo code.
+ * @param codeId The ID of the promo code.
+ */
+export const incrementPromoCodeUsage = (codeId: string): void => {
+    const index = currentMockPromoCodes.findIndex(code => code.id === codeId);
+    if (index !== -1) {
+        currentMockPromoCodes[index].usedCount += 1;
+        currentMockPromoCodes[index].updatedAt = new Date();
+    }
 };

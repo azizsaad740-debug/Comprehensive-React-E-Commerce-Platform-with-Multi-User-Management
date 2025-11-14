@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { QrCode, Link, RefreshCw, X, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { QRCode } from 'qrcode.react'; // CHANGED: Direct named import
+import * as QRCodeModule from 'qrcode.react'; // Reverting to * as import
 import { startPOSSession, disconnectPOSSession, getSessionStatus } from '@/utils/posLinkUtils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,6 +15,9 @@ interface MobileScannerLinkProps {
   isSessionActive: boolean;
   sessionId: string | null;
 }
+
+// Access the component, assuming it might be nested under 'QRCode' or 'default'
+const QRCodeComponent = (QRCodeModule as any).QRCode || (QRCodeModule as any).default || QRCodeModule;
 
 const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted, onSessionStopped, isSessionActive, sessionId }) => {
   const { toast } = useToast();
@@ -68,8 +71,7 @@ const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted,
         <CardContent className="space-y-4 text-center">
           <div className="flex justify-center">
             <div className="p-2 border border-gray-300 rounded-lg bg-white">
-              {/* Use the directly imported QRCode component */}
-              <QRCode value={localUrl} size={180} level="H" />
+              <QRCodeComponent value={localUrl} size={180} level="H" />
             </div>
           </div>
           

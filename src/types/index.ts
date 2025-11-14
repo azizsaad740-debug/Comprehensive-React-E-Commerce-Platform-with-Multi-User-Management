@@ -153,6 +153,9 @@ export interface Order {
   designFiles: string[];
   createdAt: Date;
   updatedAt: Date;
+  
+  // NEW: Promo code applied to the order
+  promoCodeApplied?: string;
 }
 
 export interface PromoCode {
@@ -262,6 +265,17 @@ export interface OperatorActivity {
   type: 'login' | 'logout' | 'sale';
   timestamp: Date;
   details: string; // e.g., 'Order CP-2024-XXXXX processed'
+}
+
+// --- POS BILL CUSTOMIZATION TYPES ---
+export interface POSBillSettings {
+  headerLogoUrl: string;
+  headerTitle: string;
+  headerTagline: string;
+  footerMessage: string;
+  showQrCode: boolean;
+  showContactInfo: boolean;
+  showDateTime: boolean;
 }
 
 // --- CONSTANTS ---
