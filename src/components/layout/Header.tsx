@@ -34,6 +34,11 @@ const Header = () => {
     navigate('/');
   };
   
+  const handleSearchClick = () => {
+    // Navigate to product catalog, potentially triggering a search UI element there
+    navigate('/products?search=true');
+  };
+  
   // Mobile Navigation Content (inside the Sheet)
   const MobileNavContent = (
     <div className="flex flex-col space-y-6 p-6 pt-10">
@@ -99,19 +104,7 @@ const Header = () => {
         </nav>
       )}
       
-      {/* Mobile Search (Optional, placed here for completeness) */}
-      {!isDashboardUser && (
-        <div className="pt-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input 
-              type="text" 
-              placeholder="Search products..." 
-              className="pl-10"
-            />
-          </div>
-        </div>
-      )}
+      {/* Removed Mobile Search Input Field */}
     </div>
   );
 
@@ -220,12 +213,24 @@ const Header = () => {
               )}
             </div>
             
-            {/* Cart (Always visible) */}
+            {/* Mobile Search Icon (NEW) - Order 1 (Leftmost on right side) */}
+            {!isDashboardUser && (
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleSearchClick}
+                    className="relative md:hidden w-9 px-0"
+                >
+                    <Search className="h-5 w-5" />
+                </Button>
+            )}
+            
+            {/* Cart (Order 2) */}
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate('/cart')}
-              className="relative"
+              className="relative w-9 px-0"
             >
               <ShoppingCart className="h-5 w-5" />
               {totalItems > 0 && (
@@ -238,7 +243,7 @@ const Header = () => {
               )}
             </Button>
 
-            {/* Mobile Hamburger Menu (Hidden on desktop) */}
+            {/* Mobile Hamburger Menu (Order 3 - Rightmost on right side) */}
             <div className="md:hidden">
               <Sheet>
                 <SheetTrigger asChild>
