@@ -26,8 +26,9 @@ interface SessionContextProviderProps {
 }
 
 export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ children }) => {
-  // Initialize session as undefined to indicate initial loading state
-  const [session, setSession] = useState<Session | null | undefined>(undefined);
+  // Initialize session as null to simplify initial state handling
+  const [session, setSession] = useState<Session | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load
   
   const { logout, setLoading, syncUser } = useAuthStore(state => ({
     logout: state.logout,
@@ -35,17 +36,15 @@ export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ 
     syncUser: state.syncUser,
   }));
   const navigate = useNavigate();
-  // Removed useToast hook usage here to prevent loop
 
   // Effect 1: Handle initial load and auth state changes from Supabase
   useEffect(() => {
-    // Set initial loading state in Zustand store
     setLoading(true);
     
     // 1. Initial session check
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       setSession(initialSession);
-      // We rely on Effect 2 (syncUser/setLoading) to finalize the loading state.
+      setIsInitialLoad(false);
     });
 
     // 2. Real-time auth state listener
@@ -53,30 +52,30 @@ export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ 
       setSession(currentSession);
 
       if (event === 'SIGNED_OUT') {
-        // Clear local auth state on sign out
         logout();
-        // Removed toast call here
         navigate('/auth/login');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [setLoading, logout, navigate]); // Dependencies cleaned up
+  }, [setLoading, logout, navigate]);
 
-  // Effect 2: Sync user profile whenever the internal session state changes
+  // Effect 2: Sync user profile whenever the user ID changes after initial load
+  const userId = session?.user?.id || null;
+  
   useEffect(() => {
-    if (session === undefined) {
-      return; // Still initializing
+    if (isInitialLoad) {
+      return; // Wait for Effect 1 to complete initial session check
     }
     
-    if (session?.user?.id) {
+    if (userId) {
       // Sync user profile (which sets isLoading=true, then false upon completion)
-      syncUser(session.user.id);
+      syncUser(userId);
     } else {
-      // No session/user. Ensure loading is false.
+      // No user ID (signed out or no session). Ensure loading is false.
       setLoading(false);
     }
-  }, [session, syncUser, setLoading]);
+  }, [userId, isInitialLoad, syncUser, setLoading]);
 
 
   return (

@@ -4,7 +4,6 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
 import { User } from '@/types';
-import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -14,7 +13,6 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, hasRole, isLoading } = useAuthStore();
-  // Removed useToast hook usage to prevent potential side effect loops
 
   // 1. If loading, show spinner to wait for auth state resolution
   if (isLoading) {
@@ -27,7 +25,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
 
   // 2. If not authenticated, redirect to login
   if (!isAuthenticated) {
-    // Note: Toast notification removed here to prevent potential infinite render loop.
     return <Navigate to="/auth/login" replace />;
   }
 
@@ -37,7 +34,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     const isAuthorized = user.role === 'superuser' || hasRole(allowedRoles);
     
     if (!isAuthorized) {
-      // Note: Toast notification removed here to prevent potential infinite render loop.
       return <Navigate to="/" replace />;
     }
   }
