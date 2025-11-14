@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Package, ShoppingBag, DollarSign, Settings, Tag, Palette, Plug, Image, Type, FileText, BookOpen, Database } from 'lucide-react';
+import { LayoutDashboard, Users, Package, ShoppingBag, DollarSign, Settings, Tag, Palette, Plug, Image, Type, FileText, BookOpen, Database, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useAuthStore } from '@/stores/authStore';
@@ -20,7 +20,19 @@ const navItems: NavItem[] = [
     title: 'Dashboard',
     href: '/dashboard-placeholder', // Placeholder, will be replaced dynamically
     icon: LayoutDashboard,
-    roles: ['admin', 'reseller'],
+    roles: ['admin', 'reseller', 'counter'],
+  },
+  {
+    title: 'POS',
+    href: '/admin/pos',
+    icon: ShoppingCart,
+    roles: ['admin', 'counter'],
+  },
+  {
+    title: 'POS Operators',
+    href: '/admin/pos-operators',
+    icon: Users,
+    roles: ['admin'],
   },
   {
     title: 'Orders',
@@ -117,6 +129,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onClose }) => {
     // Dynamically set the correct dashboard link
     if (item.title === 'Dashboard') {
       const dashboardHref = userRole === 'reseller' ? '/reseller/dashboard' : '/admin';
+      // Counter users default to the POS path
+      if (userRole === 'counter') return { ...item, href: '/admin/pos' };
       return { ...item, href: dashboardHref };
     }
     return item;
@@ -126,7 +140,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onClose }) => {
     <div className="flex flex-col h-full p-4">
       <div className="mb-6">
         <h2 className="text-xl font-bold text-sidebar-primary">
-          {userRole === 'admin' ? 'Admin Panel' : 'Reseller Hub'}
+          {userRole === 'admin' ? 'Admin Panel' : userRole === 'reseller' ? 'Reseller Hub' : 'POS Terminal'}
         </h2>
       </div>
       

@@ -17,7 +17,7 @@ interface UserFormProps {
   isSaving: boolean;
 }
 
-const roleOptions: UserRole[] = ['admin', 'reseller', 'customer'];
+const roleOptions: UserRole[] = ['admin', 'reseller', 'customer', 'counter'];
 
 const UserForm: React.FC<UserFormProps> = ({ initialUser, onSubmit, onCancel, isSaving }) => {
   const { user: currentUser, hasRole } = useAuthStore();

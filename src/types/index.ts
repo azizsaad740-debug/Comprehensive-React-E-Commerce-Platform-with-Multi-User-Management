@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 // CORE TYPES
 // =================================================================
 
-export type UserRole = 'admin' | 'reseller' | 'customer' | 'superuser';
+export type UserRole = 'admin' | 'reseller' | 'customer' | 'superuser' | 'counter';
 
 export interface User {
   id: string;
@@ -252,4 +252,13 @@ export interface LedgerTransaction {
   purchasePrice?: number; // Cost to us (for product received)
   salePrice?: number; // Price to them (for product given)
   createdAt: Date;
+}
+
+// --- OPERATOR TRACKING TYPES ---
+export interface OperatorActivity {
+  id: string;
+  operatorId: string;
+  type: 'login' | 'logout' | 'sale';
+  timestamp: Date;
+  details: string; // e.g., 'Order CP-2024-XXXXX processed'
 }

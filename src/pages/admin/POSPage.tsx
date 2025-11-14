@@ -16,7 +16,9 @@ import { CartItem, Product, User as UserType, Address, ImageSizes } from '@/type
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { createMockOrder } from '@/utils/orderUtils';
 import { v4 as uuidv4 } from 'uuid';
-import BarcodeScanner from '@/components/admin/BarcodeScanner'; // NEW IMPORT
+import BarcodeScanner from '@/components/admin/BarcodeScanner';
+import { logOperatorActivity } from '@/utils/operatorUtils'; // NEW IMPORT
+import { useAuthStore } from '@/stores/authStore'; // Ensure useAuthStore is imported
 
 // Mock Address for POS orders
 const posAddress: Address = {
@@ -38,6 +40,8 @@ interface POSCartItem extends CartItem {
 const POSPage = () => {
   const { toast } = useToast();
   const { currencySymbol } = useCheckoutSettingsStore();
+  const { user: operator } = useAuthStore(); // Get current logged-in user (the operator)
+  
   const allUsers = getAllMockUsers().filter(u => u.role === 'customer' || u.role === 'reseller');
   const allProducts = getAllMockProducts().filter(p => p.isActive);
 
@@ -79,7 +83,7 @@ const POSPage = () => {
     const previewImageUrl = (product.images[0] as ImageSizes)?.small || '/placeholder.svg';
 
     // Find item based on product ID and variant ID (if available)
-    const existingItemIndex = cart.findIndex(item => item.productId === productId && item.variantId === variant?.id);
+    const existingItemIndex = cart.findIndex(item => item.productId === product.id && item.variantId === variant?.id);
 
     if (existingItemIndex !== -1) {
       const updatedCart = [...cart];
@@ -127,6 +131,10 @@ const POSPage = () => {
       toast({ title: "Error", description: "Please select a customer.", variant: "destructive" });
       return;
     }
+    if (!operator) {
+        toast({ title: "Error", description: "Operator session expired. Please log in again.", variant: "destructive" });
+        return;
+    }
 
     setIsLoading(true);
 
@@ -148,6 +156,13 @@ const POSPage = () => {
 
       // This utility function handles order creation, stock reduction, and ledger entry (We Received Cash)
       const newOrder = createMockOrder(orderData);
+      
+      // Log POS Sale Activity
+      logOperatorActivity(
+          operator.id, 
+          'sale', 
+          `Order ${newOrder.id} processed for customer ${selectedUser.name}. Total: ${currencySymbol}${newOrder.totalAmount.toFixed(2)}`
+      );
 
       toast({
         title: "POS Order Placed",

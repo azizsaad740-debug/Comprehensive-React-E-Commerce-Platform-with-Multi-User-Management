@@ -40,7 +40,8 @@ import LedgerManagementPage from "./pages/admin/LedgerManagementPage";
 import EntityDetailPage from "./pages/admin/EntityDetailPage";
 import POSPage from "./pages/admin/POSPage";
 import DataManagementPage from "./pages/admin/DataManagementPage";
-import AIBulkOperationsPage from "./pages/admin/AIBulkOperationsPage"; // NEW IMPORT
+import AIBulkOperationsPage from "./pages/admin/AIBulkOperationsPage";
+import POSOperatorManagementPage from "./pages/admin/POSOperatorManagementPage"; // NEW IMPORT
 import { SessionContextProvider } from "./integrations/supabase/SessionContextProvider";
 
 const queryClient = new QueryClient();
@@ -65,7 +66,7 @@ const App = () => (
                 <Route 
                   path="/orders" 
                   element={
-                    <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                    <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin', 'counter']}>
                       <OrdersPage />
                     </ProtectedRoute>
                   } 
@@ -73,7 +74,7 @@ const App = () => (
                 <Route 
                   path="/orders/:id" 
                   element={
-                    <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                    <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin', 'counter']}>
                       <OrderDetailPage />
                     </ProtectedRoute>
                   } 
@@ -83,7 +84,7 @@ const App = () => (
                 <Route 
                   path="/profile" 
                   element={
-                    <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                    <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin', 'counter']}>
                       <ProfilePage />
                     </ProtectedRoute>
                   } 
@@ -91,7 +92,7 @@ const App = () => (
                 <Route 
                   path="/profile/addresses" 
                   element={
-                    <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                    <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin', 'counter']}>
                       <AddressBookPage />
                     </ProtectedRoute>
                   } 
@@ -99,7 +100,7 @@ const App = () => (
                 <Route 
                   path="/profile/designs" 
                   element={
-                    <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin']}>
+                    <ProtectedRoute allowedRoles={['customer', 'reseller', 'admin', 'counter']}>
                       <DesignLibraryPage />
                     </ProtectedRoute>
                   } 
@@ -118,7 +119,7 @@ const App = () => (
                 <Route path="/track-order" element={<ContentPage slug="track-order" />} />
                 <Route path="/faq" element={<FaqPage />} />
                 
-                {/* Protected Admin/Reseller Routes */}
+                {/* Protected Admin/Reseller/Counter Routes */}
                 <Route 
                   path="/admin" 
                   element={
@@ -130,8 +131,16 @@ const App = () => (
                 <Route 
                   path="/admin/pos" 
                   element={
-                    <ProtectedRoute allowedRoles={['admin']}>
+                    <ProtectedRoute allowedRoles={['admin', 'counter']}>
                       <POSPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin/pos-operators" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <POSOperatorManagementPage />
                     </ProtectedRoute>
                   } 
                 />
