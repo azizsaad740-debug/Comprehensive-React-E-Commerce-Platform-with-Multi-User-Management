@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image, DollarSign, Truck } from 'lucide-react';
+import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image, DollarSign, Truck, Home } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -16,9 +16,12 @@ import { useToast } from '@/hooks/use-toast';
 import CheckoutSettingsForm from '@/components/admin/CheckoutSettingsForm';
 import { useNavigate } from 'react-router-dom';
 import { hexToRawHsl } from '@/lib/colorUtils';
+import { useUISettingsStore } from '@/stores/uiSettingsStore'; // NEW IMPORT
+import { Switch } from '@/components/ui/switch'; // Ensure Switch is imported
 
 const SettingsPage = () => {
   const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
+  const { homepageSections, updateHomepageSections } = useUISettingsStore(); // NEW HOOK
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -36,9 +39,16 @@ const SettingsPage = () => {
     slogan: slogan,
     logoUrl: logoUrl,
   });
+  
+  // Local state for UI settings
+  const [localHomepageSections, setLocalHomepageSections] = useState(homepageSections);
 
   const handleBrandingChange = (field: 'appName' | 'slogan' | 'logoUrl', value: string) => {
     setBrandingData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const handleUISectionToggle = (section: keyof typeof homepageSections, checked: boolean) => {
+    setLocalHomepageSections(prev => ({ ...prev, [section]: checked }));
   };
 
   const applyColorsToCSS = (primaryHex: string, accentHex: string) => {
@@ -67,12 +77,15 @@ const SettingsPage = () => {
     // 1. Update Branding Store
     updateBranding(brandingData);
     
-    // 2. Apply Color Changes to CSS variables
+    // 2. Update UI Settings Store
+    updateHomepageSections(localHomepageSections);
+    
+    // 3. Apply Color Changes to CSS variables
     applyColorsToCSS(primaryColor, accentColor);
     
     toast({
       title: "Theme Published",
-      description: "Branding and color changes have been saved and published.",
+      description: "Branding, colors, and layout changes have been saved and published.",
     });
   };
 
@@ -83,6 +96,7 @@ const SettingsPage = () => {
       slogan: slogan,
       logoUrl: logoUrl,
     });
+    setLocalHomepageSections(homepageSections);
     
     // Note: We don't have a persistent store for colors yet, so we reset to the default hex values.
     setPrimaryColor('#FF6B81'); 
@@ -137,11 +151,11 @@ const SettingsPage = () => {
                   <TabsTrigger value="checkout" className="w-full justify-start data-[state=active]:bg-accent">
                     <DollarSign className="h-4 w-4 mr-2" /> Checkout & Delivery
                   </TabsTrigger>
+                  <TabsTrigger value="layout" className="w-full justify-start data-[state=active]:bg-accent">
+                    <LayoutGrid className="h-4 w-4 mr-2" /> Page Layout
+                  </TabsTrigger>
                   <TabsTrigger value="typography" className="w-full justify-start data-[state=active]:bg-accent">
                     <Type className="h-4 w-4 mr-2" /> Typography
-                  </TabsTrigger>
-                  <TabsTrigger value="layout" className="w-full justify-start data-[state=active]:bg-accent">
-                    <LayoutGrid className="h-4 w-4 mr-2" /> Layout Presets
                   </TabsTrigger>
                   <TabsTrigger value="assets" className="w-full justify-start data-[state=active]:bg-accent">
                     <Image className="h-4 w-4 mr-2" /> Assets & Banners
@@ -242,6 +256,59 @@ const SettingsPage = () => {
                 <CheckoutSettingsForm />
               </TabsContent>
               
+              {/* Page Layout Tab (NEW/UPDATED) */}
+              <TabsContent value="layout">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Home className="h-5 w-5" />
+                      <span>Homepage Section Visibility</span>
+                    </CardTitle>
+                    <CardDescription>Toggle visibility for predefined sections on the main homepage.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="featuresSection">Features Section ("Why Choose Us?")</Label>
+                      <Switch
+                        id="featuresSection"
+                        checked={localHomepageSections.featuresSection}
+                        onCheckedChange={(checked) => handleUISectionToggle('featuresSection', checked)}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="featuredProductsSection">Featured Products Section</Label>
+                      <Switch
+                        id="featuredProductsSection"
+                        checked={localHomepageSections.featuredProductsSection}
+                        onCheckedChange={(checked) => handleUISectionToggle('featuredProductsSection', checked)}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="categoriesPreviewSection">Categories Preview Section</Label>
+                      <Switch
+                        id="categoriesPreviewSection"
+                        checked={localHomepageSections.categoriesPreviewSection}
+                        onCheckedChange={(checked) => handleUISectionToggle('categoriesPreviewSection', checked)}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-3 border rounded-lg">
+                      <Label htmlFor="ctaSection">Call to Action (CTA) Section</Label>
+                      <Switch
+                        id="ctaSection"
+                        checked={localHomepageSections.ctaSection}
+                        onCheckedChange={(checked) => handleUISectionToggle('ctaSection', checked)}
+                      />
+                    </div>
+                    
+                    <p className="text-sm text-gray-500 pt-4">Note: Changes require publishing the theme to take effect.</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
               {/* Typography Tab (Placeholder) */}
               <TabsContent value="typography">
                 <Card>
@@ -255,22 +322,12 @@ const SettingsPage = () => {
                 </Card>
               </TabsContent>
               
-              {/* Layout Presets Tab (Placeholder) */}
-              <TabsContent value="layout">
-                <Card>
-                  <CardHeader><CardTitle>Layout Presets</CardTitle></CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">Layout presets for homepage and product pages will be managed here.</p>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
               {/* Assets & Banners Tab (Link to dedicated page) */}
               <TabsContent value="assets">
                 <Card>
                   <CardHeader><CardTitle>Assets & Banners</CardTitle></CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 mb-4">Manage all image assets and the homepage hero slider on the dedicated Content Management page.</p>
+                    <p className="text-gray-600 mb-4">Manage visual assets and the homepage hero slider on the dedicated Content Management page.</p>
                     <Button onClick={() => navigate('/admin/content')}>
                       <Image className="h-4 w-4 mr-2" /> Go to Content Management
                     </Button>
