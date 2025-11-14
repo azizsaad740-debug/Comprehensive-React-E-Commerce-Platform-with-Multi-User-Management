@@ -5,7 +5,7 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { useAuthStore } from '@/stores/authStore';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast'; // Keep import for potential future use, but remove from component logic
 
 interface SessionContextType {
   session: Session | null;
@@ -35,7 +35,7 @@ export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ 
     syncUser: state.syncUser,
   }));
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // Removed useToast hook usage here to prevent loop
 
   // Effect 1: Handle initial load and auth state changes from Supabase
   useEffect(() => {
@@ -55,13 +55,13 @@ export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ 
       if (event === 'SIGNED_OUT') {
         // Clear local auth state on sign out
         logout();
-        toast({ title: "Logged Out", description: "You have been successfully logged out." });
+        // Removed toast call here
         navigate('/auth/login');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [setLoading, logout, navigate, toast]);
+  }, [setLoading, logout, navigate]); // Dependencies cleaned up
 
   // Effect 2: Sync user profile whenever the internal session state changes
   useEffect(() => {
