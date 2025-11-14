@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { QrCode, Link, RefreshCw, X, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import QRCode from 'qrcode.react'; // REVERTED: Back to default import, will handle potential runtime issues if necessary
+import * as QRCodeModule from 'qrcode.react'; // FIXED: Use * as import
 import { startPOSSession, disconnectPOSSession, getSessionStatus } from '@/utils/posLinkUtils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,14 +16,14 @@ interface MobileScannerLinkProps {
   sessionId: string | null;
 }
 
-// Cast QRCode to 'any' to avoid TS errors related to default/named exports conflict
-const QRCodeComponent = QRCode as any;
+// Access the default export property from the imported module object
+const QRCodeComponent = (QRCodeModule as any).default || QRCodeModule.QRCode || QRCodeModule;
 
 const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted, onSessionStopped, isSessionActive, sessionId }) => {
   const { toast } = useToast();
   const [localUrl, setLocalUrl] = useState<string | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
-  const [isConnected] = useState(false); // Removed setIsConnected as it's handled by useEffect polling
+  const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -32,9 +32,10 @@ const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted,
       interval = setInterval(async () => {
         // Note: getSessionStatus is synchronous in the mock utility
         const status = getSessionStatus(sessionId);
-        // Update state if necessary, though the original code didn't use setIsConnected
-        // For now, we'll keep the polling logic simple as defined previously.
+        setIsConnected(status);
       }, 1000);
+    } else {
+      setIsConnected(false);
     }
 
     return () => clearInterval(interval);
@@ -53,6 +54,7 @@ const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted,
     }
     setLocalUrl(null);
     onSessionStopped();
+    setIsConnected(false);
     toast({ title: "Session Ended", description: "Mobile scanner session disconnected." });
   };
 
