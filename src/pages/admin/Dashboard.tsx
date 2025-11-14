@@ -117,18 +117,20 @@ const Dashboard = () => {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
-          {/* Main Content Area (Chart/Activity) */}
+          {/* Main Content Area (Chart/Activity) - Now col-span-1 on mobile, col-span-2 on large */}
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Revenue Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <RevenueChart 
-                data={monthlyRevenueData} 
-                dataKey="Monthly Revenue" 
-                title="Last 7 Months Revenue" 
-                currencySymbol={currencySymbol}
-              />
+              <div className="w-full h-80"> {/* Ensure the container has a fixed height for ResponsiveContainer */}
+                <RevenueChart 
+                  data={monthlyRevenueData} 
+                  dataKey="Monthly Revenue" 
+                  title="Last 7 Months Revenue" 
+                  currencySymbol={currencySymbol}
+                />
+              </div>
               
               <Separator className="my-6" />
               
