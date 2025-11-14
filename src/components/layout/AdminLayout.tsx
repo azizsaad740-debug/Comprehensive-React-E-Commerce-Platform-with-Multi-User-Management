@@ -8,7 +8,8 @@ import { Menu, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
-import AIPopupAgent from '../admin/AIPopupAgent'; // NEW IMPORT
+import AIPopupAgent from '../admin/AIPopupAgent';
+import ThemeInitializer from './ThemeInitializer'; // NEW IMPORT
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -21,6 +22,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <ThemeInitializer /> {/* ADDED */}
       <Header />
       <div className="flex flex-1">
         
@@ -29,7 +31,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <AdminSidebar />
         </div>
         
-        {/* Mobile Menu Button and Sheet (below md) - Removed border-b */}
+        {/* Mobile Menu Button and Sheet (below md) */}
         {isMobile && (
           <div className="md:hidden p-2 bg-white dark:bg-card">
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>

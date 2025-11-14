@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,21 +18,22 @@ import { useNavigate } from 'react-router-dom';
 import { hexToRawHsl } from '@/lib/colorUtils';
 import { useUISettingsStore, HeaderVisibilitySettings } from '@/stores/uiSettingsStore';
 import { Switch } from '@/components/ui/switch';
-import SupabaseConfigForm from '@/components/admin/SupabaseConfigForm'; // NEW IMPORT
+import SupabaseConfigForm from '@/components/admin/SupabaseConfigForm';
+import { useThemeStore } from '@/stores/themeStore'; // NEW IMPORT
 
 const SettingsPage = () => {
   const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
   const { homepageSections, headerVisibility, updateHomepageSections, updateHeaderVisibility } = useUISettingsStore();
+  const { primaryColorHex, updateThemeColors } = useThemeStore(); // NEW HOOK
   const { toast } = useToast();
   const navigate = useNavigate();
   
   // --- State for Tab Synchronization ---
   const [activeTab, setActiveTab] = useState('branding');
   
-  // Local state for color customization (using default Tailwind primary/accent colors for initialization)
-  // Note: These hex values are placeholders and don't necessarily match the current HSL values in globals.css
-  const [primaryColor, setPrimaryColor] = useState('#FF6B81'); // Salmon Pink approximation
-  const [accentColor, setAccentColor] = useState('#FF6B81'); // Salmon Pink approximation (using primary for accent default)
+  // Local state for color customization (initialized from store)
+  const [primaryColor, setPrimaryColor] = useState(primaryColorHex); 
+  const [accentColor, setAccentColor] = useState(primaryColorHex); // Accent defaults to primary
   
   // Local state for branding form
   const [brandingData, setBrandingData] = useState({
@@ -44,6 +45,12 @@ const SettingsPage = () => {
   // Local state for UI settings
   const [localHomepageSections, setLocalHomepageSections] = useState(homepageSections);
   const [localHeaderVisibility, setLocalHeaderVisibility] = useState(headerVisibility);
+
+  // Sync local color state when store changes (e.g., on initial load or external change)
+  useEffect(() => {
+    setPrimaryColor(primaryColorHex);
+    setAccentColor(primaryColorHex);
+  }, [primaryColorHex]);
 
   const handleBrandingChange = (field: 'appName' | 'slogan' | 'logoUrl', value: string) => {
     setBrandingData(prev => ({ ...prev, [field]: value }));
@@ -57,28 +64,6 @@ const SettingsPage = () => {
     setLocalHeaderVisibility(prev => ({ ...prev, [field]: checked }));
   };
 
-  const applyColorsToCSS = (primaryHex: string, accentHex: string) => {
-    const root = document.documentElement;
-    
-    const primaryHsl = hexToRawHsl(primaryHex);
-    const accentHsl = hexToRawHsl(accentHex);
-
-    if (primaryHsl) {
-      root.style.setProperty('--primary', primaryHsl);
-      root.style.setProperty('--ring', primaryHsl);
-      root.style.setProperty('--accent', primaryHsl);
-      root.style.setProperty('--sidebar-primary', primaryHsl);
-      root.style.setProperty('--sidebar-ring', primaryHsl);
-    }
-    
-    if (accentHsl) {
-      // We can use accent for secondary/muted colors if needed, but for simplicity, 
-      // we'll just set a dedicated accent variable if we had one. 
-      // Since Tailwind uses primary for most accents, we'll stick to primary for now.
-      // If we wanted a separate accent, we'd need to define it in tailwind.config.ts
-    }
-  };
-
   const handlePublish = () => {
     // 1. Update Branding Store
     updateBranding(brandingData);
@@ -87,8 +72,11 @@ const SettingsPage = () => {
     updateHomepageSections(localHomepageSections);
     updateHeaderVisibility(localHeaderVisibility);
     
-    // 3. Apply Color Changes to CSS variables
-    applyColorsToCSS(primaryColor, accentColor);
+    // 3. Update Theme Store (Colors)
+    const primaryHsl = hexToRawHsl(primaryColor);
+    if (primaryHsl) {
+        updateThemeColors(primaryColor, primaryHsl);
+    }
     
     toast({
       title: "Theme Published",
@@ -106,12 +94,9 @@ const SettingsPage = () => {
     setLocalHomepageSections(homepageSections);
     setLocalHeaderVisibility(headerVisibility);
     
-    // Note: We don't have a persistent store for colors yet, so we reset to the default hex values.
-    setPrimaryColor('#FF6B81'); 
-    setAccentColor('#FF6B81');
-    
-    // Re-apply the default colors to the CSS variables to visually reset
-    applyColorsToCSS('#FF6B81', '#FF6B81'); 
+    // Reset local color state to persisted store values
+    setPrimaryColor(primaryColorHex); 
+    setAccentColor(primaryColorHex);
     
     toast({
       title: "Changes Discarded",
