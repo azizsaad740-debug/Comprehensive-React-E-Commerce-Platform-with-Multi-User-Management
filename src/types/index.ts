@@ -263,3 +263,6 @@ export interface OperatorActivity {
   timestamp: Date;
   details: string; // e.g., 'Order CP-2024-XXXXX processed'
 }
+
+// --- CONSTANTS ---
+export const POS_GUEST_ID = 'pos-guest-0000';

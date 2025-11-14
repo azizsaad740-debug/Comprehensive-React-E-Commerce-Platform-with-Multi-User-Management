@@ -1,4 +1,4 @@
-import { LedgerEntity, LedgerTransaction, LedgerEntityType, TransactionType, TransactionItemType } from '@/types';
+import { LedgerEntity, LedgerTransaction, LedgerEntityType, TransactionType, TransactionItemType, POS_GUEST_ID } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 import { getAllMockUsers } from './userUtils';
 import { updateProductStock } from './productUtils'; // Import stock update utility
@@ -10,6 +10,8 @@ const initialExternalEntities: LedgerEntity[] = [
   { id: 'e1', name: 'Material Supplier Inc.', type: 'supplier', linkedId: uuidv4(), contact: 'supplier@example.com' },
   { id: 'e2', name: 'Shipping Partner Co.', type: 'supplier', linkedId: uuidv4(), contact: 'shipping@example.com' },
   { id: 'e3', name: 'Local Charity Fund', type: 'other', linkedId: uuidv4(), contact: 'charity@example.com' },
+  // NEW: POS Guest Entity
+  { id: POS_GUEST_ID, name: 'POS Guest Customer', type: 'customer', linkedId: POS_GUEST_ID, contact: 'pos.guest@example.com' },
 ];
 
 let currentExternalEntities: LedgerEntity[] = initialExternalEntities;

@@ -8,17 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, User, Package, Plus, Minus, Trash2, CheckCircle, RefreshCw, Search } from 'lucide-react';
+import { ShoppingCart, User, Package, Plus, Minus, Trash2, CheckCircle, RefreshCw, Search, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getAllMockUsers } from '@/utils/userUtils';
 import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
-import { CartItem, Product, User as UserType, Address, ImageSizes } from '@/types';
+import { CartItem, Product, User as UserType, Address, ImageSizes, POS_GUEST_ID } from '@/types';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { createMockOrder } from '@/utils/orderUtils';
 import { v4 as uuidv4 } from 'uuid';
 import BarcodeScanner from '@/components/admin/BarcodeScanner';
-import { logOperatorActivity } from '@/utils/operatorUtils'; // NEW IMPORT
-import { useAuthStore } from '@/stores/authStore'; // Ensure useAuthStore is imported
+import { logOperatorActivity } from '@/utils/operatorUtils';
+import { useAuthStore } from '@/stores/authStore';
 
 // Mock Address for POS orders
 const posAddress: Address = {
@@ -37,10 +37,12 @@ interface POSCartItem extends CartItem {
   lineTotal: number;
 }
 
+type TaxMode = 'include' | 'exclude' | 'hide';
+
 const POSPage = () => {
   const { toast } = useToast();
   const { currencySymbol } = useCheckoutSettingsStore();
-  const { user: operator } = useAuthStore(); // Get current logged-in user (the operator)
+  const { user: operator } = useAuthStore();
   
   const allUsers = getAllMockUsers().filter(u => u.role === 'customer' || u.role === 'reseller');
   const allProducts = getAllMockProducts().filter(p => p.isActive);
@@ -50,6 +52,10 @@ const POSPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isLoading, setIsLoading] = useState(false);
   const [productSearchTerm, setProductSearchTerm] = useState('');
+  
+  // NEW: Tax state
+  const [taxMode, setTaxMode] = useState<TaxMode>('exclude');
+  const TAX_RATE = 0.08;
 
   const selectedUser = useMemo(() => allUsers.find(u => u.id === selectedUserId), [selectedUserId, allUsers]);
 
@@ -63,11 +69,28 @@ const POSPage = () => {
 
   const cartSummary = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + item.lineTotal, 0);
-    const taxRate = 0.08;
-    const taxAmount = subtotal * taxRate;
-    const total = subtotal + taxAmount;
-    return { subtotal, taxAmount, total };
-  }, [cart]);
+    
+    let taxAmount = 0;
+    let total = subtotal;
+    
+    if (taxMode !== 'hide') {
+      if (taxMode === 'exclude') {
+        taxAmount = subtotal * TAX_RATE;
+        total = subtotal + taxAmount;
+      } else if (taxMode === 'include') {
+        // If tax is included, the subtotal already contains the tax amount
+        taxAmount = subtotal * (TAX_RATE / (1 + TAX_RATE));
+        total = subtotal;
+      }
+    }
+    
+    return { 
+      subtotal: taxMode === 'include' ? subtotal - taxAmount : subtotal, 
+      taxAmount, 
+      total,
+      displaySubtotal: subtotal, // The sum of line totals before tax adjustment
+    };
+  }, [cart, taxMode]);
 
   const handleAddProduct = (productId: string) => {
     const product = getMockProductById(productId);
@@ -79,10 +102,8 @@ const POSPage = () => {
     const variant = product.variants[0]; // Use first variant for simplicity
     const price = product.discountedPrice || product.basePrice;
     
-    // FIX: Access the small size URL for the preview image
     const previewImageUrl = (product.images[0] as ImageSizes)?.small || '/placeholder.svg';
 
-    // Find item based on product ID and variant ID (if available)
     const existingItemIndex = cart.findIndex(item => item.productId === product.id && item.variantId === variant?.id);
 
     if (existingItemIndex !== -1) {
@@ -127,22 +148,22 @@ const POSPage = () => {
       toast({ title: "Error", description: "Cart is empty.", variant: "destructive" });
       return;
     }
-    if (!selectedUser) {
-      toast({ title: "Error", description: "Please select a customer.", variant: "destructive" });
-      return;
-    }
     if (!operator) {
         toast({ title: "Error", description: "Operator session expired. Please log in again.", variant: "destructive" });
         return;
     }
 
     setIsLoading(true);
+    
+    // Determine customer ID for order and ledger
+    const customerId = selectedUser?.id || POS_GUEST_ID;
+    const customerName = selectedUser?.name || 'POS Guest';
 
     try {
       // Create a mock order object
       const orderData = {
-        customerId: selectedUser.id,
-        resellerId: selectedUser.resellerId,
+        customerId: customerId,
+        resellerId: selectedUser?.resellerId,
         cartItems: cart,
         shippingAddress: posAddress,
         paymentMethod: paymentMethod,
@@ -154,19 +175,18 @@ const POSPage = () => {
         deliveryMethod: 'POS Pickup',
       };
 
-      // This utility function handles order creation, stock reduction, and ledger entry (We Received Cash)
       const newOrder = createMockOrder(orderData);
       
       // Log POS Sale Activity
       logOperatorActivity(
           operator.id, 
           'sale', 
-          `Order ${newOrder.id} processed for customer ${selectedUser.name}. Total: ${currencySymbol}${newOrder.totalAmount.toFixed(2)}`
+          `Order ${newOrder.id} processed for customer ${customerName}. Total: ${currencySymbol}${newOrder.totalAmount.toFixed(2)}`
       );
 
       toast({
         title: "POS Order Placed",
-        description: `Order ${newOrder.id} recorded for ${selectedUser.name}. Stock and Ledger updated.`,
+        description: `Order ${newOrder.id} recorded for ${customerName}. Stock and Ledger updated.`,
       });
 
       // Reset POS state
@@ -193,7 +213,7 @@ const POSPage = () => {
             <ShoppingCart className="h-6 w-6 mr-3" />
             Point of Sale (POS)
           </h1>
-          <Button variant="outline" onClick={() => setIsLoading(false)} disabled={isLoading}>
+          <Button variant="outline" onClick={() => { setCart([]); setSelectedUserId(null); setPaymentMethod('cash'); }} disabled={isLoading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             New Transaction
           </Button>
@@ -251,12 +271,12 @@ const POSPage = () => {
 
           {/* Right Column: Cart & Checkout */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Customer Selection */}
+            {/* Customer Selection (Now Optional) */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 text-lg">
                   <User className="h-5 w-5" />
-                  Customer
+                  Customer (Optional)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -266,9 +286,10 @@ const POSPage = () => {
                   disabled={isLoading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Customer (Required)" />
+                    <SelectValue placeholder="Select Customer (Optional)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="">-- POS Guest --</SelectItem>
                     {allUsers.map(user => (
                       <SelectItem key={user.id} value={user.id}>
                         {user.name} ({user.email})
@@ -276,9 +297,9 @@ const POSPage = () => {
                     ))}
                   </SelectContent>
                 </Select>
-                {selectedUser && (
-                  <p className="text-sm text-gray-500 mt-2">Selected: {selectedUser.name} ({selectedUser.role})</p>
-                )}
+                <p className="text-sm text-gray-500 mt-2">
+                  Selected: {selectedUser ? `${selectedUser.name} (${selectedUser.role})` : 'POS Guest'}
+                </p>
               </CardContent>
             </Card>
 
@@ -339,6 +360,28 @@ const POSPage = () => {
                 <CardTitle className="text-lg">Payment & Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Tax Configuration */}
+                <div className="space-y-2 border p-3 rounded-lg">
+                  <Label htmlFor="taxMode" className="flex items-center space-x-2">
+                    <DollarSign className="h-4 w-4" />
+                    <span>Tax Configuration (Rate: {TAX_RATE * 100}%)</span>
+                  </Label>
+                  <Select 
+                    value={taxMode} 
+                    onValueChange={(val) => setTaxMode(val as TaxMode)}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select tax mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="exclude">Exclude Tax (Add to Subtotal)</SelectItem>
+                      <SelectItem value="include">Include Tax (Subtotal is Total)</SelectItem>
+                      <SelectItem value="hide">Hide Tax (No Tax Applied)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 {/* Payment Method */}
                 <div className="space-y-2">
                   <Label htmlFor="paymentMethod">Payment Method</Label>
@@ -362,12 +405,16 @@ const POSPage = () => {
                 <div className="space-y-2 pt-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>{currencySymbol}{cartSummary.subtotal.toFixed(2)}</span>
+                    <span>{currencySymbol}{cartSummary.displaySubtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Tax (8%)</span>
-                    <span>{currencySymbol}{cartSummary.taxAmount.toFixed(2)}</span>
-                  </div>
+                  
+                  {taxMode !== 'hide' && (
+                    <div className="flex justify-between">
+                      <span>Tax ({TAX_RATE * 100}%)</span>
+                      <span>{currencySymbol}{cartSummary.taxAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
                   <Separator />
                   <div className="flex justify-between text-xl font-bold">
                     <span>Total Due</span>
@@ -380,7 +427,7 @@ const POSPage = () => {
                   className="w-full" 
                   size="lg"
                   onClick={handlePlaceOrder}
-                  disabled={isLoading || cart.length === 0 || !selectedUser}
+                  disabled={isLoading || cart.length === 0}
                 >
                   {isLoading ? <RefreshCw className="h-5 w-5 mr-2 animate-spin" /> : <CheckCircle className="h-5 w-5 mr-2" />}
                   {isLoading ? 'Processing...' : 'Complete Sale'}
