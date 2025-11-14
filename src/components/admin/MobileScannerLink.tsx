@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { QrCode, Link, RefreshCw, X, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import * as QRCodeModule from 'qrcode.react'; // FIXED: Use * as import
+import * as QRCodeModule from 'qrcode.react';
 import { startPOSSession, disconnectPOSSession, getSessionStatus } from '@/utils/posLinkUtils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,8 +16,9 @@ interface MobileScannerLinkProps {
   sessionId: string | null;
 }
 
-// Access the default export property from the imported module object
-const QRCodeComponent = (QRCodeModule as any).default || QRCodeModule.QRCode || QRCodeModule;
+// Access the component, handling potential default export structure
+// We rely on the module object itself or its default property for the component.
+const QRCodeComponent = (QRCodeModule as any).default || QRCodeModule;
 
 const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted, onSessionStopped, isSessionActive, sessionId }) => {
   const { toast } = useToast();
@@ -29,7 +30,7 @@ const MobileScannerLink: React.FC<MobileScannerLinkProps> = ({ onSessionStarted,
     let interval: NodeJS.Timeout;
     if (isSessionActive && sessionId) {
       // Start polling for connection status
-      interval = setInterval(async () => {
+      interval = setInterval(() => {
         // Note: getSessionStatus is synchronous in the mock utility
         const status = getSessionStatus(sessionId);
         setIsConnected(status);
