@@ -27,27 +27,33 @@ interface SessionContextProviderProps {
 
 export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const { isAuthenticated, logout, setLoading } = useAuthStore();
+  // Include syncUser in the dependencies
+  const { isAuthenticated, logout, setLoading, syncUser } = useAuthStore(state => ({
+    isAuthenticated: state.isAuthenticated,
+    logout: state.logout,
+    setLoading: state.setLoading,
+    syncUser: state.syncUser,
+  }));
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Effect 1: Handle initial load and auth state changes from Supabase
   useEffect(() => {
     // Set initial loading state to true while checking session
     setLoading(true);
     
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    // 1. Initial session check
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      setSession(initialSession);
       setLoading(false);
     });
 
+    // 2. Real-time auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       setLoading(false);
 
-      if (event === 'SIGNED_IN' && currentSession) {
-        // Handle successful sign-in (AuthStore will handle user profile sync later)
-        console.log('Supabase SIGNED_IN event');
-      } else if (event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT') {
         // Clear local auth state on sign out
         logout();
         toast({ title: "Logged Out", description: "You have been successfully logged out." });
@@ -57,6 +63,15 @@ export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ 
 
     return () => subscription.unsubscribe();
   }, [setLoading, logout, navigate, toast]);
+
+  // Effect 2: Sync user profile whenever the internal session state changes
+  useEffect(() => {
+    if (session?.user?.id) {
+      // Only sync if we have a user ID in the session
+      syncUser(session.user.id);
+    }
+  }, [session, syncUser]);
+
 
   return (
     <SessionContext.Provider value={{ session }}>
