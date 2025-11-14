@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Product, ProductCustomization, SavedDesignTemplate } from '@/types';
+import { Product, ProductCustomization, SavedDesignTemplate, ImageSizes } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Image, ShoppingCart, Save, ArrowLeft, Loader2 } from 'lucide-react';
@@ -102,6 +102,9 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
 
   // Mock Preview Logic (similar to ProductCustomizationForm)
   const isCustomizing = customization.texts.some(t => t.trim()) || customization.startDesign || customization.endDesign;
+  
+  // FIX: Access the small size URL for the preview background
+  const previewImageUrl = (product.images[0] as ImageSizes)?.small || '/placeholder.svg';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -118,7 +121,7 @@ const DesignEditor: React.FC<DesignEditorProps> = ({
             <div className="relative aspect-square bg-gray-200 rounded-lg overflow-hidden shadow-xl">
               {/* Product Image Background */}
               <img 
-                src={product.images[0] || '/placeholder.svg'} 
+                src={previewImageUrl} 
                 alt={product.name}
                 className="w-full h-full object-cover"
               />

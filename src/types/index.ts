@@ -64,6 +64,12 @@ export interface ProductCustomizationOptions {
   allowedColors?: string[];
 }
 
+export interface ImageSizes {
+  small: string; // Low resolution placeholder (e.g., 100px)
+  medium: string; // Medium resolution (e.g., 600px)
+  large: string; // High resolution (e.g., 1200px)
+}
+
 export interface ProductVariant {
   id: string;
   name: string;
@@ -81,7 +87,7 @@ export interface Product {
   description: string;
   basePrice: number;
   discountedPrice?: number;
-  images: string[];
+  images: ImageSizes[]; // UPDATED: Array of ImageSizes objects
   category: string;
   subcategory?: string;
   stockQuantity: number;
@@ -187,7 +193,8 @@ export interface HeroSlide {
 export interface ImageAsset {
   id: string;
   name: string;
-  url: string;
+  url: string; // Original URL
+  sizes: ImageSizes; // NEW: Store generated sizes
   type: 'product' | 'hero' | 'other';
   uploadedAt: Date;
 }

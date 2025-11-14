@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import CustomizationDisplay from '@/components/products/CustomizationDisplay';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
+import { ImageSizes } from '@/types';
 
 const CartPage = () => {
   const { 
@@ -98,6 +99,7 @@ const CartPage = () => {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {items.map((item, index) => {
+              const imageUrl = (item.product.images[0] as ImageSizes)?.small || '/placeholder.svg';
               return (
                 <Card key={`${item.productId}-${item.variantId || 'default'}-${index}`}>
                   <CardContent className="p-6">
@@ -106,7 +108,7 @@ const CartPage = () => {
                       <div className="w-24 h-24 bg-gray-100 rounded-md flex-shrink-0">
                         {item.product.images[0] ? (
                           <img 
-                            src={item.product.images[0]} 
+                            src={imageUrl} 
                             alt={item.product.name}
                             className="w-full h-full object-cover rounded-md"
                           />

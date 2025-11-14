@@ -11,12 +11,13 @@ import { Star, Heart, ShoppingCart, Palette, MessageSquare, Info } from 'lucide-
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
-import { Product, ProductActionButton } from '@/types';
+import { Product, ProductActionButton, ImageSizes } from '@/types';
 import { getAllMockProducts } from '@/utils/productUtils';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useContentStore } from '@/stores/contentStore';
-import { cn } from '@/lib/utils'; // <-- Added import
+import { cn } from '@/lib/utils';
+import ProgressiveImage from '@/components/common/ProgressiveImage'; // NEW IMPORT
 
 // Helper to get query parameters
 const useQuery = () => {
@@ -205,19 +206,20 @@ function ProductCatalog() {
           {filteredProducts.map((product) => {
             const price = product.discountedPrice || product.basePrice;
             const hasDiscount = product.discountedPrice && product.discountedPrice < product.basePrice;
-            const visibleButtons = product.actionButtons.filter(btn => btn !== 'customize'); // Customize button is handled by the card click/outline button
             const primaryButton = product.actionButtons.find(btn => btn === 'customize' || btn === 'quick_add');
-            const secondaryButtons = product.actionButtons.filter(btn => btn !== primaryButton);
             
             // Determine if we should center the price (only one button visible)
             const singleButtonMode = product.actionButtons.length === 1;
+            
+            // Use the first image sizes object
+            const imageSizes = product.images[0] || { small: '/placeholder.svg', medium: '/placeholder.svg', large: '/placeholder.svg' };
 
             return (
               <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 <div className="relative cursor-pointer" onClick={() => navigate(`/products/${product.id}`)}>
                   <div className="aspect-square bg-gray-100">
-                    <img 
-                      src={product.images[0] || '/placeholder.svg'} 
+                    <ProgressiveImage 
+                      sizes={imageSizes}
                       alt={product.name}
                       className="w-full h-full object-cover"
                     />

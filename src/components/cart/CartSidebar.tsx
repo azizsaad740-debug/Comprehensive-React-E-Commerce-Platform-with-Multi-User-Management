@@ -10,6 +10,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import CustomizationDisplay from '../products/CustomizationDisplay';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
+import { ImageSizes } from '@/types';
 
 const CartSidebar = () => {
   const navigate = useNavigate();
@@ -81,6 +82,7 @@ const CartSidebar = () => {
             ) : (
               <div className="space-y-4">
                 {items.map((item, index) => {
+                  const imageUrl = (item.product.images[0] as ImageSizes)?.small || '/placeholder.svg';
                   return (
                     <div key={`${item.productId}-${item.variantId || 'default'}-${index}`} className="border rounded-lg p-4">
                       <div className="flex items-start space-x-3">
@@ -88,7 +90,7 @@ const CartSidebar = () => {
                         <div className="w-16 h-16 bg-gray-100 rounded-md flex-shrink-0">
                           {item.product.images[0] ? (
                             <img 
-                              src={item.product.images[0]} 
+                              src={imageUrl} 
                               alt={item.product.name}
                               className="w-full h-full object-cover rounded-md"
                             />

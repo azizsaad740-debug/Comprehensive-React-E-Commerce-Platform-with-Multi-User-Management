@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Image, Wand2, Save, Trash2, RefreshCw, PlusCircle, Link } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Product } from '@/types';
+import { Product, ImageSizes } from '@/types';
 import ImageGeneratorForm from '@/components/admin/ImageGeneratorForm';
 import { updateMockProductImages, getMockProductById } from '@/utils/productUtils';
 import { addImageAsset } from '@/utils/imageManagementUtils';
@@ -19,36 +19,41 @@ interface ImageManagementModalProps {
   onProductUpdate: () => void;
 }
 
+// Helper to extract the base URL from ImageSizes (we use 'large' as the canonical URL for saving)
+const getBaseUrl = (sizes: ImageSizes): string => {
+  // Strip mock query parameters to get the base path
+  return sizes.large.split('?')[0];
+};
+
 const ImageManagementModal: React.FC<ImageManagementModalProps> = ({ product, isOpen, onClose, onProductUpdate }) => {
-  // Use a local state that is initialized from the prop, but can be modified locally
-  const [currentImages, setCurrentImages] = useState<string[]>(product.images ?? []);
+  // currentImages now stores ImageSizes objects
+  const [currentImages, setCurrentImages] = useState<ImageSizes[]>(product.images ?? []);
   const [isSaving, setIsSaving] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
   const { toast } = useToast();
 
   // Sync images when product prop changes (e.g., modal opens)
   React.useEffect(() => {
-    // Ensure we fetch the latest product data when opening the modal
     const latestProduct = getMockProductById(product.id);
     setCurrentImages(latestProduct?.images ?? []);
   }, [product.id, product.images, isOpen]);
 
   const handleImageSelected = (imageUrl: string) => {
-    // 1. Save the generated image as a new asset first
+    // 1. Save the generated image as a new asset first (utility handles size generation)
     const assetName = `${product.name} AI Mockup ${new Date().toLocaleTimeString()}`;
-    addImageAsset(assetName, imageUrl, 'product');
+    const newAsset = addImageAsset(assetName, imageUrl, 'product');
     
-    // 2. Add the new image URL to the product's list
-    setCurrentImages(prev => [imageUrl, ...prev.filter(img => img !== '/placeholder.svg')]);
+    // 2. Add the new ImageSizes object to the product's list
+    setCurrentImages(prev => [newAsset.sizes, ...prev.filter(img => getBaseUrl(img) !== '/placeholder.svg')]);
   };
   
   const handleAddManualImage = () => {
     if (manualUrl.trim()) {
-      // Save manual URL as an asset too
+      // Save manual URL as an asset too (utility handles size generation)
       const assetName = `${product.name} Manual Image ${new Date().toLocaleTimeString()}`;
-      addImageAsset(assetName, manualUrl.trim(), 'product');
+      const newAsset = addImageAsset(assetName, manualUrl.trim(), 'product');
       
-      setCurrentImages(prev => [manualUrl.trim(), ...prev.filter(img => img !== '/placeholder.svg')]);
+      setCurrentImages(prev => [newAsset.sizes, ...prev.filter(img => getBaseUrl(img) !== '/placeholder.svg')]);
       setManualUrl('');
       toast({ title: "Image Added", description: "Image URL added to the list." });
     }
@@ -61,8 +66,9 @@ const ImageManagementModal: React.FC<ImageManagementModalProps> = ({ product, is
   const handleSaveImages = () => {
     setIsSaving(true);
     
-    // currentImages is guaranteed to be an array here
-    const imagesToSave = currentImages.length > 0 ? currentImages : ['/placeholder.svg'];
+    // Convert ImageSizes array back to an array of base URLs (large size) for the mock utility
+    const baseUrlsToSave = currentImages.map(getBaseUrl);
+    const imagesToSave = baseUrlsToSave.length > 0 ? baseUrlsToSave : ['/placeholder.svg'];
     
     const updatedProduct = updateMockProductImages(product.id, imagesToSave);
     
@@ -107,7 +113,7 @@ const ImageManagementModal: React.FC<ImageManagementModalProps> = ({ product, is
                 <Link className="h-4 w-4 mr-2" /> Add Image via URL
               </h3>
               <div className="space-y-2">
-                <Label htmlFor="manualUrl">Image URL / Path</Label>
+                <Label htmlFor="manualUrl">Image URL / Path (Original Size)</Label>
                 <div className="flex space-x-2">
                   <Input 
                     id="manualUrl"
@@ -132,14 +138,15 @@ const ImageManagementModal: React.FC<ImageManagementModalProps> = ({ product, is
             <h3 className="text-lg font-semibold">Current Images ({currentImages.length})</h3>
             
             <div className="space-y-3 max-h-[400px] overflow-y-auto p-2 border rounded-lg">
-              {currentImages.map((url, index) => (
+              {currentImages.map((sizes, index) => (
                 <div key={index} className="flex items-center justify-between p-2 border rounded-md">
                   <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                    <img src={url} alt={`Product Image ${index + 1}`} className="w-full h-full object-cover" />
+                    <img src={sizes.small} alt={`Product Image ${index + 1}`} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0 ml-3">
                     <p className="text-sm font-medium truncate">Image {index + 1}</p>
-                    <p className="text-xs text-gray-500 truncate">{url}</p>
+                    <p className="text-xs text-gray-500 truncate">Base URL: {getBaseUrl(sizes)}</p>
+                    <p className="text-xs text-gray-500">Sizes: S, M, L generated.</p>
                   </div>
                   <Button 
                     variant="destructive" 

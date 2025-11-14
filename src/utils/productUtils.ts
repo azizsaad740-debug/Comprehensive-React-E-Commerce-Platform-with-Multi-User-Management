@@ -1,5 +1,12 @@
-import { Product, ProductVariant } from '@/types';
+import { Product, ProductVariant, ImageSizes } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+
+// Helper to generate mock ImageSizes from a base URL
+const generateMockImageSizes = (baseUrl: string): ImageSizes => ({
+  small: `${baseUrl}?size=small`,
+  medium: `${baseUrl}?size=medium`,
+  large: `${baseUrl}?size=large`,
+});
 
 // Mock product data (Centralized)
 const mockProductVariants: ProductVariant[] = [
@@ -34,7 +41,11 @@ export const mockProducts: Product[] = [
     description: 'High-quality cotton t-shirt perfect for custom printing. Choose from various fonts, colors, and designs to create your unique style.',
     basePrice: 29.99,
     discountedPrice: 24.99,
-    images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
+    images: [
+      generateMockImageSizes('/placeholder.svg'),
+      generateMockImageSizes('/placeholder.svg?img=2'),
+      generateMockImageSizes('/placeholder.svg?img=3')
+    ],
     category: 'Apparel',
     subcategory: 'T-Shirts',
     stockQuantity: 50,
@@ -61,7 +72,7 @@ export const mockProducts: Product[] = [
     description: 'Ceramic mug with custom printing. Perfect for gifts or daily use.',
     basePrice: 19.99,
     discountedPrice: undefined,
-    images: ['/placeholder.svg'],
+    images: [generateMockImageSizes('/placeholder.svg?img=4')],
     category: 'Drinkware',
     subcategory: 'Mugs',
     stockQuantity: 100,
@@ -94,7 +105,7 @@ export const mockProducts: Product[] = [
     description: 'Durable phone case with full customization.',
     basePrice: 35.00,
     discountedPrice: 30.00,
-    images: ['/placeholder.svg'],
+    images: [generateMockImageSizes('/placeholder.svg?img=5')],
     category: 'Accessories',
     subcategory: 'Phone Cases',
     stockQuantity: 5,
@@ -159,7 +170,9 @@ export const createMockProduct = (newProductData: Omit<Product, 'id' | 'createdA
       endDesigns: newProductData.customizationOptions?.endDesigns || [],
       maxCharacters: Number(newProductData.customizationOptions?.maxCharacters || 50),
       allowedColors: newProductData.customizationOptions?.allowedColors || [],
-    }
+    },
+    // Ensure images are initialized with the new structure
+    images: newProductData.images.map(img => generateMockImageSizes(img.large || '/placeholder.svg')),
   };
   mockProducts.push(newProduct);
   return newProduct;
@@ -168,7 +181,8 @@ export const createMockProduct = (newProductData: Omit<Product, 'id' | 'createdA
 export const updateMockProductImages = (productId: string, newImages: string[]): Product | undefined => {
   const productIndex = mockProducts.findIndex(product => product.id === productId);
   if (productIndex !== -1) {
-    mockProducts[productIndex].images = newImages;
+    // Convert the array of base URLs (strings) back into ImageSizes objects
+    mockProducts[productIndex].images = newImages.map(url => generateMockImageSizes(url));
     mockProducts[productIndex].updatedAt = new Date();
     return mockProducts[productIndex];
   }

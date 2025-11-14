@@ -1,5 +1,12 @@
-import { HeroSlide, ImageAsset } from '@/types';
+import { HeroSlide, ImageAsset, ImageSizes } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+
+// Helper to generate mock ImageSizes from a base URL
+const generateMockImageSizes = (baseUrl: string): ImageSizes => ({
+  small: `${baseUrl}?size=small`,
+  medium: `${baseUrl}?size=medium`,
+  large: `${baseUrl}?size=large`,
+});
 
 // --- Mock Hero Slides Data ---
 const initialMockHeroSlides: HeroSlide[] = [
@@ -17,7 +24,7 @@ const initialMockHeroSlides: HeroSlide[] = [
     id: 'h2',
     heading: 'Reseller Program Available',
     subheading: 'Earn commission by referring customers and sharing your exclusive promo codes.',
-    imageUrl: '/placeholder.svg',
+    imageUrl: '/placeholder.svg?img=h2',
     buttonText: 'Join Now',
     buttonLink: '/auth/register?role=reseller', // Note: Public registration is now customer only, but this link remains for admin management context
     isActive: true,
@@ -27,7 +34,7 @@ const initialMockHeroSlides: HeroSlide[] = [
     id: 'h3',
     heading: 'Limited Time Sale!',
     subheading: 'Get 20% off all apparel this week only. Use code SUMMER20.',
-    imageUrl: '/placeholder.svg',
+    imageUrl: '/placeholder.svg?img=h3',
     buttonText: 'Shop Apparel',
     buttonLink: '/products?category=apparel',
     isActive: false,
@@ -68,8 +75,8 @@ export const deleteHeroSlide = (id: string): boolean => {
 
 // --- Mock Image Assets Data ---
 const initialMockImageAssets: ImageAsset[] = [
-  { id: 'img1', name: 'T-Shirt Mockup', url: '/placeholder.svg', type: 'product', uploadedAt: new Date() },
-  { id: 'img2', name: 'Mug Hero Banner', url: '/placeholder.svg', type: 'hero', uploadedAt: new Date() },
+  { id: 'img1', name: 'T-Shirt Mockup', url: '/placeholder.svg', sizes: generateMockImageSizes('/placeholder.svg'), type: 'product', uploadedAt: new Date() },
+  { id: 'img2', name: 'Mug Hero Banner', url: '/placeholder.svg?img=2', sizes: generateMockImageSizes('/placeholder.svg?img=2'), type: 'hero', uploadedAt: new Date() },
 ];
 
 let currentMockImageAssets: ImageAsset[] = initialMockImageAssets;
@@ -83,6 +90,7 @@ export const addImageAsset = (name: string, url: string, type: ImageAsset['type'
     id: uuidv4(),
     name,
     url,
+    sizes: generateMockImageSizes(url), // Simulate generating sizes
     type,
     uploadedAt: new Date(),
   };

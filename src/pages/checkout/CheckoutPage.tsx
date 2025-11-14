@@ -14,7 +14,7 @@ import { CreditCard, Truck, Shield, MapPin, MessageSquare } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
-import { Address } from '@/types';
+import { Address, ImageSizes } from '@/types';
 import Layout from '@/components/layout/Layout';
 import { createMockOrder } from '@/utils/orderUtils';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
@@ -362,11 +362,13 @@ const CheckoutPage = () => {
                 <CardContent className="space-y-4">
                   {/* Order Items */}
                   <div className="space-y-3">
-                    {items.map((item, index) => (
+                    {items.map((item, index) => {
+                      const imageUrl = (item.product.images[0] as ImageSizes)?.small || '/placeholder.svg';
+                      return (
                       <div key={`${item.productId}-${item.variantId || 'default'}-${index}`} className="flex items-center space-x-3">
                         <div className="w-16 h-16 bg-gray-100 rounded">
                           <img 
-                            src={item.product.images[0] || '/placeholder.svg'} 
+                            src={imageUrl} 
                             alt={item.product.name}
                             className="w-full h-full object-cover rounded"
                           />
@@ -379,7 +381,7 @@ const CheckoutPage = () => {
                           {currencySymbol}{((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
                         </p>
                       </div>
-                    ))}
+                    )})}
                   </div>
 
                   <Separator />

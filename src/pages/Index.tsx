@@ -10,7 +10,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
-import { Product, ProductActionButton } from '@/types';
+import { Product, ProductActionButton, ImageSizes } from '@/types';
 import HeroSlideshow from '@/components/layout/HeroSlideshow';
 import { useBrandingStore } from '@/stores/brandingStore';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
@@ -176,12 +176,14 @@ const Index = () => {
                 const singleButtonMode = product.actionButtons.length === 1;
                 
                 const primaryButton = product.actionButtons.find(btn => btn === 'customize' || btn === 'quick_add');
+                
+                const imageUrl = (product.images[0] as ImageSizes)?.small || '/placeholder.svg';
 
                 return (
                   <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     <div className="aspect-square bg-gray-100 relative">
                       <img 
-                        src={product.images[0] || '/placeholder.svg'} 
+                        src={imageUrl} 
                         alt={product.name}
                         className="w-full h-full object-cover"
                       />

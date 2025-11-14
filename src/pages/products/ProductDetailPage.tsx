@@ -13,10 +13,11 @@ import { Star, Heart, ShoppingCart, ArrowLeft, Palette, MessageSquare, Info } fr
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
-import { Product, ProductActionButton } from '@/types';
+import { Product, ProductActionButton, ImageSizes } from '@/types';
 import { getMockProductById } from '@/utils/productUtils';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import ProgressiveImage from '@/components/common/ProgressiveImage'; // NEW IMPORT
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -36,7 +37,7 @@ const ProductDetailPage = () => {
   const [isMoreInfoOpen, setIsMoreInfoOpen] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (id) return;
 
     const fetchedProduct = getMockProductById(id);
     if (!fetchedProduct) {
@@ -78,6 +79,8 @@ const ProductDetailPage = () => {
   const hasDiscount = finalPrice < basePrice;
   const originalPrice = basePrice;
   // -------------------------------
+  
+  const currentImageSizes: ImageSizes = product.images[currentImageIndex] || { small: '/placeholder.svg', medium: '/placeholder.svg', large: '/placeholder.svg' };
 
   const handleAddToCart = () => {
     addItem(product, selectedVariant?.id, quantity);
@@ -183,8 +186,8 @@ const ProductDetailPage = () => {
           {/* Product Images */}
           <div className="space-y-4">
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-              <img 
-                src={product.images[currentImageIndex] || '/placeholder.svg'} 
+              <ProgressiveImage 
+                sizes={currentImageSizes}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -192,7 +195,7 @@ const ProductDetailPage = () => {
             
             {product.images.length > 1 && (
               <div className="flex space-x-2">
-                {product.images.map((image, index) => (
+                {product.images.map((imageSizes, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
@@ -201,7 +204,7 @@ const ProductDetailPage = () => {
                     }`}
                   >
                     <img 
-                      src={image} 
+                      src={imageSizes.small} // Use small size for thumbnail
                       alt={`${product.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />

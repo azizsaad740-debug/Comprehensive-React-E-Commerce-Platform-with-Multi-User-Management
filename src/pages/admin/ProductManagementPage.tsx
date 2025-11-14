@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { ColumnDef } from "@tanstack/react-table";
-import { Product } from '@/types';
+import { Product, ImageSizes } from '@/types';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { DataTable } from '../../components/data-table/DataTable.tsx';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import ProductForm from '@/components/admin/ProductForm';
 import ImageManagementModal from '@/components/admin/ImageManagementModal';
+
+// Helper to generate mock ImageSizes from a base URL (copied from productUtils for local use)
+const generateMockImageSizes = (baseUrl: string): ImageSizes => ({
+  small: `${baseUrl}?size=small`,
+  medium: `${baseUrl}?size=medium`,
+  large: `${baseUrl}?size=large`,
+});
 
 const ProductManagementPage = () => {
   const navigate = useNavigate();
@@ -70,7 +77,8 @@ const ProductManagementPage = () => {
         // Create new product
         const productToCreate = {
           ...productData,
-          images: ['/placeholder.svg'], // Default image
+          // FIX: Initialize images with ImageSizes object
+          images: [generateMockImageSizes('/placeholder.svg')], 
           variants: [], // Start with no variants
           customizationOptions: productData.customizationOptions || { fonts: [], maxCharacters: 50, allowedColors: [] },
           printPaths: productData.printPaths || 1,

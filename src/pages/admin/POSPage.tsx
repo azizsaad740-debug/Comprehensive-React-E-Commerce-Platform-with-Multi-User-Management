@@ -12,7 +12,7 @@ import { ShoppingCart, User, Package, Plus, Minus, Trash2, CheckCircle, RefreshC
 import { useToast } from '@/hooks/use-toast';
 import { getAllMockUsers } from '@/utils/userUtils';
 import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
-import { CartItem, Product, User as UserType, Address } from '@/types';
+import { CartItem, Product, User as UserType, Address, ImageSizes } from '@/types';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { createMockOrder } from '@/utils/orderUtils';
 import { v4 as uuidv4 } from 'uuid';
@@ -70,6 +70,9 @@ const POSPage = () => {
 
     const variant = product.variants[0]; // Use first variant for simplicity
     const price = product.discountedPrice || product.basePrice;
+    
+    // FIX: Access the small size URL for the preview image
+    const previewImageUrl = (product.images[0] as ImageSizes)?.small || '/placeholder.svg';
 
     // Find item based on product ID and variant ID (if available)
     const existingItemIndex = cart.findIndex(item => item.productId === productId && item.variantId === variant?.id);
@@ -85,7 +88,7 @@ const POSPage = () => {
         variantId: variant?.id,
         quantity: 1,
         product: product,
-        customization: { texts: [], font: '', previewImage: product.images[0] || '/placeholder.svg', svgFile: '' },
+        customization: { texts: [], font: '', previewImage: previewImageUrl, svgFile: '' },
         lineTotal: price,
       };
       setCart(prev => [...prev, newItem]);
@@ -264,11 +267,13 @@ const POSPage = () => {
                   <p className="text-center text-gray-500">Add products to start a sale.</p>
                 ) : (
                   <div className="space-y-3">
-                    {cart.map((item, index) => (
+                    {cart.map((item, index) => {
+                      const imageUrl = (item.product.images[0] as ImageSizes)?.small || '/placeholder.svg';
+                      return (
                       <div key={index} className="flex items-center justify-between border-b pb-3 last:border-b-0">
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
                           <div className="w-10 h-10 bg-gray-100 rounded">
-                            <img src={item.product.images[0] || '/placeholder.svg'} alt={item.product.name} className="w-full h-full object-cover rounded" />
+                            <img src={imageUrl} alt={item.product.name} className="w-full h-full object-cover rounded" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="font-medium truncate">{item.product.name}</p>
@@ -294,7 +299,7 @@ const POSPage = () => {
                           </Button>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 )}
               </CardContent>

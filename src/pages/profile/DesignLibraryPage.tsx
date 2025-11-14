@@ -8,7 +8,7 @@ import { PlusCircle, Palette, Edit, Trash2, ArrowLeft, ShoppingCart } from 'luci
 import Layout from '@/components/layout/Layout';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
-import { SavedDesignTemplate } from '@/types';
+import { SavedDesignTemplate, ImageSizes } from '@/types';
 import { getDesignsByUserId, deleteDesign } from '@/utils/designUtils';
 import { getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
 import { getMockProductById } from '@/utils/productUtils';
@@ -127,7 +127,8 @@ const DesignLibraryPage = () => {
           ) : (
             designs.map((design) => {
               const product = getMockProductById(design.productId);
-              const imageUrl = product?.images[0] || '/placeholder.svg';
+              // FIX: Access the small size URL
+              const imageUrl = (product?.images[0] as ImageSizes)?.small || '/placeholder.svg';
               
               return (
                 <Card key={design.id} className="flex flex-col">
