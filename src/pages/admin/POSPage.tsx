@@ -16,9 +16,11 @@ import { CartItem, Product, User as UserType, Address, ImageSizes, POS_GUEST_ID 
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { createMockOrder } from '@/utils/orderUtils';
 import { v4 as uuidv4 } from 'uuid';
-import BarcodeScanner from '@/components/admin/BarcodeScanner';
+import BarcodeManualInput from '@/components/admin/BarcodeManualInput';
+import BarcodeScannerCamera from '@/components/admin/BarcodeScannerCamera'; // NEW IMPORT
 import { logOperatorActivity } from '@/utils/operatorUtils';
 import { useAuthStore } from '@/stores/authStore';
+import { useIsMobile } from '@/hooks/use-mobile'; // NEW IMPORT
 
 // Mock Address for POS orders
 const posAddress: Address = {
@@ -43,6 +45,7 @@ const POSPage = () => {
   const { toast } = useToast();
   const { currencySymbol } = useCheckoutSettingsStore();
   const { user: operator } = useAuthStore();
+  const isMobile = useIsMobile(); // Use hook
   
   const allUsers = getAllMockUsers().filter(u => u.role === 'customer' || u.role === 'reseller');
   const allProducts = getAllMockProducts().filter(p => p.isActive);
@@ -223,8 +226,17 @@ const POSPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Product Selection */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Barcode Scanner */}
-            <BarcodeScanner 
+            
+            {/* Camera Scanner (Priority on Mobile) */}
+            {isMobile && (
+              <BarcodeScannerCamera 
+                onProductScanned={handleAddProduct} 
+                disabled={isLoading}
+              />
+            )}
+            
+            {/* Manual Input (Fallback/Desktop) */}
+            <BarcodeManualInput 
               onProductScanned={handleAddProduct} 
               disabled={isLoading}
             />
