@@ -3,7 +3,13 @@ import { getMockOrders } from './orderUtils'; // Import order utility
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock password storage is removed as we rely on Supabase Auth.
-export const mockPasswords: Record<string, string> = {};
+export const mockPasswords: Record<string, string> = {
+  'u1': 'password', // Mock Admin User
+  'u2': 'password', // Mock Reseller User
+  'u3': 'password', // Mock Customer User
+  'u4': 'password', // Mock Counter User
+  'u5': 'password', // Mock Customer User
+};
 
 // Mock user list is drastically reduced, keeping only a placeholder for the superuser ID
 // NOTE: In a real application, this list would be replaced by database queries.
@@ -16,6 +22,61 @@ export const mockUsers: User[] = [
     role: 'superuser', 
     isActive: true, 
     createdAt: new Date(), 
+    updatedAt: new Date(),
+  },
+  // Mock Admin User for testing
+  {
+    id: 'u1',
+    email: 'admin@example.com',
+    name: 'Alice Admin',
+    role: 'admin',
+    isActive: true,
+    createdAt: new Date(Date.now() - 86400000 * 50),
+    updatedAt: new Date(),
+    commissionRate: undefined,
+    resellerId: undefined,
+  },
+  // Mock Reseller User
+  {
+    id: 'u2',
+    email: 'reseller@example.com',
+    name: 'Bob Reseller',
+    role: 'reseller',
+    isActive: true,
+    createdAt: new Date(Date.now() - 86400000 * 40),
+    updatedAt: new Date(),
+    commissionRate: 15,
+    resellerId: undefined,
+  },
+  // Mock Customer User 1 (Referred by u2)
+  {
+    id: 'u3',
+    email: 'charlie@example.com',
+    name: 'Charlie Customer',
+    role: 'customer',
+    isActive: true,
+    createdAt: new Date(Date.now() - 86400000 * 30),
+    updatedAt: new Date(),
+    resellerId: 'u2',
+  },
+  // Mock Customer User 2
+  {
+    id: 'u5',
+    email: 'eve@example.com',
+    name: 'Eve Customer',
+    role: 'customer',
+    isActive: true,
+    createdAt: new Date(Date.now() - 86400000 * 10),
+    updatedAt: new Date(),
+  },
+  // Mock Counter User (for POS)
+  {
+    id: 'u4',
+    email: 'pos.counter@example.com',
+    name: 'POS Operator 1',
+    role: 'counter',
+    isActive: true,
+    createdAt: new Date(Date.now() - 86400000 * 30),
     updatedAt: new Date(),
   },
 ];
