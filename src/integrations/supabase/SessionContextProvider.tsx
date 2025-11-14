@@ -26,41 +26,48 @@ interface SessionContextProviderProps {
 
 export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
+  const [initialSyncDone, setInitialSyncDone] = useState(false); // Local flag to ensure initial sync runs only once
+  
   const { logout, setLoading, syncUser } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    setLoading(true);
-    
-    // 1. Handle initial session load
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      if (initialSession?.user?.id) {
-        syncUser(initialSession.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
+    // Only run initial sync logic if it hasn't been done yet
+    if (!initialSyncDone) {
+      setLoading(true);
+      
+      supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+        setSession(initialSession);
+        setInitialSyncDone(true); // Mark initial check as done
+        
+        if (initialSession?.user?.id) {
+          // Sync user profile (which handles setting isLoading=false internally)
+          syncUser(initialSession.user.id);
+        } else {
+          // No session, stop loading
+          setLoading(false);
+        }
+      });
+    }
 
     // 2. Handle real-time auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
 
       if (event === 'SIGNED_IN' && currentSession?.user?.id) {
-        // When signed in, sync the user profile
+        // Note: syncUser handles setting isLoading=true/false internally
         syncUser(currentSession.user.id);
       } else if (event === 'SIGNED_OUT') {
-        // When signed out, clear local state and navigate
         logout();
         navigate('/auth/login');
       } else if (event === 'INITIAL_SESSION' && !currentSession) {
-        // If initial session is null (not logged in), ensure loading is false
+        // Fallback to ensure loading is false if initial session is null
         setLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [setLoading, logout, syncUser, navigate]);
+  }, [initialSyncDone, setLoading, logout, syncUser, navigate]);
 
 
   return (
