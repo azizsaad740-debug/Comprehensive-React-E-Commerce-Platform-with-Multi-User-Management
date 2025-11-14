@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { User, UserRole } from '@/types';
 import { Save, X, RefreshCw } from 'lucide-react';
+import { useAuthStore } from '@/stores/authStore'; // NEW IMPORT
 
 interface UserFormProps {
   initialUser: User;
@@ -19,6 +20,7 @@ interface UserFormProps {
 const roleOptions: UserRole[] = ['admin', 'reseller', 'customer'];
 
 const UserForm: React.FC<UserFormProps> = ({ initialUser, onSubmit, onCancel, isSaving }) => {
+  const { user: currentUser, hasRole } = useAuthStore();
   const [formData, setFormData] = useState<Partial<User>>({});
 
   useEffect(() => {
@@ -64,6 +66,9 @@ const UserForm: React.FC<UserFormProps> = ({ initialUser, onSubmit, onCancel, is
 
   const isReseller = formData.role === 'reseller';
   const isCustomer = formData.role === 'customer';
+  
+  // Only Superuser can change roles
+  const canEditRole = hasRole('superuser');
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-4">
@@ -97,6 +102,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialUser, onSubmit, onCancel, is
           <Select 
             value={formData.role} 
             onValueChange={handleRoleChange}
+            disabled={!canEditRole || isSaving} // Disable role change if not superuser
           >
             <SelectTrigger>
               <SelectValue placeholder="Select Role" />
@@ -109,6 +115,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialUser, onSubmit, onCancel, is
               ))}
             </SelectContent>
           </Select>
+          {!canEditRole && <p className="text-xs text-red-500">Only Superuser can change roles.</p>}
         </div>
         
         <div className="flex items-center space-x-4 pt-6">
@@ -116,6 +123,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialUser, onSubmit, onCancel, is
             id="isActive"
             checked={!!formData.isActive}
             onCheckedChange={(checked) => handleChange('isActive', checked)}
+            disabled={isSaving}
           />
           <Label htmlFor="isActive">User is Active</Label>
         </div>
@@ -138,6 +146,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialUser, onSubmit, onCancel, is
                 value={formData.commissionRate || 0}
                 onChange={(e) => handleChange('commissionRate', Number(e.target.value))}
                 required
+                disabled={!canEditRole || isSaving}
               />
             </div>
           )}
@@ -150,6 +159,7 @@ const UserForm: React.FC<UserFormProps> = ({ initialUser, onSubmit, onCancel, is
                 value={formData.resellerId || ''}
                 onChange={(e) => handleChange('resellerId', e.target.value)}
                 placeholder="Enter Reseller ID (e.g., u2)"
+                disabled={!canEditRole || isSaving}
               />
             </div>
           )}

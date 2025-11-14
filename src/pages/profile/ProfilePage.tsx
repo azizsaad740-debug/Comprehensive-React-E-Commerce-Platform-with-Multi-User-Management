@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { User as UserIcon, Mail, Phone, MessageSquare, Save, MapPin, Palette } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, MessageSquare, Save, MapPin, Palette, Lock, Eye, EyeOff } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,10 @@ const ProfilePage = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<Partial<User>>({});
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -32,6 +36,7 @@ const ProfilePage = () => {
         phone: user.phone || '',
         whatsapp: user.whatsapp || '',
       });
+      setNewEmail(user.email);
     }
   }, [user, isAuthenticated, authLoading, navigate]);
 
@@ -43,19 +48,37 @@ const ProfilePage = () => {
     e.preventDefault();
     if (!user) return;
 
+    if (newPassword && newPassword !== confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (newEmail && newEmail !== user.email) {
+        // Supabase requires re-authentication for email change, which is handled internally.
+        // The user will receive a confirmation email.
+    }
+
     setIsSaving(true);
     try {
-      // The updateUser function is now asynchronous and handles Supabase persistence
-      await updateUser(formData);
+      await updateUser(formData, newPassword || undefined, newEmail || undefined);
 
       toast({
         title: "Success",
-        description: "Profile updated successfully!",
+        description: "Profile updated successfully! Check your email if you changed your address.",
       });
-    } catch (error) {
+      
+      // Clear password fields after successful update
+      setNewPassword('');
+      setConfirmPassword('');
+      
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update profile.",
+        description: error.message || "Failed to update profile.",
         variant: "destructive",
       });
     } finally {
@@ -80,7 +103,7 @@ const ProfilePage = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
+            <CardTitle>Account & Personal Information</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -100,19 +123,70 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              {/* Email (Read-only for simplicity) */}
+              {/* Email Change */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
                     id="email"
-                    value={formData.email || ''}
-                    className="pl-10 bg-gray-100 cursor-not-allowed"
-                    readOnly
+                    type="email"
+                    value={newEmail || ''}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="pl-10"
+                    required
                   />
                 </div>
-                <p className="text-sm text-gray-500">Email cannot be changed here.</p>
+                {newEmail !== user.email && (
+                    <p className="text-sm text-orange-500">Changing email requires confirmation via a link sent to the new address.</p>
+                )}
+              </div>
+              
+              <Separator />
+              
+              {/* Password Change */}
+              <div className="space-y-4 border p-4 rounded-lg">
+                <h3 className="text-lg font-semibold flex items-center">
+                    <Lock className="h-5 w-5 mr-2" /> Change Password
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="newPassword">New Password</Label>
+                        <div className="relative">
+                            <Input
+                                id="newPassword"
+                                type={showPassword ? 'text' : 'password'}
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="Leave blank to keep current password"
+                                className="pr-10"
+                            />
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? (
+                                    <EyeOff className="h-4 w-4 text-gray-400" />
+                                ) : (
+                                    <Eye className="h-4 w-4 text-gray-400" />
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                        <Input
+                            id="confirmPassword"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            disabled={!newPassword}
+                        />
+                    </div>
+                </div>
               </div>
 
               <Separator />

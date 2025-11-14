@@ -1,9 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
+import { useSupabaseConfigStore } from '@/stores/supabaseConfigStore';
 
-// Supabase Project ID: wnlveqfnbaempwvymfak
-// Supabase Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IndubHZlcWZuYmFlbXB3dnltZmFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5ODk0NzIsImV4cCI6MjA3NzU2NTQ3Mn0.yb9fairNg0lurOIZpkUFY4OMD_ddTGNMEgizCGS8ZVg
+// Initialize client dynamically based on the store's current state
+// This function ensures the client is created only once or recreated if config changes.
+const initializeSupabaseClient = () => {
+  // We must access the store state outside of a React component/hook context
+  // For simplicity in this setup, we rely on the store being initialized.
+  // In a real app, this might be handled via a global singleton or context provider.
+  const { supabaseUrl, supabaseAnonKey } = useSupabaseConfigStore.getState();
 
-const SUPABASE_URL = 'https://wnlveqfnbaempwvymfak.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndubHZlcWZuYmFlbXB3dnltZmFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5ODk0NzIsImV4cCI6MjA3NzU2NTQ3Mn0.yb9fairNg0lurOIZpkUFY4OMD_ddTGNMEgizCGS8ZVg';
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Supabase configuration missing. Client cannot be initialized.");
+    // Return a dummy client to prevent crashes
+    return { auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }) }, from: () => ({ select: () => ({ eq: () => ({ single: () => ({ data: null, error: null }) }) }) }) } as any;
+  }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return createClient(supabaseUrl, supabaseAnonKey);
+};
+
+export const supabase = initializeSupabaseClient();

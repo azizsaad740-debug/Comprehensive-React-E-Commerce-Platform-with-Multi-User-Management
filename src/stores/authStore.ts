@@ -3,7 +3,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, UserRole } from '@/types';
-import { getMockUserById, updateMockUser, mockUsers, mockPasswords } from '@/utils/userUtils'; // Import mock utilities
 import { supabase } from '@/integrations/supabase/client';
 
 // Helper function to simulate fetching user data after login
@@ -25,12 +24,23 @@ const findAndLoadUser = async (supabaseUserId: string): Promise<User | null> => 
   
   if (!authUser) return null;
 
-  // 3. Merge data: Use profile data if available, otherwise use auth data and mock defaults
+  // 3. Determine the role. Check if the user is the hardcoded superuser ID.
+  let role: UserRole = profileData?.role || 'customer';
+  
+  // Hardcoded check for the initial superuser ID (must be manually created in Supabase Auth)
+  if (authUser.email === 'azizsaad740@gmail.com') {
+    role = 'superuser';
+  } else if (authUser.email === 'superuser@example.com') {
+    // Fallback for the old mock superuser ID if it exists
+    role = 'superuser';
+  }
+
+  // 4. Merge data: Use profile data if available, otherwise use auth data and defaults
   const user: User = {
     id: authUser.id,
     email: authUser.email || '',
     name: profileData?.first_name || authUser.email?.split('@')[0] || 'User',
-    role: profileData?.role || 'customer',
+    role: role,
     isActive: true, // Assuming Supabase users are active unless explicitly disabled
     createdAt: new Date(authUser.created_at),
     updatedAt: new Date(),
@@ -52,7 +62,7 @@ interface AuthState {
   register: (email: string, password: string, name: string, resellerId?: string) => Promise<void>;
   logout: () => void;
   syncUser: (supabaseUserId: string) => Promise<void>;
-  updateUser: (userData: Partial<User>) => Promise<void>;
+  updateUser: (userData: Partial<User>, newPassword?: string, newEmail?: string) => Promise<void>;
   setLoading: (loading: boolean) => void;
   hasRole: (role: User['role'] | User['role'][]) => boolean;
   hasPermission: (permission: string) => boolean;
@@ -132,37 +142,58 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      updateUser: async (userData: Partial<User>) => {
+      updateUser: async (userData: Partial<User>, newPassword?: string, newEmail?: string) => {
         const { user } = get();
         if (!user) return;
 
         set({ isLoading: true });
         
-        // 1. Update Supabase Auth metadata (for name/role if needed, though role is in profile)
-        const { error: authError } = await supabase.auth.updateUser({
-          data: {
-            first_name: userData.name?.split(' ')[0],
-            last_name: userData.name?.split(' ').slice(1).join(' '),
-          }
-        });
+        const authUpdateData: { password?: string, email?: string, data?: Record<string, any> } = {};
         
-        if (authError) {
-          set({ isLoading: false });
-          throw new Error(authError.message);
+        // 1. Handle Password Change
+        if (newPassword) {
+            authUpdateData.password = newPassword;
+        }
+        
+        // 2. Handle Email Change
+        if (newEmail && newEmail !== user.email) {
+            // Supabase handles the email verification flow automatically
+            authUpdateData.email = newEmail;
         }
 
-        // 2. Update public.profiles table
+        // 3. Handle Name Change (via metadata update, though profile update is primary)
+        if (userData.name) {
+            authUpdateData.data = {
+                first_name: userData.name.split(' ')[0],
+                last_name: userData.name.split(' ').slice(1).join(' '),
+            };
+        }
+        
+        if (Object.keys(authUpdateData).length > 0) {
+            const { error: authError } = await supabase.auth.updateUser(authUpdateData);
+            
+            if (authError) {
+                set({ isLoading: false });
+                throw new Error(authError.message);
+            }
+        }
+
+        // 4. Update public.profiles table (for name, role, contact info, etc.)
         const profileUpdateData: Record<string, any> = {
-          first_name: userData.name?.split(' ')[0],
-          last_name: userData.name?.split(' ').slice(1).join(' '),
+          first_name: userData.name?.split(' ')[0] || user.name.split(' ')[0],
+          last_name: userData.name?.split(' ').slice(1).join(' ') || user.name.split(' ').slice(1).join(' '),
           phone: userData.phone,
           whatsapp: userData.whatsapp,
-          role: userData.role,
-          commission_rate: userData.commissionRate,
-          reseller_id: userData.resellerId,
           updated_at: new Date().toISOString(),
         };
         
+        // Only allow role/commission updates if the current user is an admin/superuser
+        if (get().hasRole(['admin', 'superuser']) && userData.role) {
+            profileUpdateData.role = userData.role;
+            profileUpdateData.commission_rate = userData.commissionRate;
+            profileUpdateData.reseller_id = userData.resellerId;
+        }
+
         const { error: profileError } = await supabase
           .from('profiles')
           .update(profileUpdateData)
@@ -173,7 +204,7 @@ export const useAuthStore = create<AuthState>()(
             throw new Error(profileError.message);
         }
 
-        // 3. Sync local store state
+        // 5. Sync local store state
         await get().syncUser(user.id);
       },
 
@@ -191,7 +222,7 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (!user) return false;
 
-        // Superuser has all permissions
+        // Superuser bypasses all specific role checks
         if (user.role === 'superuser') {
           return true;
         }

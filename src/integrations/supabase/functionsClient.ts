@@ -1,9 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
+import { useSupabaseConfigStore } from '@/stores/supabaseConfigStore';
 
-// Supabase Project ID: wnlveqfnbaempwvymfak
-// Supabase Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndubHZlcWZuYmFlbXB3dnltZmFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5ODk0NzIsImV4cCI6MjA3NzU2NTQ3Mn0.yb9fairNg0lurOIZpkUFY4OMD_ddTGNMEgizCGS8ZVg
+// Initialize client dynamically based on the store's current state
+const initializeSupabaseFunctionsClient = () => {
+  const { supabaseUrl, supabaseAnonKey } = useSupabaseConfigStore.getState();
 
-const SUPABASE_URL = 'https://wnlveqfnbaempwvymfak.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndubHZlcWZuYmFlbXB3dnltZmFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5ODk0NzIsImV4cCI6MjA3NzU2NTQ3Mn0.yb9fairNg0lurOIZpkUFY4OMD_ddTGNMEgizCGS8ZVg';
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Supabase configuration missing. Functions client cannot be initialized.");
+    return { functions: { invoke: () => ({ data: null, error: new Error("Supabase not configured.") }) } } as any;
+  }
 
-export const supabaseFunctionsClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return createClient(supabaseUrl, supabaseAnonKey);
+};
+
+export const supabaseFunctionsClient = initializeSupabaseFunctionsClient();

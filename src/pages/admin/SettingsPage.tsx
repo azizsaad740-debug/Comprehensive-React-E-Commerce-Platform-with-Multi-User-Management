@@ -5,7 +5,7 @@ import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image, DollarSign, Truck, Home, Link } from 'lucide-react';
+import { Palette, LayoutGrid, Type, Upload, Save, X, Tag, Image, DollarSign, Truck, Home, Link, Plug, Database } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -16,12 +16,13 @@ import { useToast } from '@/hooks/use-toast';
 import CheckoutSettingsForm from '@/components/admin/CheckoutSettingsForm';
 import { useNavigate } from 'react-router-dom';
 import { hexToRawHsl } from '@/lib/colorUtils';
-import { useUISettingsStore, HeaderVisibilitySettings } from '@/stores/uiSettingsStore'; // UPDATED IMPORT
-import { Switch } from '@/components/ui/switch'; // Ensure Switch is imported
+import { useUISettingsStore, HeaderVisibilitySettings } from '@/stores/uiSettingsStore';
+import { Switch } from '@/components/ui/switch';
+import SupabaseConfigForm from '@/components/admin/SupabaseConfigForm'; // NEW IMPORT
 
 const SettingsPage = () => {
   const { appName, slogan, logoUrl, updateBranding } = useBrandingStore();
-  const { homepageSections, headerVisibility, updateHomepageSections, updateHeaderVisibility } = useUISettingsStore(); // UPDATED HOOK
+  const { homepageSections, headerVisibility, updateHomepageSections, updateHeaderVisibility } = useUISettingsStore();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -42,7 +43,7 @@ const SettingsPage = () => {
   
   // Local state for UI settings
   const [localHomepageSections, setLocalHomepageSections] = useState(homepageSections);
-  const [localHeaderVisibility, setLocalHeaderVisibility] = useState(headerVisibility); // NEW STATE
+  const [localHeaderVisibility, setLocalHeaderVisibility] = useState(headerVisibility);
 
   const handleBrandingChange = (field: 'appName' | 'slogan' | 'logoUrl', value: string) => {
     setBrandingData(prev => ({ ...prev, [field]: value }));
@@ -84,7 +85,7 @@ const SettingsPage = () => {
     
     // 2. Update UI Settings Store
     updateHomepageSections(localHomepageSections);
-    updateHeaderVisibility(localHeaderVisibility); // NEW: Save header visibility settings
+    updateHeaderVisibility(localHeaderVisibility);
     
     // 3. Apply Color Changes to CSS variables
     applyColorsToCSS(primaryColor, accentColor);
@@ -103,7 +104,7 @@ const SettingsPage = () => {
       logoUrl: logoUrl,
     });
     setLocalHomepageSections(homepageSections);
-    setLocalHeaderVisibility(headerVisibility); // NEW: Reset header visibility
+    setLocalHeaderVisibility(headerVisibility);
     
     // Note: We don't have a persistent store for colors yet, so we reset to the default hex values.
     setPrimaryColor('#FF6B81'); 
@@ -166,6 +167,9 @@ const SettingsPage = () => {
                   </TabsTrigger>
                   <TabsTrigger value="assets" className="w-full justify-start data-[state=active]:bg-accent">
                     <Image className="h-4 w-4 mr-2" /> Assets & Banners
+                  </TabsTrigger>
+                  <TabsTrigger value="integrations" className="w-full justify-start data-[state=active]:bg-accent">
+                    <Database className="h-4 w-4 mr-2" /> Integrations
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -263,7 +267,7 @@ const SettingsPage = () => {
                 <CheckoutSettingsForm />
               </TabsContent>
               
-              {/* Page Layout Tab (NEW/UPDATED) */}
+              {/* Page Layout Tab */}
               <TabsContent value="layout">
                 <Card>
                   <CardHeader>
@@ -344,7 +348,7 @@ const SettingsPage = () => {
                           id="featuredProductsSection"
                           checked={localHomepageSections.featuredProductsSection}
                           onCheckedChange={(checked) => handleUISectionToggle('featuredProductsSection', checked)}
-                        />
+                          />
                       </div>
                       
                       <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -392,6 +396,25 @@ const SettingsPage = () => {
                     <p className="text-gray-600 mb-4">Manage visual assets and the homepage hero slider on the dedicated Content Management page.</p>
                     <Button onClick={() => navigate('/admin/content')}>
                       <Image className="h-4 w-4 mr-2" /> Go to Content Management
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Integrations Tab (NEW) */}
+              <TabsContent value="integrations">
+                <SupabaseConfigForm />
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Plug className="h-5 w-5" />
+                      <span>Other Integrations</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 mb-4">Manage API keys and settings for third-party services like payment gateways and analytics.</p>
+                    <Button onClick={() => navigate('/admin/plugins')}>
+                      <Plug className="h-4 w-4 mr-2" /> Go to Plugin Management
                     </Button>
                   </CardContent>
                 </Card>
