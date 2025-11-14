@@ -9,7 +9,7 @@ import { Order, POSBillSettings } from '@/types';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { useThemeStore } from '@/stores/themeStore';
 import { useContentStore } from '@/stores/contentStore';
-import { QRCode } from 'qrcode.react'; // Changed to named import
+import QRCode from 'qrcode.react'; // Changed to default import
 
 interface POSBillPreviewProps {
   order: Order;
