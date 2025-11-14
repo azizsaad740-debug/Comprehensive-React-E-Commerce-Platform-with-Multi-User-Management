@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Mail, Lock, User, Loader2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { useBrandingStore } from '@/stores/brandingStore';
-import { registerMockUser } from '@/utils/userUtils';
+import { useAuthStore } from '@/stores/authStore'; // Import useAuthStore
 
 function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -28,6 +28,7 @@ function RegisterPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { appName } = useBrandingStore();
+  const { register } = useAuthStore(); // Use register from auth store
 
   const query = new URLSearchParams(location.search);
   const referralId = query.get('ref');
@@ -60,24 +61,19 @@ function RegisterPage() {
     setIsLoading(true);
 
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Use mock registration utility
-      registerMockUser(
+      await register(
         formData.email, 
         formData.password, 
         formData.name, 
-        'customer', 
         referralId || undefined
       );
       
       toast({
         title: "Registration Successful",
-        description: "Your account has been created. Please log in.",
+        description: "Account created! You are now logged in.",
       });
       
-      navigate('/auth/login');
+      navigate('/'); // Redirect to home/dashboard after successful registration and login
       
     } catch (error: any) {
       toast({

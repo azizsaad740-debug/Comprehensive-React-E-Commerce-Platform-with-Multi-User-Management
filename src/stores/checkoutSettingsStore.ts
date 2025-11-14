@@ -31,8 +31,8 @@ const initialDeliveryMethods: DeliveryMethod[] = [
 export const useCheckoutSettingsStore = create<CheckoutSettingsState>()(
   persist(
     (set, get) => ({
-      currency: 'USD',
-      currencySymbol: '$',
+      currency: 'PKR',
+      currencySymbol: 'Rs',
       deliveryMethods: initialDeliveryMethods,
       isCashOnDeliveryEnabled: false,
       thankYouNoteInstruction: 'Your order is confirmed! Please check your email for tracking details. Contact support if you have any questions.',
