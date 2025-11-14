@@ -4,7 +4,5 @@ import "./globals.css";
 import { SessionContextProvider } from "./integrations/supabase/SessionContextProvider.tsx";
 
 createRoot(document.getElementById("root")!).render(
-  <SessionContextProvider>
-    <App />
-  </SessionContextProvider>
+  <App />
 );
