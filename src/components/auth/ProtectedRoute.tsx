@@ -14,7 +14,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, hasRole, isLoading } = useAuthStore();
-  const { toast } = useToast();
+  // Removed useToast hook usage to prevent potential side effect loops
 
   // 1. If loading, show spinner to wait for auth state resolution
   if (isLoading) {
@@ -27,11 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
 
   // 2. If not authenticated, redirect to login
   if (!isAuthenticated) {
-    toast({
-      title: "Authentication Required",
-      description: "Please log in to access this page.",
-      variant: "destructive",
-    });
+    // Note: Toast notification removed here to prevent potential infinite render loop.
     return <Navigate to="/auth/login" replace />;
   }
 
@@ -41,11 +37,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     const isAuthorized = user.role === 'superuser' || hasRole(allowedRoles);
     
     if (!isAuthorized) {
-      toast({
-        title: "Access Denied",
-        description: "You do not have permission to view this page.",
-        variant: "destructive",
-      });
+      // Note: Toast notification removed here to prevent potential infinite render loop.
       return <Navigate to="/" replace />;
     }
   }
