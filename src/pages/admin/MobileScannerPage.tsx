@@ -4,9 +4,9 @@ import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BarcodeScannerCamera from '@/components/admin/BarcodeScannerCamera';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button'; // ADDED: Missing Button import
-import { AlertTriangle, QrCode, ArrowLeft } from 'lucide-react';
-import { connectMobileScanner, sendScannedData } from '@/utils/posLinkUtils';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, QrCode, ArrowLeft, XCircle } from 'lucide-react';
+import { connectMobileScanner, sendScannedData, disconnectPOSSession } from '@/utils/posLinkUtils';
 import { useToast } from '@/hooks/use-toast';
 
 const MobileScannerPage = () => {
@@ -24,6 +24,7 @@ const MobileScannerPage = () => {
         toast({ title: "Connected", description: "Mobile scanner linked to POS terminal.", duration: 2000 });
       } else {
         toast({ title: "Error", description: "Invalid or expired session ID.", variant: "destructive" });
+        // Redirect back to POS page if connection fails
         navigate('/admin/pos');
       }
     } else {
@@ -40,6 +41,14 @@ const MobileScannerPage = () => {
         toast({ title: "Error", description: "Failed to send data. Session lost.", variant: "destructive" });
       }
     }
+  };
+  
+  const handleDisconnect = () => {
+    if (sessionId) {
+      disconnectPOSSession(sessionId);
+      toast({ title: "Disconnected", description: "Session manually ended.", variant: "destructive" });
+    }
+    navigate('/admin/pos');
   };
 
   if (!sessionId) {
@@ -73,11 +82,24 @@ const MobileScannerPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <p className="text-sm text-gray-600 mb-4">
+            Session ID: <span className="font-mono text-xs bg-gray-100 p-1 rounded">{sessionId}</span>
+          </p>
           <p className="text-sm text-gray-600 mb-4">Point your camera at a product barcode or QR code.</p>
+          
           <BarcodeScannerCamera 
             onProductScanned={handleProductScanned} 
             disabled={false}
           />
+          
+          <Button 
+            variant="destructive" 
+            className="w-full mt-4"
+            onClick={handleDisconnect}
+          >
+            <XCircle className="h-4 w-4 mr-2" />
+            Disconnect Scanner
+          </Button>
         </CardContent>
       </Card>
     </div>
