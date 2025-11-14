@@ -26,10 +26,10 @@ interface SessionContextProviderProps {
 }
 
 export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  // Include syncUser in the dependencies
-  const { isAuthenticated, logout, setLoading, syncUser } = useAuthStore(state => ({
-    isAuthenticated: state.isAuthenticated,
+  // Initialize session as undefined to indicate initial loading state
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
+  
+  const { logout, setLoading, syncUser } = useAuthStore(state => ({
     logout: state.logout,
     setLoading: state.setLoading,
     syncUser: state.syncUser,
@@ -39,19 +39,18 @@ export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ 
 
   // Effect 1: Handle initial load and auth state changes from Supabase
   useEffect(() => {
-    // Set initial loading state to true while checking session
+    // Set initial loading state in Zustand store
     setLoading(true);
     
     // 1. Initial session check
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       setSession(initialSession);
-      setLoading(false);
+      // We rely on Effect 2 (syncUser/setLoading) to finalize the loading state.
     });
 
     // 2. Real-time auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
-      setLoading(false);
 
       if (event === 'SIGNED_OUT') {
         // Clear local auth state on sign out
@@ -66,11 +65,18 @@ export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ 
 
   // Effect 2: Sync user profile whenever the internal session state changes
   useEffect(() => {
-    if (session?.user?.id) {
-      // Only sync if we have a user ID in the session
-      syncUser(session.user.id);
+    if (session === undefined) {
+      return; // Still initializing
     }
-  }, [session, syncUser]);
+    
+    if (session?.user?.id) {
+      // Sync user profile (which sets isLoading=true, then false upon completion)
+      syncUser(session.user.id);
+    } else {
+      // No session/user. Ensure loading is false.
+      setLoading(false);
+    }
+  }, [session, syncUser, setLoading]);
 
 
   return (
