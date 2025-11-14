@@ -4,11 +4,12 @@ import React, { useState } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Database, Upload, Download, Cloud, Link, RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Database, Upload, Download, Cloud, Link, RefreshCw, CheckCircle, AlertTriangle, Users, Package, ShoppingBag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import DataExportButton from '@/components/admin/DataExportButton';
 
 // Mock data structure for the entire application state (simplified)
 interface AppDataBackup {
@@ -145,11 +146,20 @@ const DataManagementPage = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="font-semibold">Backup Data</h3>
+                <h3 className="font-semibold">Full System Backup</h3>
                 <Button onClick={handleLocalBackup} disabled={isProcessing}>
                   {isProcessing ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                  Download Backup (.json)
+                  Download Full Backup (.json)
                 </Button>
+              </div>
+              
+              <Separator />
+              
+              <h3 className="font-semibold mb-3">Export Specific Data to CSV</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <DataExportButton dataType="users" />
+                <DataExportButton dataType="products" />
+                <DataExportButton dataType="orders" />
               </div>
               
               <Separator />

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { ShoppingCart, User, Package, Plus, Minus, Trash2, CheckCircle, RefreshCw } from 'lucide-react';
+import { ShoppingCart, User, Package, Plus, Minus, Trash2, CheckCircle, RefreshCw, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getAllMockUsers } from '@/utils/userUtils';
 import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
@@ -44,8 +44,17 @@ const POSPage = () => {
   const [cart, setCart] = useState<POSCartItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isLoading, setIsLoading] = useState(false);
+  const [productSearchTerm, setProductSearchTerm] = useState(''); // NEW: Search term state
 
   const selectedUser = useMemo(() => allUsers.find(u => u.id === selectedUserId), [selectedUserId, allUsers]);
+
+  const filteredProducts = useMemo(() => {
+    if (!productSearchTerm) return allProducts;
+    return allProducts.filter(p => 
+      p.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+      p.sku.toLowerCase().includes(productSearchTerm.toLowerCase())
+    );
+  }, [allProducts, productSearchTerm]);
 
   const cartSummary = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + item.lineTotal, 0);
@@ -62,6 +71,7 @@ const POSPage = () => {
     const variant = product.variants[0]; // Use first variant for simplicity
     const price = product.discountedPrice || product.basePrice;
 
+    // Find item based on product ID and variant ID (if available)
     const existingItemIndex = cart.findIndex(item => item.productId === productId && item.variantId === variant?.id);
 
     if (existingItemIndex !== -1) {
@@ -171,17 +181,27 @@ const POSPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Product Selection */}
           <Card className="lg:col-span-1">
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle>Product Selection</CardTitle>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search product name or SKU..."
+                  value={productSearchTerm}
+                  onChange={(e) => setProductSearchTerm(e.target.value)}
+                  className="pl-10"
+                  disabled={isLoading}
+                />
+              </div>
             </CardHeader>
             <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
-              {allProducts.map(product => (
+              {filteredProducts.map(product => (
                 <Button 
                   key={product.id}
                   variant="outline"
                   className="w-full justify-between h-auto p-3"
                   onClick={() => handleAddProduct(product.id)}
-                  disabled={isLoading}
+                  disabled={isLoading || product.stockQuantity <= 0}
                 >
                   <div className="flex flex-col items-start">
                     <span className="font-medium">{product.name}</span>
@@ -192,6 +212,9 @@ const POSPage = () => {
                   </span>
                 </Button>
               ))}
+              {filteredProducts.length === 0 && (
+                <p className="text-center text-sm text-gray-500 pt-4">No products found matching "{productSearchTerm}"</p>
+              )}
             </CardContent>
           </Card>
 
