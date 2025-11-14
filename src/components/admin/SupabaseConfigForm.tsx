@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Save, RefreshCw, Database, AlertTriangle } from 'lucide-react';
+import { Save, RefreshCw, Database, AlertTriangle, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSupabaseConfigStore } from '@/stores/supabaseConfigStore';
+
+const SUPABASE_PROJECT_ID = 'wnlveqfnbaempwvymfak';
+const SUPABASE_SETTINGS_URL = `https://app.supabase.com/project/${SUPABASE_PROJECT_ID}/settings/api`;
 
 const SupabaseConfigForm: React.FC = () => {
   const { supabaseUrl, supabaseAnonKey, isConfigured, updateConfig } = useSupabaseConfigStore();
@@ -49,6 +52,16 @@ const SupabaseConfigForm: React.FC = () => {
         <CardDescription>Configure your self-hosted or native Supabase project connection details.</CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <a href={SUPABASE_SETTINGS_URL} target="_blank" rel="noopener noreferrer">
+            <Button variant="secondary" className="w-full">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Open Supabase Project Settings
+            </Button>
+          </a>
+          <p className="text-xs text-gray-500 mt-2">Use this link to easily find your Project URL and Anon Key.</p>
+        </div>
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="supabaseUrl">Supabase URL</Label>
