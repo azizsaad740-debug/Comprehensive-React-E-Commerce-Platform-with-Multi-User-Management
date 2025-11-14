@@ -9,30 +9,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Heart, ShoppingCart, ArrowLeft, Palette } from 'lucide-react';
+import { Star, Heart, ShoppingCart, ArrowLeft, Palette, MessageSquare, Info } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
-import { Product, ProductCustomization, SavedDesignTemplate } from '@/types';
+import { Product, ProductActionButton } from '@/types';
 import { getMockProductById } from '@/utils/productUtils';
-import { getDesignById } from '@/utils/designUtils';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
-  const designId = query.get('designId'); // Keep this to check if we are loading a design
+  const designId = query.get('designId');
 
   const { addItem } = useCartStore();
   const { toast } = useToast();
-  const { currencySymbol } = useCheckoutSettingsStore(); // Read currency symbol
+  const { currencySymbol } = useCheckoutSettingsStore();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<Product['variants'][number] | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isMoreInfoOpen, setIsMoreInfoOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -51,7 +52,6 @@ const ProductDetailPage = () => {
     setProduct(fetchedProduct);
     setSelectedVariant(fetchedProduct.variants[0]);
     
-    // If a designId is present, we should redirect to the editor immediately
     if (designId) {
         navigate(`/products/${id}/design?designId=${designId}`, { replace: true });
     }
@@ -80,7 +80,6 @@ const ProductDetailPage = () => {
   // -------------------------------
 
   const handleAddToCart = () => {
-    // Quick Add: Add item without customization
     addItem(product, selectedVariant?.id, quantity);
     toast({
       title: "Added to cart",
@@ -90,6 +89,81 @@ const ProductDetailPage = () => {
   
   const handleCustomize = () => {
     navigate(`/products/${product.id}/design`);
+  };
+  
+  const handleContact = () => {
+    navigate('/contact');
+  };
+  
+  const handleMoreInfo = () => {
+    if (product.moreInfoContent) {
+      setIsMoreInfoOpen(true);
+    } else {
+      toast({
+        title: "No Information",
+        description: "The admin has not provided additional information for this product.",
+        variant: "default",
+      });
+    }
+  };
+  
+  const renderActionButton = (buttonType: ProductActionButton) => {
+    switch (buttonType) {
+      case 'customize':
+        return (
+          <Button 
+            key="customize"
+            variant="default" 
+            className="w-full" 
+            size="lg"
+            onClick={handleCustomize}
+          >
+            <Palette className="h-5 w-5 mr-2" />
+            Start Customizing
+          </Button>
+        );
+      case 'quick_add':
+        return (
+          <Button 
+            key="quick_add"
+            className="w-full" 
+            size="lg"
+            onClick={handleAddToCart}
+            disabled={!selectedVariant && product.variants.length > 0}
+          >
+            <ShoppingCart className="h-5 w-5 mr-2" />
+            Quick Add to Cart
+          </Button>
+        );
+      case 'contact':
+        return (
+          <Button 
+            key="contact"
+            variant="outline" 
+            className="w-full" 
+            size="lg"
+            onClick={handleContact}
+          >
+            <MessageSquare className="h-5 w-5 mr-2" />
+            Contact Us
+          </Button>
+        );
+      case 'more_info':
+        return (
+          <Button 
+            key="more_info"
+            variant="outline" 
+            className="w-full" 
+            size="lg"
+            onClick={handleMoreInfo}
+          >
+            <Info className="h-5 w-5 mr-2" />
+            More Info
+          </Button>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -232,27 +306,9 @@ const ProductDetailPage = () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons (Dynamic) */}
             <div className="space-y-2">
-              <Button 
-                className="w-full" 
-                size="lg"
-                onClick={handleAddToCart}
-                disabled={!selectedVariant && product.variants.length > 0}
-              >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                Quick Add (No Customization)
-              </Button>
-              
-              <Button 
-                variant="default" 
-                className="w-full" 
-                size="lg"
-                onClick={handleCustomize}
-              >
-                <Palette className="h-5 w-5 mr-2" />
-                Start Customizing
-              </Button>
+              {product.actionButtons.map(renderActionButton)}
               
               <Button variant="outline" className="w-full" size="lg">
                 <Heart className="h-5 w-5 mr-2" />
@@ -388,6 +444,26 @@ const ProductDetailPage = () => {
           </Tabs>
         </div>
       </div>
+      
+      {/* More Info Dialog */}
+      <Dialog open={isMoreInfoOpen} onOpenChange={setIsMoreInfoOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Info className="h-5 w-5" />
+              <span>More Information: {product.name}</span>
+            </DialogTitle>
+            <DialogDescription>
+              Detailed product information provided by the seller.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">
+              {product.moreInfoContent}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

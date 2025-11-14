@@ -7,13 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Star, Heart, ShoppingCart } from 'lucide-react';
+import { Star, Heart, ShoppingCart, Palette, MessageSquare, Info } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
-import { Product } from '@/types';
+import { Product, ProductActionButton } from '@/types';
 import { getAllMockProducts } from '@/utils/productUtils';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useContentStore } from '@/stores/contentStore';
+import { cn } from '@/lib/utils'; // <-- Added import
 
 // Helper to get query parameters
 const useQuery = () => {
@@ -31,7 +34,13 @@ function ProductCatalog() {
   
   const { addItem } = useCartStore();
   const { toast } = useToast();
-  const { currencySymbol } = useCheckoutSettingsStore(); // Read currency symbol
+  const { currencySymbol } = useCheckoutSettingsStore();
+  const { contactInfo } = useContentStore();
+
+  // State for More Info Dialog
+  const [isMoreInfoOpen, setIsMoreInfoOpen] = useState(false);
+  const [moreInfoContent, setMoreInfoContent] = useState('');
+  const [moreInfoTitle, setMoreInfoTitle] = useState('');
 
   const mockProducts = getAllMockProducts();
 
@@ -74,12 +83,82 @@ function ProductCatalog() {
   };
 
   const handleAddToCart = (product: Product) => {
-    // For quick add, we assume default variant and no customization
     addItem(product, product.variants[0]?.id, 1);
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart`,
     });
+  };
+  
+  const handleMoreInfo = (product: Product) => {
+    if (product.moreInfoContent) {
+      setMoreInfoTitle(product.name);
+      setMoreInfoContent(product.moreInfoContent);
+      setIsMoreInfoOpen(true);
+    } else {
+      toast({
+        title: "No Information",
+        description: "The admin has not provided additional information for this product.",
+        variant: "default",
+      });
+    }
+  };
+  
+  const renderCardButton = (product: Product, buttonType: ProductActionButton) => {
+    switch (buttonType) {
+      case 'customize':
+        return (
+          <Button 
+            key="customize"
+            variant="outline" 
+            className="w-full h-8 text-xs" 
+            size="sm"
+            onClick={() => navigate(`/products/${product.id}`)}
+          >
+            Customize
+          </Button>
+        );
+      case 'quick_add':
+        return (
+          <Button 
+            key="quick_add"
+            className="w-full h-8 text-xs" 
+            size="sm"
+            onClick={() => handleAddToCart(product)}
+          >
+            <ShoppingCart className="h-3 w-3 mr-1" />
+            Quick Add
+          </Button>
+        );
+      case 'contact':
+        return (
+          <Button 
+            key="contact"
+            variant="secondary" 
+            className="w-full h-8 text-xs" 
+            size="sm"
+            onClick={() => navigate('/contact')}
+          >
+            <MessageSquare className="h-3 w-3 mr-1" />
+            Contact
+          </Button>
+        );
+      case 'more_info':
+        return (
+          <Button 
+            key="more_info"
+            variant="outline" 
+            className="w-full h-8 text-xs" 
+            size="sm"
+            onClick={() => handleMoreInfo(product)}
+          >
+            <Info className="h-3 w-3 mr-1" />
+            More Info
+          </Button>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -122,15 +201,20 @@ function ProductCatalog() {
           </div>
         </div>
 
-        {/* Adjusted grid: grid-cols-2 by default, md:grid-cols-2, lg:grid-cols-3 */}
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {filteredProducts.map((product) => {
             const price = product.discountedPrice || product.basePrice;
             const hasDiscount = product.discountedPrice && product.discountedPrice < product.basePrice;
+            const visibleButtons = product.actionButtons.filter(btn => btn !== 'customize'); // Customize button is handled by the card click/outline button
+            const primaryButton = product.actionButtons.find(btn => btn === 'customize' || btn === 'quick_add');
+            const secondaryButtons = product.actionButtons.filter(btn => btn !== primaryButton);
             
+            // Determine if we should center the price (only one button visible)
+            const singleButtonMode = product.actionButtons.length === 1;
+
             return (
               <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative">
+                <div className="relative cursor-pointer" onClick={() => navigate(`/products/${product.id}`)}>
                   <div className="aspect-square bg-gray-100">
                     <img 
                       src={product.images[0] || '/placeholder.svg'} 
@@ -165,7 +249,10 @@ function ProductCatalog() {
                 </CardHeader>
 
                 <CardContent className="pt-0 p-3 md:p-6">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className={cn(
+                    "flex items-center mb-3",
+                    singleButtonMode ? "justify-center" : "justify-between"
+                  )}>
                     <div className="flex flex-col items-start space-y-0">
                       <span className="text-base font-bold text-green-600">
                         {currencySymbol}{price.toFixed(2)}
@@ -176,29 +263,21 @@ function ProductCatalog() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs text-gray-600">4.5</span>
-                    </div>
+                    
+                    {/* Primary action button (if only one button is configured, it will be the only element in the row) */}
+                    {!singleButtonMode && primaryButton && (
+                      <Button size="sm" className="h-8 text-xs" onClick={() => navigate(`/products/${product.id}`)}>
+                        {primaryButton === 'customize' ? 'Customize' : 'View Details'}
+                      </Button>
+                    )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Button 
-                      className="w-full h-8 text-xs" 
-                      size="sm"
-                      onClick={() => handleAddToCart(product)}
-                    >
-                      <ShoppingCart className="h-3 w-3 mr-1" />
-                      Quick Add
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full h-8 text-xs" 
-                      size="sm"
-                      onClick={() => navigate(`/products/${product.id}`)}
-                    >
-                      Customize
-                    </Button>
+                  {/* Dynamic Button Row */}
+                  <div className={cn(
+                    "space-y-2",
+                    product.actionButtons.length > 1 ? "grid grid-cols-2 gap-2" : "grid grid-cols-1 gap-2"
+                  )}>
+                    {product.actionButtons.map(btn => renderCardButton(product, btn))}
                   </div>
                 </CardContent>
               </Card>
@@ -206,6 +285,26 @@ function ProductCatalog() {
           })}
         </div>
       </div>
+      
+      {/* More Info Dialog */}
+      <Dialog open={isMoreInfoOpen} onOpenChange={setIsMoreInfoOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Info className="h-5 w-5" />
+              <span>More Information: {moreInfoTitle}</span>
+            </DialogTitle>
+            <DialogDescription>
+              Detailed product information provided by the seller.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-gray-700 whitespace-pre-wrap">
+              {moreInfoContent}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

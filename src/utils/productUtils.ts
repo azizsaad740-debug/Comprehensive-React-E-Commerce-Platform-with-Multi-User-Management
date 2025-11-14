@@ -50,7 +50,9 @@ export const mockProducts: Product[] = [
     isActive: true,
     tags: ['popular', 'bestseller'],
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    actionButtons: ['customize', 'quick_add'], // Default buttons
+    moreInfoContent: 'This T-Shirt is made from 100% organic cotton and is ethically sourced.'
   },
   {
     id: '2',
@@ -82,7 +84,8 @@ export const mockProducts: Product[] = [
     isActive: true,
     tags: ['new'],
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
+    actionButtons: ['quick_add', 'contact'], // Example: Quick add and Contact only
   },
   {
     id: '3',
@@ -122,6 +125,8 @@ export const mockProducts: Product[] = [
     tags: ['low-stock'],
     createdAt: new Date(Date.now() - 86400000 * 60),
     updatedAt: new Date(),
+    actionButtons: ['more_info'], // Example: Only More Info button
+    moreInfoContent: 'This phone case is shock-absorbent and supports wireless charging.'
   },
 ];
 
@@ -147,6 +152,7 @@ export const createMockProduct = (newProductData: Omit<Product, 'id' | 'createdA
     tags: newProductData.tags || [],
     createdAt: now,
     updatedAt: now,
+    actionButtons: newProductData.actionButtons || ['customize', 'quick_add'],
     customizationOptions: {
       fonts: newProductData.customizationOptions?.fonts || [],
       startDesigns: newProductData.customizationOptions?.startDesigns || [],

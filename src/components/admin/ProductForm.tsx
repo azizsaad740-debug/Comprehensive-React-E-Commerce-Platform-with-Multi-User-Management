@@ -7,9 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Product, ProductCustomizationOptions } from '@/types';
-import { Save, X, RefreshCw } from 'lucide-react';
+import { Product, ProductCustomizationOptions, ProductActionButton } from '@/types';
+import { Save, X, RefreshCw, Check, ShoppingCart, Palette, Info, MessageSquare } from 'lucide-react';
 import { getAllMockFonts, getAllMockStartDesigns, getAllMockEndDesigns } from '@/utils/customizationUtils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 
 interface ProductFormProps {
   initialProduct?: Product;
@@ -39,7 +41,16 @@ const defaultProductData: Partial<Product> = {
   isActive: true,
   tags: [],
   customizationOptions: defaultCustomizationOptions,
+  actionButtons: ['customize', 'quick_add'], // Default
+  moreInfoContent: '',
 };
+
+const actionButtonOptions: { value: ProductActionButton, label: string, icon: React.ElementType }[] = [
+  { value: 'customize', label: 'Customize', icon: Palette },
+  { value: 'quick_add', label: 'Quick Add to Cart', icon: ShoppingCart },
+  { value: 'contact', label: 'Contact Us', icon: MessageSquare },
+  { value: 'more_info', label: 'More Info Popup', icon: Info },
+];
 
 const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onCancel, isSaving }) => {
   const [formData, setFormData] = useState<Partial<Product>>(() => {
@@ -47,6 +58,9 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
     // Ensure customizationOptions is initialized
     if (!initial.customizationOptions) {
       initial.customizationOptions = defaultCustomizationOptions;
+    }
+    if (!initial.actionButtons) {
+      initial.actionButtons = defaultProductData.actionButtons;
     }
     return initial;
   });
@@ -63,9 +77,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
     if (!initial.customizationOptions) {
       initial.customizationOptions = defaultCustomizationOptions;
     }
+    if (!initial.actionButtons) {
+      initial.actionButtons = defaultProductData.actionButtons;
+    }
     setFormData(initial);
     setTagsInput(initial.tags?.join(', ') || '');
-    setColorsInput(initial.customizationOptions.allowedColors?.join(', ') || '');
+    setColorsInput(initial.customizationOptions?.allowedColors?.join(', ') || '');
   }, [initialProduct]);
 
   const handleChange = (field: keyof Product, value: string | number | boolean) => {
@@ -80,6 +97,21 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
         [field]: value,
       } as ProductCustomizationOptions,
     }));
+  };
+  
+  const handleActionButtonToggle = (button: ProductActionButton, checked: boolean) => {
+    setFormData(prev => {
+      const currentButtons = prev.actionButtons || [];
+      let newButtons: ProductActionButton[];
+      
+      if (checked) {
+        newButtons = [...currentButtons, button];
+      } else {
+        newButtons = currentButtons.filter(b => b !== button);
+      }
+      
+      return { ...prev, actionButtons: newButtons };
+    });
   };
 
   const handleTagInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,6 +155,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
       printPaths: Number(formData.printPaths),
       tags: formData.tags || [],
       customizationOptions: customizationOptions,
+      actionButtons: formData.actionButtons || ['customize', 'quick_add'],
+      moreInfoContent: formData.moreInfoContent || undefined,
     };
     
     onSubmit(dataToSubmit);
@@ -143,6 +177,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
     const selectedName = mockDesigns.find(d => d.id === selectedId)?.name;
     handleCustomizationChange(field, selectedName ? [selectedName] : []);
   };
+
+  const hasMoreInfoButton = formData.actionButtons?.includes('more_info');
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 p-4">
@@ -193,6 +229,44 @@ const ProductForm: React.FC<ProductFormProps> = ({ initialProduct, onSubmit, onC
           <Label htmlFor="tags">Tags (comma separated)</Label>
           <Input id="tags" value={tagsInput} onChange={handleTagInput} placeholder="e.g., popular, new, sale" />
         </div>
+      </div>
+      
+      {/* Action Buttons Configuration */}
+      <div className="border p-4 rounded-lg space-y-4">
+        <h3 className="text-lg font-semibold">Product Page Actions</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {actionButtonOptions.map(option => {
+            const Icon = option.icon;
+            const isChecked = formData.actionButtons?.includes(option.value);
+            
+            return (
+              <div key={option.value} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`btn-${option.value}`}
+                  checked={isChecked}
+                  onCheckedChange={(checked) => handleActionButtonToggle(option.value, checked as boolean)}
+                />
+                <Label htmlFor={`btn-${option.value}`} className="flex items-center text-sm">
+                  <Icon className="h-4 w-4 mr-1 text-gray-500" />
+                  {option.label}
+                </Label>
+              </div>
+            );
+          })}
+        </div>
+        
+        {hasMoreInfoButton && (
+          <div className="space-y-2 pt-4 border-t">
+            <Label htmlFor="moreInfoContent">More Info Popup Content</Label>
+            <Textarea 
+              id="moreInfoContent" 
+              value={formData.moreInfoContent || ''} 
+              onChange={(e) => handleChange('moreInfoContent', e.target.value)} 
+              rows={3} 
+              placeholder="Enter detailed information for the popup (e.g., material specs, sizing details)."
+            />
+          </div>
+        )}
       </div>
       
       {/* Customization Options */}

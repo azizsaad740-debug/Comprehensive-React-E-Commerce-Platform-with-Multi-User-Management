@@ -72,6 +72,8 @@ export interface ProductVariant {
   attributes: Record<string, string>;
 }
 
+export type ProductActionButton = 'customize' | 'quick_add' | 'contact' | 'more_info';
+
 export interface Product {
   id: string;
   name: string;
@@ -90,6 +92,8 @@ export interface Product {
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
+  actionButtons: ProductActionButton[]; // NEW: Configurable action buttons
+  moreInfoContent?: string; // NEW: Content for the 'more_info' popup
 }
 
 export interface CartItem {
