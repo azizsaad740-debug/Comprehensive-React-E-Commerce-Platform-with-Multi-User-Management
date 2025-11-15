@@ -19,11 +19,17 @@ const SupabaseConfigForm: React.FC = () => {
   const [localUrl, setLocalUrl] = useState(supabaseUrl);
   const [localAnonKey, setLocalAnonKey] = useState(supabaseAnonKey);
   const [isLoading, setIsLoading] = useState(false);
+  const [configChanged, setConfigChanged] = useState(false); // Track if changes were made
 
   useEffect(() => {
     setLocalUrl(supabaseUrl);
     setLocalAnonKey(supabaseAnonKey);
   }, [supabaseUrl, supabaseAnonKey]);
+  
+  useEffect(() => {
+    const changed = localUrl !== supabaseUrl || localAnonKey !== supabaseAnonKey;
+    setConfigChanged(changed);
+  }, [localUrl, localAnonKey, supabaseUrl, supabaseAnonKey]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,13 +38,17 @@ const SupabaseConfigForm: React.FC = () => {
     setTimeout(() => {
       updateConfig(localUrl.trim(), localAnonKey.trim());
       
-      // Note: In a real app, we would test the connection here.
-      
       toast({ 
         title: "Supabase Config Saved", 
-        description: "Connection details updated. Restarting the app may be required for full effect.",
+        description: "Configuration updated. Please refresh the page to re-establish the connection and log in again.",
       });
       setIsLoading(false);
+      
+      // Prompt user to refresh
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
     }, 500);
   };
 
@@ -93,7 +103,7 @@ const SupabaseConfigForm: React.FC = () => {
           )}
           
           <div className="flex justify-end pt-2">
-            <Button type="submit" disabled={isLoading || !localUrl || !localAnonKey}>
+            <Button type="submit" disabled={isLoading || !localUrl || !localAnonKey || !configChanged}>
               {isLoading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
               Save Configuration
             </Button>
