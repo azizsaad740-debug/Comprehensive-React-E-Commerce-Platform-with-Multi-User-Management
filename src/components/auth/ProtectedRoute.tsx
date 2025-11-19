@@ -1,57 +1,37 @@
 "use client";
 
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { ReactNode } from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/stores/authStore';
-import { User } from '@/types';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { UserRole } from '@/types';
+import FullPageLoader from '../layout/FullPageLoader';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  allowedRoles?: User['role'][];
+  allowedRoles: UserRole[];
+  children?: ReactNode; // Made optional to support <Route element={<ProtectedRoute />} /> pattern
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { isAuthenticated, user, hasRole, isLoading } = useAuthStore();
-  const { toast } = useToast();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles, children }) => {
+  const { isAuthenticated, user, isLoading } = useAuthStore();
 
-  // 1. If loading, show spinner to wait for auth state resolution
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <FullPageLoader />;
   }
 
-  // 2. If not authenticated, redirect to login
   if (!isAuthenticated) {
-    toast({
-      title: "Authentication Required",
-      description: "Please log in to access this page.",
-      variant: "destructive",
-    });
+    // Redirect unauthenticated users to the login page
     return <Navigate to="/auth/login" replace />;
   }
 
-  // 3. If authenticated but role is restricted, redirect to home
-  if (allowedRoles && user) {
-    // Superuser bypasses all specific role checks
-    const isAuthorized = user.role === 'superuser' || hasRole(allowedRoles);
-    
-    if (!isAuthorized) {
-      toast({
-        title: "Access Denied",
-        description: "You do not have permission to view this page.",
-        variant: "destructive",
-      });
-      return <Navigate to="/" replace />;
-    }
+  // Check if the user's role is allowed
+  const userRole = user?.role || 'customer'; // Default to 'customer' if role is somehow missing
+  if (!allowedRoles.includes(userRole)) {
+    // Redirect unauthorized users to a safe page (e.g., home or 404)
+    return <Navigate to="/" replace />;
   }
 
-  // 4. Access granted
-  return <>{children}</>;
+  // If authenticated and authorized, render the children or the nested routes via Outlet
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default ProtectedRoute;
