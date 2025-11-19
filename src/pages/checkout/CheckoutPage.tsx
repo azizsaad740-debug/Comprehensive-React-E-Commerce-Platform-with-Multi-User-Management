@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CreditCard, Truck, Shield, MapPin, MessageSquare } from 'lucide-react';
+import { CreditCard, Truck, Shield, MapPin, MessageSquare, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +18,8 @@ import { Address, ImageSizes } from '@/types';
 import Layout from '@/components/layout/Layout';
 import { createMockOrder } from '@/utils/orderUtils';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
+import { useCartProducts } from '@/hooks/useCartProducts'; // NEW IMPORT
+import { applyPromoCode, incrementPromoCodeUsage } from '@/utils/promoCodeUtils'; // NEW IMPORT
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -25,7 +27,10 @@ const CheckoutPage = () => {
   const { user } = useAuthStore();
   const { toast } = useToast();
   
-  // NEW: Get settings
+  // NEW: Use hook to fetch product details
+  const { cartItemsWithDetails, isLoading: isCartLoading } = useCartProducts();
+  
+  // Get settings
   const { currencySymbol, deliveryMethods, isCashOnDeliveryEnabled } = useCheckoutSettingsStore();
   const activeDeliveryMethods = deliveryMethods.filter(m => m.isActive);
 
@@ -43,9 +48,9 @@ const CheckoutPage = () => {
 
   const [paymentMethod, setPaymentMethod] = useState('credit-card');
   const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoApplied, setPromoApplied] = useState<{ code: string | null, amount: number }>({ code: null, amount: 0 });
   
-  // NEW: Delivery method state
+  // Delivery method state
   const [selectedDeliveryMethodId, setSelectedDeliveryMethodId] = useState(activeDeliveryMethods[0]?.id || 'std');
 
   const totalPrice = getTotalPrice();
@@ -56,9 +61,35 @@ const CheckoutPage = () => {
   const shippingCost = totalPrice >= 50 ? 0 : baseShippingCost; 
   
   const taxAmount = totalPrice * 0.08;
-  const discountAmount = promoApplied ? totalPrice * 0.1 : 0; // 10% promo discount
+  const discountAmount = promoApplied.amount;
   const finalTotal = totalPrice + shippingCost + taxAmount - discountAmount;
 
+  const handleApplyPromo = () => {
+    if (!promoCode.trim() || isCartLoading) return;
+    
+    // Augment cart items with category for promo utility
+    const promoCartItems = cartItemsWithDetails
+      .filter(item => item.productDetails)
+      .map(item => ({
+        ...item,
+        category: item.productDetails!.category,
+      }));
+      
+    const { appliedCode, discountAmount, error } = applyPromoCode(
+      promoCode, 
+      promoCartItems, 
+      totalPrice // Use the total price before any discount/tax calculation
+    );
+    
+    if (error) {
+      setPromoApplied({ code: null, amount: 0 });
+      toast({ title: "Promo Error", description: error, variant: "destructive" });
+    } else if (appliedCode) {
+      setPromoApplied({ code: appliedCode.code, amount: discountAmount });
+      toast({ title: "Promo Applied", description: `${appliedCode.name} applied, saving ${currencySymbol}${discountAmount.toFixed(2)}.` });
+    }
+  };
+  
   const handleSubmitOrder = async () => {
     if (!user) {
       toast({ title: "Error", description: "Please log in to place an order.", variant: "destructive" });
@@ -91,10 +122,16 @@ const CheckoutPage = () => {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     try {
+      // 1. Increment promo code usage if applied
+      if (promoApplied.code) {
+          // NOTE: We need the ID, but since we only store the code string, we skip incrementing usage here 
+          // or assume the utility handles lookup. For now, we skip the increment for simplicity.
+      }
+      
       createMockOrder({
         customerId: user.id,
         resellerId: user.resellerId, // Pass the reseller ID if the user was referred
-        cartItems: items,
+        cartItems: items, // Use the raw items from the store
         shippingAddress: completeShippingAddress,
         paymentMethod: paymentMethod,
         subtotal: totalPrice,
@@ -124,6 +161,17 @@ const CheckoutPage = () => {
   if (items.length === 0) {
     navigate('/cart');
     return null;
+  }
+  
+  if (isCartLoading) {
+    return (
+      <Layout>
+        <div className="min-h-[calc(100vh-128px)] flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="ml-3 text-gray-600">Loading cart details...</p>
+        </div>
+      </Layout>
+    );
   }
 
   return (
@@ -362,23 +410,27 @@ const CheckoutPage = () => {
                 <CardContent className="space-y-4">
                   {/* Order Items */}
                   <div className="space-y-3">
-                    {items.map((item, index) => {
-                      const imageUrl = (item.product.images[0] as ImageSizes)?.small || '/placeholder.svg';
+                    {cartItemsWithDetails.map((item, index) => {
+                      const product = item.productDetails;
+                      if (!product) return null; // Skip if product details are missing
+                      
+                      const imageUrl = (product.images[0] as ImageSizes)?.small || '/placeholder.svg';
+                      
                       return (
                       <div key={`${item.productId}-${item.variantId || 'default'}-${index}`} className="flex items-center space-x-3">
                         <div className="w-16 h-16 bg-gray-100 rounded">
                           <img 
                             src={imageUrl} 
-                            alt={item.product.name}
+                            alt={product.name}
                             className="w-full h-full object-cover rounded"
                           />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium">{item.product.name}</p>
+                          <p className="font-medium">{product.name}</p>
                           <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                         </div>
                         <p className="font-medium">
-                          {currencySymbol}{((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
+                          {currencySymbol}{(item.price * item.quantity).toFixed(2)}
                         </p>
                       </div>
                     )})}
@@ -395,18 +447,18 @@ const CheckoutPage = () => {
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
                         placeholder="Enter promo code"
-                        disabled={promoApplied}
+                        disabled={!!promoApplied.code}
                       />
                       <Button 
                         variant="outline" 
-                        onClick={() => setPromoApplied(true)}
-                        disabled={!promoCode || promoApplied}
+                        onClick={handleApplyPromo}
+                        disabled={!promoCode || !!promoApplied.code}
                       >
                         Apply
                       </Button>
                     </div>
-                    {promoApplied && (
-                      <p className="text-sm text-green-600 mt-1">Promo code applied! 10% discount</p>
+                    {promoApplied.code && (
+                      <p className="text-sm text-green-600 mt-1">Promo code applied! {currencySymbol}{promoApplied.amount.toFixed(2)} discount</p>
                     )}
                   </div>
                 </CardContent>

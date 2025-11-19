@@ -26,6 +26,9 @@ export const useCartStore = create<CartState>()(
       addItem: (product: Product, variantId?: string, quantity = 1, customization?: ProductCustomization) => {
         const { items } = get();
         
+        // Determine price per unit
+        const price = product.discountedPrice || product.basePrice;
+
         // Normalize customization for comparison
         const normalizedCustomization = customization || {
           texts: [],
@@ -51,10 +54,11 @@ export const useCartStore = create<CartState>()(
           // Add new item
           const newItem: CartItem = {
             productId: product.id,
+            productName: product.name, // Store name
             variantId,
             quantity,
             customization: normalizedCustomization,
-            product
+            price: price, // Store price
           };
           set({ items: [...items, newItem] });
         }
@@ -104,8 +108,8 @@ export const useCartStore = create<CartState>()(
       getTotalPrice: () => {
         const { items } = get();
         return items.reduce((total, item) => {
-          const price = item.product.discountedPrice || item.product.basePrice;
-          return total + (price * item.quantity);
+          // Use stored price
+          return total + (item.price * item.quantity);
         }, 0);
       },
     }),

@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import CustomizationDisplay from '@/components/products/CustomizationDisplay';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { ImageSizes } from '@/types';
+import { useCartProducts } from '@/hooks/useCartProducts';
 
 const CartPage = () => {
   const { 
@@ -25,6 +26,8 @@ const CartPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { currencySymbol } = useCheckoutSettingsStore(); // Read currency symbol
+  
+  const { cartItemsWithDetails, isLoading } = useCartProducts(); // Use hook to fetch details
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -79,6 +82,19 @@ const CartPage = () => {
       </Layout>
     );
   }
+  
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="ml-3 text-gray-600">Loading cart details...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -98,18 +114,24 @@ const CartPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {items.map((item, index) => {
-              const imageUrl = (item.product.images[0] as ImageSizes)?.small || '/placeholder.svg';
+            {cartItemsWithDetails.map((item, index) => {
+              const product = item.productDetails;
+              const imageUrl = (product?.images[0] as ImageSizes)?.small || '/placeholder.svg';
+              const variantName = product?.variants.find(v => v.id === item.variantId)?.name;
+              
+              // Fallback price calculation (should use item.price now)
+              const pricePerUnit = item.price; 
+
               return (
                 <Card key={`${item.productId}-${item.variantId || 'default'}-${index}`}>
                   <CardContent className="p-6">
                     <div className="flex items-start space-x-4">
                       {/* Product Image */}
                       <div className="w-24 h-24 bg-gray-100 rounded-md flex-shrink-0">
-                        {item.product.images[0] ? (
+                        {product ? (
                           <img 
                             src={imageUrl} 
-                            alt={item.product.name}
+                            alt={item.productName}
                             className="w-full h-full object-cover rounded-md"
                           />
                         ) : (
@@ -122,15 +144,15 @@ const CartPage = () => {
                         <div className="flex justify-between items-start">
                           <div>
                             <h3 className="text-lg font-medium text-gray-900">
-                              {item.product.name}
+                              {item.productName}
                             </h3>
                             {item.variantId && (
                               <p className="text-sm text-gray-500">
-                                {item.product.variants.find(v => v.id === item.variantId)?.name}
+                                {variantName || 'Variant N/A'}
                               </p>
                             )}
                             <p className="text-sm text-gray-600 mt-1">
-                              {item.product.description}
+                              {product?.description || 'Loading description...'}
                             </p>
                           </div>
                           <Button
@@ -177,10 +199,10 @@ const CartPage = () => {
                           
                           <div className="text-right">
                             <span className="text-lg font-medium">
-                              {currencySymbol}{((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
+                              {currencySymbol}{(pricePerUnit * item.quantity).toFixed(2)}
                             </span>
                             <p className="text-sm text-gray-500">
-                              {currencySymbol}{(item.product.discountedPrice || item.product.basePrice).toFixed(2)} each
+                              {currencySymbol}{pricePerUnit.toFixed(2)} each
                             </p>
                           </div>
                         </div>

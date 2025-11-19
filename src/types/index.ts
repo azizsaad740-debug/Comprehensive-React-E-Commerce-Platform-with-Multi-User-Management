@@ -108,10 +108,11 @@ export interface Product {
 
 export interface CartItem {
   productId: string;
+  productName: string; // Added for quick display
   variantId?: string;
   quantity: number;
   customization: ProductCustomization;
-  product: Product;
+  price: number; // Price per unit (discounted or base)
 }
 
 export interface Address {

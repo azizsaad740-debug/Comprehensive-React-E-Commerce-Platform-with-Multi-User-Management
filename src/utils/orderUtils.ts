@@ -112,7 +112,7 @@ export const createMockOrder = (data: OrderCreationData): Order => {
     productId: cartItem.productId,
     variantId: cartItem.variantId,
     quantity: cartItem.quantity,
-    price: cartItem.product.discountedPrice || cartItem.product.basePrice,
+    price: cartItem.price, // Use stored price from CartItem
     customization: cartItem.customization || { texts: [], font: '', previewImage: '', svgFile: '' },
   }));
 

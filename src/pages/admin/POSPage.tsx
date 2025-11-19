@@ -12,7 +12,7 @@ import { ShoppingCart, User, Package, Plus, Minus, Trash2, CheckCircle, RefreshC
 import { useToast } from '@/hooks/use-toast';
 import { getAllMockUsers } from '@/utils/userUtils';
 import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
-import { CartItem, Product, User as UserType, Address, ImageSizes, POS_GUEST_ID, PromoCode, Order } from '@/types';
+import { CartItem, Product, User as UserType, Address, ImageSizes, POS_GUEST_ID, PromoCode, Order, ProductCustomization } from '@/types';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { createMockOrder } from '@/utils/orderUtils';
 import { v4 as uuidv4 } from 'uuid';
@@ -39,8 +39,10 @@ const posAddress: Address = {
   isDefault: true,
 };
 
+// Redefine POSCartItem to include full product details locally for stock checks and display
 interface POSCartItem extends CartItem {
   lineTotal: number;
+  productDetails: Product; // Full product details for local use
 }
 
 type TaxMode = 'include' | 'exclude' | 'hide';
@@ -165,11 +167,13 @@ const POSPage = () => {
     } else {
       const newItem: POSCartItem = {
         productId: product.id,
+        productName: product.name, // Store name
         variantId: variant?.id,
         quantity: 1,
-        product: product,
-        customization: { texts: [], font: '', previewImage: previewImageUrl, svgFile: '' },
+        customization: { texts: [], font: '', previewImage: previewImageUrl, svgFile: '' } as ProductCustomization,
+        price: price, // Store price
         lineTotal: price,
+        productDetails: product, // Store full product details
       };
       setCart(prev => [...prev, newItem]);
     }
@@ -238,14 +242,15 @@ const POSPage = () => {
     }
     
     // Check stock limit
-    if (quantity > item.product.stockQuantity) {
-        toast({ title: "Stock Limit", description: `Cannot add more than ${item.product.stockQuantity} units of ${item.product.name}.`, variant: "destructive" });
+    if (quantity > item.productDetails.stockQuantity) { // Use productDetails
+        toast({ title: "Stock Limit", description: `Cannot add more than ${item.productDetails.stockQuantity} units of ${item.productDetails.name}.`, variant: "destructive" });
         return;
     }
     
     setCart(prev => prev.map((item, i) => {
       if (i === index) {
-        const price = item.product.discountedPrice || item.product.basePrice;
+        // Price is already stored in item.price
+        const price = item.price; 
         return { ...item, quantity, lineTotal: quantity * price };
       }
       return item;
@@ -281,7 +286,7 @@ const POSPage = () => {
       const orderData = {
         customerId: customerId,
         resellerId: selectedUser?.resellerId,
-        cartItems: cart,
+        cartItems: cart, // POSCartItem is compatible with CartItem for persistence (only uses base properties)
         shippingAddress: posAddress,
         paymentMethod: paymentMethod,
         subtotal: cartSummary.displaySubtotal, // Subtotal before discount
@@ -475,16 +480,16 @@ const POSPage = () => {
                 ) : (
                   <div className="space-y-3">
                     {cart.map((item, index) => {
-                      const imageUrl = (item.product.images[0] as ImageSizes)?.small || '/placeholder.svg';
+                      const imageUrl = (item.productDetails.images[0] as ImageSizes)?.small || '/placeholder.svg';
                       return (
                       <div key={index} className="flex items-center justify-between border-b pb-3 last:border-b-0">
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
                           <div className="w-10 h-10 bg-gray-100 rounded">
-                            <img src={imageUrl} alt={item.product.name} className="w-full h-full object-cover rounded" />
+                            <img src={imageUrl} alt={item.productName} className="w-full h-full object-cover rounded" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-medium truncate">{item.product.name}</p>
-                            <p className="text-xs text-gray-500">{item.product.variants[0]?.name || 'Default'}</p>
+                            <p className="font-medium truncate">{item.productName}</p>
+                            <p className="text-xs text-gray-500">{item.productDetails.variants[0]?.name || 'Default'}</p>
                           </div>
                         </div>
                         

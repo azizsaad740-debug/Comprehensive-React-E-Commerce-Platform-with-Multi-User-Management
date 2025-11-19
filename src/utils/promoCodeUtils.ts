@@ -105,6 +105,11 @@ export const deleteMockPromoCode = (codeId: string): boolean => {
   return currentMockPromoCodes.length < initialLength;
 };
 
+// Define a type that includes the necessary product fields for promo calculation
+interface PromoCartItem extends CartItem {
+  category: string;
+}
+
 /**
  * Validates a promo code against a cart and calculates the discount.
  * @param codeString The promo code string.
@@ -114,7 +119,7 @@ export const deleteMockPromoCode = (codeId: string): boolean => {
  */
 export const applyPromoCode = (
   codeString: string, 
-  cartItems: CartItem[], 
+  cartItems: PromoCartItem[], // UPDATED: Expects items with category
   subtotal: number
 ): { appliedCode: PromoCode | null, discountAmount: number, error?: string } => {
   const code = currentMockPromoCodes.find(c => c.code.toUpperCase() === codeString.toUpperCase());
@@ -126,7 +131,7 @@ export const applyPromoCode = (
     return { appliedCode: null, discountAmount: 0, error: "Promo code is inactive or expired." };
   }
   if (subtotal < code.minimumOrderValue) {
-    return { appliedCode: null, discountAmount: 0, error: `Minimum order value of $${code.minimumOrderValue.toFixed(2)} not met.` };
+    return { appliedCode: null, discountAmount: 0, error: `Minimum order value of ${code.minimumOrderValue.toFixed(2)} not met.` };
   }
 
   let applicableSubtotal = 0;
@@ -134,8 +139,8 @@ export const applyPromoCode = (
   if (code.targetCategory && code.targetCategory !== 'all') {
     // Calculate subtotal only for items matching the target category
     applicableSubtotal = cartItems.reduce((sum, item) => {
-      if (item.product.category.toLowerCase() === code.targetCategory?.toLowerCase()) {
-        const price = item.product.discountedPrice || item.product.basePrice;
+      if (item.category.toLowerCase() === code.targetCategory?.toLowerCase()) { // FIXED: Use item.category
+        const price = item.price; // FIXED: Use item.price
         return sum + (price * item.quantity);
       }
       return sum;

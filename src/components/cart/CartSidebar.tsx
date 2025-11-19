@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
+import { Plus, Minus, Trash2, ShoppingBag, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import CustomizationDisplay from '../products/CustomizationDisplay';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { ImageSizes } from '@/types';
+import { useCartProducts } from '@/hooks/useCartProducts';
 
 const CartSidebar = () => {
   const navigate = useNavigate();
@@ -25,6 +26,8 @@ const CartSidebar = () => {
   } = useCartStore();
   const { toast } = useToast();
   const { currencySymbol } = useCheckoutSettingsStore(); // Read currency symbol
+  
+  const { cartItemsWithDetails, isLoading } = useCartProducts(); // Use hook to fetch details
 
   const handleQuantityChange = (productId: string, variantId: string | undefined, newQuantity: number) => {
     if (newQuantity < 1) {
@@ -79,19 +82,27 @@ const CartSidebar = () => {
                   Start Shopping
                 </Button>
               </div>
+            ) : isLoading ? (
+              <div className="flex justify-center items-center h-32">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="ml-2 text-sm text-gray-600">Loading product details...</p>
+              </div>
             ) : (
               <div className="space-y-4">
-                {items.map((item, index) => {
-                  const imageUrl = (item.product.images[0] as ImageSizes)?.small || '/placeholder.svg';
+                {cartItemsWithDetails.map((item, index) => {
+                  const product = item.productDetails;
+                  const imageUrl = (product?.images[0] as ImageSizes)?.small || '/placeholder.svg';
+                  const variantName = product?.variants.find(v => v.id === item.variantId)?.name;
+                  
                   return (
                     <div key={`${item.productId}-${item.variantId || 'default'}-${index}`} className="border rounded-lg p-4">
                       <div className="flex items-start space-x-3">
                         {/* Product Image */}
                         <div className="w-16 h-16 bg-gray-100 rounded-md flex-shrink-0">
-                          {item.product.images[0] ? (
+                          {product ? (
                             <img 
                               src={imageUrl} 
-                              alt={item.product.name}
+                              alt={item.productName}
                               className="w-full h-full object-cover rounded-md"
                             />
                           ) : (
@@ -102,11 +113,11 @@ const CartSidebar = () => {
                         {/* Product Details */}
                         <div className="flex-1 min-w-0">
                           <h3 className="text-sm font-medium text-gray-900 truncate">
-                            {item.product.name}
+                            {item.productName}
                           </h3>
                           {item.variantId && (
                             <p className="text-sm text-gray-500">
-                              {item.product.variants.find(v => v.id === item.variantId)?.name}
+                              {variantName || 'Variant N/A'}
                             </p>
                           )}
                           
@@ -144,7 +155,7 @@ const CartSidebar = () => {
                             
                             <div className="text-right">
                               <span className="text-sm font-medium">
-                                {currencySymbol}{((item.product.discountedPrice || item.product.basePrice) * item.quantity).toFixed(2)}
+                                {currencySymbol}{(item.price * item.quantity).toFixed(2)}
                               </span>
                             </div>
                           </div>
@@ -171,6 +182,7 @@ const CartSidebar = () => {
                   className="w-full" 
                   size="lg"
                   onClick={handleCheckout}
+                  disabled={isLoading}
                 >
                   Checkout
                 </Button>
@@ -184,7 +196,7 @@ const CartSidebar = () => {
                   </Button>
                   <Button 
                     variant="outline" 
-                    onClick={() => navigate('/cart')}
+                    onClick={() => { setCartOpen(false); navigate('/cart'); }}
                   >
                     View Cart
                   </Button>
