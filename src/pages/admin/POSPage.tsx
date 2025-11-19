@@ -52,7 +52,17 @@ const POSPage = () => {
   const isMobile = useIsMobile();
   
   const allUsers = getAllMockUsers().filter(u => u.role === 'customer' || u.role === 'reseller');
-  const allProducts = getAllMockProducts().filter(p => p.isActive);
+  
+  // NEW STATE for products
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  
+  useEffect(() => {
+    const loadProducts = async () => {
+      // Fetch only active products for POS
+      setAllProducts(await getAllMockProducts(false));
+    };
+    loadProducts();
+  }, []);
 
   const [selectedUserId, setSelectedUserId] = useState<string>(POS_GUEST_ID);
   const [cart, setCart] = useState<POSCartItem[]>([]);
@@ -113,8 +123,10 @@ const POSPage = () => {
     };
   }, [cart, taxMode, appliedPromo]);
 
-  const handleAddProduct = (productId: string) => {
-    const product = getMockProductById(productId);
+  const handleAddProduct = async (productId: string) => {
+    // Fetch product asynchronously
+    const product = await getMockProductById(productId);
+    
     if (!product) {
       toast({ title: "Product Not Found", description: `Product ID/SKU ${productId} not found.`, variant: "destructive" });
       return;
@@ -182,6 +194,7 @@ const POSPage = () => {
       interval = setInterval(() => {
         const scannedData = pollScannedData(mobileSessionId);
         if (scannedData) {
+          // Since handleAddProduct is now async, we call it without awaiting
           handleAddProduct(scannedData);
         }
       }, 500); // Poll every 500ms

@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Save, RefreshCw, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { PromoCode } from '@/types';
+import { PromoCode, Product } from '@/types';
 import { getAllMockProducts } from '@/utils/productUtils'; // Import utility to get categories
 
 interface PromoCodeFormProps {
@@ -35,7 +35,15 @@ const defaultCodeData: Partial<PromoCode> = {
 };
 
 const PromoCodeForm: React.FC<PromoCodeFormProps> = ({ initialCode, onSubmit, onCancel, isSaving }) => {
-  const allProducts = getAllMockProducts();
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  
+  useEffect(() => {
+    const loadProducts = async () => {
+      setAllProducts(await getAllMockProducts(false));
+    };
+    loadProducts();
+  }, []);
+  
   const availableCategories = useMemo(() => {
     const categories = Array.from(new Set(allProducts.map(p => p.category)));
     return ['all', ...categories];

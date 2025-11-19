@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Save, RefreshCw, DollarSign, Package, X } from 'lucide-react';
-import { LedgerEntity, TransactionType, TransactionItemType, LedgerTransaction } from '@/types';
+import { LedgerEntity, TransactionType, TransactionItemType, LedgerTransaction, Product } from '@/types';
 import { addLedgerTransaction, updateLedgerTransaction } from '@/utils/ledgerUtils';
 import { useToast } from '@/hooks/use-toast';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
@@ -25,7 +25,16 @@ interface TransactionFormProps {
 const TransactionForm: React.FC<TransactionFormProps> = ({ entity, initialType, initialTransaction, onTransactionAdded, onClose }) => {
   const { toast } = useToast();
   const { currencySymbol } = useCheckoutSettingsStore();
-  const allProducts = getAllMockProducts();
+  
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  
+  useEffect(() => {
+    const loadProducts = async () => {
+      // Fetch all products, including inactive ones for admin view
+      setAllProducts(await getAllMockProducts(true));
+    };
+    loadProducts();
+  }, []);
   
   const [isLoading, setIsLoading] = useState(false);
   

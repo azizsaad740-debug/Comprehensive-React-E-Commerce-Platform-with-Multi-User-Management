@@ -73,12 +73,12 @@ const DataExportButton: React.FC<DataExportButtonProps> = ({ dataType }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
-  const fetchData = (type: ExportDataType) => {
+  const fetchData = async (type: ExportDataType) => {
     switch (type) {
       case 'users':
         return getAllMockUsers();
       case 'products':
-        return getAllMockProducts();
+        return await getAllMockProducts(true); // Await the async function
       case 'orders':
         return getMockOrders();
       default:
@@ -86,12 +86,12 @@ const DataExportButton: React.FC<DataExportButtonProps> = ({ dataType }) => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setIsGenerating(true);
     
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
-        const data = fetchData(dataType);
+        const data = await fetchData(dataType); // Await the fetch
         const csvContent = convertToCSV(data, dataType);
         
         if (!csvContent) {

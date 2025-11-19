@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Star, ShoppingBag, Palette, Truck, Heart, MessageSquare, Info, ShoppingCart } from 'lucide-react';
+import { ArrowRight, Star, ShoppingBag, Palette, Truck, Heart, MessageSquare, Info, ShoppingCart, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
@@ -43,14 +43,30 @@ const Index = () => {
   const { currencySymbol } = useCheckoutSettingsStore();
   const { homepageSections } = useUISettingsStore(); // Use UI settings
 
-  const allProducts = getAllMockProducts();
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const fetchedProducts = await getAllMockProducts(false);
+        setAllProducts(fetchedProducts);
+      } catch (e) {
+        console.error("Failed to load products for Index page:", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
   
   // Use specific product IDs for featured products
   const featuredProductIds = ['1', '2', '3']; 
   
   const featuredProducts = useMemo(() => {
+    // Filter from the already loaded allProducts array
     return featuredProductIds
-      .map(id => getMockProductById(id))
+      .map(id => allProducts.find(p => p.id === id))
       .filter((p): p is Product => !!p);
   }, [allProducts]);
 
@@ -166,80 +182,88 @@ const Index = () => {
               </p>
             </div>
             
-            {/* Adjusted grid: grid-cols-2 by default, md:grid-cols-3 */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
-              {featuredProducts.map((product) => {
-                const price = product.discountedPrice || product.basePrice;
-                const originalPrice = product.basePrice;
-                
-                // Determine if we should center the price (only one button visible)
-                const singleButtonMode = product.actionButtons.length === 1;
-                
-                const primaryButton = product.actionButtons.find(btn => btn === 'customize' || btn === 'quick_add');
-                
-                const imageUrl = (product.images[0] as ImageSizes)?.small || '/placeholder.svg';
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+                {featuredProducts.map((product) => {
+                  const price = product.discountedPrice || product.basePrice;
+                  const originalPrice = product.basePrice;
+                  
+                  // Determine if we should center the price (only one button visible)
+                  const singleButtonMode = product.actionButtons.length === 1;
+                  
+                  const primaryButton = product.actionButtons.find(btn => btn === 'customize' || btn === 'quick_add');
+                  
+                  const imageUrl = (product.images[0] as ImageSizes)?.small || '/placeholder.svg';
 
-                return (
-                  <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="aspect-square bg-gray-100 relative">
-                      <img 
-                        src={imageUrl} 
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/80 hover:bg-white"
-                      >
-                        <Heart className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <CardHeader className="p-3 pb-2 md:p-6 md:pb-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <Badge variant="secondary" className="text-xs">{product.category}</Badge>
-                        <div className="flex items-center space-x-1">
-                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                          <span className="text-xs text-gray-600">
-                            4.8 (124) {/* Mock rating/reviews */}
-                          </span>
-                        </div>
+                  return (
+                    <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                      <div className="aspect-square bg-gray-100 relative">
+                        <img 
+                          src={imageUrl} 
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/80 hover:bg-white"
+                        >
+                          <Heart className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <CardTitle className="text-base md:text-lg">{product.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-                      <div className={cn(
-                        "flex items-center mb-3",
-                        singleButtonMode ? "justify-center" : "justify-between"
-                      )}>
-                        <div className="flex flex-col items-start space-y-0">
-                          <span className="text-base font-bold text-green-600">
-                            {currencySymbol}{price.toFixed(2)}
-                          </span>
-                          {originalPrice > price && (
-                            <span className="text-xs text-gray-500 line-through">
-                              {currencySymbol}{originalPrice.toFixed(2)}
+                      <CardHeader className="p-3 pb-2 md:p-6 md:pb-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <Badge variant="secondary" className="text-xs">{product.category}</Badge>
+                          <div className="flex items-center space-x-1">
+                            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                            <span className="text-xs text-gray-600">
+                              4.8 (124) {/* Mock rating/reviews */}
                             </span>
+                          </div>
+                        </div>
+                        <CardTitle className="text-base md:text-lg">{product.name}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                        <div className={cn(
+                          "flex items-center mb-3",
+                          singleButtonMode ? "justify-center" : "justify-between"
+                        )}>
+                          <div className="flex flex-col items-start space-y-0">
+                            <span className="text-base font-bold text-green-600">
+                              {currencySymbol}{price.toFixed(2)}
+                            </span>
+                            {originalPrice > price && (
+                              <span className="text-xs text-gray-500 line-through">
+                                {currencySymbol}{originalPrice.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Primary action button (if only one button is configured, it will be the only element in the row) */}
+                          {!singleButtonMode && primaryButton && (
+                            <Button size="sm" className="h-8 text-xs" onClick={() => navigate(`/products/${product.id}`)}>
+                              {primaryButton === 'customize' ? 'Customize' : 'View Details'}
+                            </Button>
                           )}
                         </div>
                         
-                        {/* Primary action button (if only one button is configured, it will be the only element in the row) */}
-                        {!singleButtonMode && primaryButton && (
-                          <Button size="sm" className="h-8 text-xs" onClick={() => navigate(`/products/${product.id}`)}>
-                            {primaryButton === 'customize' ? 'Customize' : 'View Details'}
-                          </Button>
-                        )}
-                      </div>
-                      
-                      {/* Dynamic Button Row */}
-                      <div className={`space-y-2 ${product.actionButtons.length > 1 ? 'grid grid-cols-2 gap-2' : 'grid grid-cols-1 gap-2'}`}>
-                        {product.actionButtons.map(buttonType => renderCardButton(product, buttonType))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                        {/* Dynamic Button Row */}
+                        <div className={cn(
+                          "space-y-2",
+                          product.actionButtons.length > 1 ? "grid grid-cols-2 gap-2" : "grid grid-cols-1 gap-2"
+                        )}>
+                          {product.actionButtons.map(buttonType => renderCardButton(product, buttonType))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
             
             <div className="text-center mt-12">
               <Button 

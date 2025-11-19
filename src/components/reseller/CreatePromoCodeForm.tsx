@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Save } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { PromoCode } from '@/types';
+import { PromoCode, Product } from '@/types';
 import { createNewPromoCode } from '@/utils/promoCodeUtils';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -26,7 +26,15 @@ const CreatePromoCodeForm: React.FC<CreatePromoCodeFormProps> = ({ onCodeCreated
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
-  const allProducts = getAllMockProducts();
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  
+  useEffect(() => {
+    const loadProducts = async () => {
+      setAllProducts(await getAllMockProducts(false));
+    };
+    loadProducts();
+  }, []);
+  
   const availableCategories = useMemo(() => {
     const categories = Array.from(new Set(allProducts.map(p => p.category)));
     return ['all', ...categories];
