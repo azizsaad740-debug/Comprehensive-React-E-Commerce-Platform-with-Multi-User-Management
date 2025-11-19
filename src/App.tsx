@@ -3,32 +3,32 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index.tsx";
 import LoginPage from "./pages/auth/LoginPage.tsx";
 import RegisterPage from "./pages/auth/RegisterPage.tsx";
-import ProductsPage from "./pages/ProductsPage.tsx";
-import ProductDetailPage from "./pages/ProductDetailPage.tsx";
-import CartPage from "./pages/CartPage.tsx";
-import CheckoutPage from "./pages/CheckoutPage.tsx";
-import ContactPage from "./pages/ContactPage.tsx";
+import ProductsPage from "./pages/products/ProductCatalog.tsx"; // Mapped to ProductCatalog
+import ProductDetailPage from "./pages/products/ProductDetailPage.tsx"; // Mapped to products/ProductDetailPage
+import CartPage from "./pages/cart/CartPage.tsx"; // Mapped to cart/CartPage
+import CheckoutPage from "./pages/checkout/CheckoutPage.tsx"; // Mapped to checkout/CheckoutPage
+import ContactPage from "./pages/ContactPage.tsx"; // Mapped to ContactPage
 import ProfilePage from "./pages/profile/ProfilePage.tsx";
 import AdminDashboard from "@/pages/admin/Dashboard.tsx";
 import ProtectedRoute from "@/components/auth/ProtectedRoute.tsx";
 import AdminLayout from "@/components/layout/AdminLayout.tsx";
-import AdminProductsPage from "@/pages/admin/AdminProductsPage.tsx";
-import AdminOrdersPage from "@/pages/admin/AdminOrdersPage.tsx";
-import AdminUsersPage from "@/pages/admin/AdminUsersPage.tsx";
-import AdminPromoCodesPage from "@/pages/admin/AdminPromoCodesPage.tsx";
-import AdminThemeEditor from "@/pages/admin/AdminThemeEditor.tsx";
-import AdminPluginManagement from "@/pages/admin/AdminPluginManagement.tsx";
+import AdminProductsPage from "@/pages/admin/ProductManagementPage.tsx"; // Mapped to ProductManagementPage
+import AdminOrdersPage from "@/pages/admin/OrderManagementPage.tsx"; // Mapped to OrderManagementPage
+import AdminUsersPage from "@/pages/admin/UserManagementPage.tsx"; // Mapped to UserManagementPage
+import AdminPromoCodesPage from "@/pages/admin/PromoCodeManagementPage.tsx"; // Mapped to PromoCodeManagementPage
+import AdminThemeEditor from "@/pages/admin/SettingsPage.tsx"; // Mapped to SettingsPage
+import AdminPluginManagement from "@/pages/admin/PluginManagementPage.tsx"; // Mapped to PluginManagementPage
 import ResellerDashboard from "@/pages/reseller/ResellerDashboard.tsx";
-import ResellerPromoCodesPage from "@/pages/reseller/ResellerPromoCodesPage.tsx";
-import ResellerOrdersPage from "@/pages/reseller/ResellerOrdersPage.tsx";
-import ResellerCustomersPage from "@/pages/reseller/ResellerCustomersPage.tsx";
+import ResellerPromoCodesPage from "@/pages/reseller/ResellerPromoCodePage.tsx"; // Mapped to ResellerPromoCodePage
+import ResellerOrdersPage from "@/pages/admin/OrderManagementPage.tsx"; // Mapped to OrderManagementPage (handles reseller view)
+import ResellerCustomersPage from "@/pages/reseller/CustomerManagementPage.tsx"; // Mapped to CustomerManagementPage
 import POSPage from "@/pages/admin/POSPage.tsx";
 import DesignLibraryPage from "@/pages/profile/DesignLibraryPage.tsx";
-import LedgerPage from "@/pages/admin/LedgerPage.tsx";
-import CustomerLedgerPage from "@/pages/reseller/CustomerLedgerPage.tsx";
-import OrderHistoryPage from "@/pages/profile/OrderHistoryPage.tsx";
-import OrderDetailPage from "@/pages/profile/OrderDetailPage.tsx";
-import NotFoundPage from "./pages/NotFoundPage.tsx";
+import LedgerPage from "@/pages/admin/LedgerManagementPage.tsx"; // Mapped to LedgerManagementPage
+import CustomerLedgerPage from "@/pages/admin/EntityDetailPage.tsx"; // Mapped to EntityDetailPage
+import OrderHistoryPage from "@/pages/orders/OrdersPage.tsx"; // Mapped to orders/OrdersPage
+import OrderDetailPage from "@/pages/orders/OrderDetailPage.tsx"; // Mapped to orders/OrderDetailPage
+import NotFoundPage from "./pages/NotFound.tsx"; // Mapped to NotFound.tsx
 
 const App = () => {
   return (
