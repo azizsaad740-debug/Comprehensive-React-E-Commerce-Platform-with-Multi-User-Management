@@ -187,10 +187,17 @@ const POSPage = () => {
       return;
     }
     
+    // Map POSCartItem to the required structure for applyPromoCode (which needs category)
+    const promoCartItems = cart
+      .map(item => ({
+        ...item,
+        category: item.productDetails.category, // Inject category from productDetails
+      }));
+      
     const { appliedCode, discountAmount, error } = applyPromoCode(
       promoCodeInput, 
-      cart, 
-      cartSummary.displaySubtotal // Use the total before any discount/tax calculation
+      promoCartItems as any, // Cast to any to satisfy the utility function's expectation
+      cartSummary.displaySubtotal // Use the total before any discount/tax adjustment
     );
     
     if (error) {
