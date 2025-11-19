@@ -21,7 +21,7 @@ import EntityList from '@/components/ledger/EntityList.tsx';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import EntityLedgerView from '@/components/ledger/EntityLedgerView'; // FIX 2
+import EntityLedgerView from '@/components/ledger/EntityLedgerView';
 
 // --- External Entity Form Component (Internal to Page) ---
 
@@ -108,6 +108,10 @@ const LedgerManagementPage = () => {
   const [isExternalFormOpen, setIsExternalFormOpen] = useState(false);
   const [isSavingExternal, setIsSavingExternal] = useState(false);
 
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
   useEffect(() => {
     const allEntities = getAllLedgerEntities();
     setEntities(allEntities);
@@ -122,9 +126,6 @@ const LedgerManagementPage = () => {
     return entities.find(e => e.id === selectedEntityId);
   }, [entities, selectedEntityId]);
   
-  const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
-  };
   
   const handleSelectEntity = (entityId: string) => {
     if (isMobile) {
@@ -220,7 +221,7 @@ const LedgerManagementPage = () => {
               {selectedEntity ? (
                 <EntityLedgerView 
                   entity={selectedEntity} 
-                  onTransactionAdded={handleRefresh}
+                  onTransactionAdded={handleRefresh} // Use handleRefresh to sync data
                 />
               ) : (
                 <Card className="h-full flex items-center justify-center">

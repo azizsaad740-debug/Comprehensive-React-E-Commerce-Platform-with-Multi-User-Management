@@ -53,16 +53,22 @@ const POSPage = () => {
   
   const allUsers = getAllMockUsers().filter(u => u.role === 'customer' || u.role === 'reseller');
   
-  // NEW STATE for products
   const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0); // New state for manual refresh
   
-  useEffect(() => {
-    const loadProducts = async () => {
+  const fetchProducts = async () => {
+    try {
       // Fetch only active products for POS
       setAllProducts(await getAllMockProducts(false));
-    };
-    loadProducts();
-  }, []);
+    } catch (e) {
+      console.error("Failed to fetch products:", e);
+      toast({ title: "Error", description: "Failed to sync product inventory.", variant: "destructive" });
+    }
+  };
+  
+  useEffect(() => {
+    fetchProducts();
+  }, [refreshKey]); // Depend on refreshKey
 
   const [selectedUserId, setSelectedUserId] = useState<string>(POS_GUEST_ID);
   const [cart, setCart] = useState<POSCartItem[]>([]);
@@ -131,6 +137,11 @@ const POSPage = () => {
       toast({ title: "Product Not Found", description: `Product ID/SKU ${productId} not found.`, variant: "destructive" });
       return;
     }
+    
+    if (product.stockQuantity <= 0) {
+        toast({ title: "Out of Stock", description: `${product.name} is out of stock.`, variant: "destructive" });
+        return;
+    }
 
     const variant = product.variants[0]; // Use first variant for simplicity
     const price = product.discountedPrice || product.basePrice;
@@ -141,6 +152,13 @@ const POSPage = () => {
 
     if (existingItemIndex !== -1) {
       const updatedCart = [...cart];
+      
+      // Check stock limit
+      if (updatedCart[existingItemIndex].quantity + 1 > product.stockQuantity) {
+          toast({ title: "Stock Limit", description: `Cannot add more than ${product.stockQuantity} units of ${product.name}.`, variant: "destructive" });
+          return;
+      }
+      
       updatedCart[existingItemIndex].quantity += 1;
       updatedCart[existingItemIndex].lineTotal = updatedCart[existingItemIndex].quantity * price;
       setCart(updatedCart);
@@ -211,9 +229,18 @@ const POSPage = () => {
   // ------------------------------------
 
   const handleQuantityChange = (index: number, quantity: number) => {
+    const item = cart[index];
+    if (!item) return;
+    
     if (quantity <= 0) {
       setCart(prev => prev.filter((_, i) => i !== index));
       return;
+    }
+    
+    // Check stock limit
+    if (quantity > item.product.stockQuantity) {
+        toast({ title: "Stock Limit", description: `Cannot add more than ${item.product.stockQuantity} units of ${item.product.name}.`, variant: "destructive" });
+        return;
     }
     
     setCart(prev => prev.map((item, i) => {
@@ -290,6 +317,9 @@ const POSPage = () => {
       setPaymentMethod('cash');
       setPromoCodeInput('');
       setAppliedPromo({ code: null, amount: 0 });
+      
+      // 6. Refresh product data to reflect stock changes
+      await fetchProducts();
 
     } catch (error) {
       toast({
@@ -313,6 +343,7 @@ const POSPage = () => {
     setPromoCodeInput('');
     setAppliedPromo({ code: null, amount: 0 });
     setLastOrder(null);
+    setRefreshKey(prev => prev + 1); // Trigger full data refresh
   };
 
   return (
