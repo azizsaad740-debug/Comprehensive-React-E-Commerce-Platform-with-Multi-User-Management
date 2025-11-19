@@ -24,7 +24,7 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
-  const designId = query.get('designId');
+  // Removed designId check here as the router handles the /design path
 
   const { addItem } = useCartStore();
   const { toast } = useToast();
@@ -59,9 +59,8 @@ const ProductDetailPage = () => {
       setProduct(fetchedProduct);
       setSelectedVariant(fetchedProduct.variants[0]);
       
-      if (designId) {
-          navigate(`/products/${id}/design?designId=${designId}`, { replace: true });
-      }
+      // Removed: if (designId) { navigate(`/products/${id}/design?designId=${designId}`, { replace: true }); }
+      
     } catch (error) {
       console.error("Failed to fetch product:", error);
       toast({ title: "Error", description: "Failed to load product details.", variant: "destructive" });
@@ -72,7 +71,7 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     fetchProduct();
-  }, [id, navigate, toast, designId]);
+  }, [id, navigate, toast]);
 
   if (isLoading) {
     return (

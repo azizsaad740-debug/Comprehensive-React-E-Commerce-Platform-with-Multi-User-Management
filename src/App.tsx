@@ -5,6 +5,7 @@ import LoginPage from "./pages/auth/LoginPage.tsx";
 import RegisterPage from "./pages/auth/RegisterPage.tsx";
 import ProductsPage from "./pages/products/ProductCatalog.tsx"; // Mapped to ProductCatalog
 import ProductDetailPage from "./pages/products/ProductDetailPage.tsx"; // Mapped to products/ProductDetailPage
+import DesignEditorPage from "./pages/products/DesignEditorPage.tsx"; // Mapped to products/DesignEditorPage
 import CartPage from "./pages/cart/CartPage.tsx"; // Mapped to cart/CartPage
 import CheckoutPage from "./pages/checkout/CheckoutPage.tsx"; // Mapped to checkout/CheckoutPage
 import ContactPage from "./pages/ContactPage.tsx"; // Mapped to ContactPage
@@ -27,7 +28,7 @@ import DesignLibraryPage from "@/pages/profile/DesignLibraryPage.tsx";
 import LedgerPage from "@/pages/admin/LedgerManagementPage.tsx"; // Mapped to LedgerManagementPage
 import CustomerLedgerPage from "@/pages/admin/EntityDetailPage.tsx"; // Mapped to EntityDetailPage
 import OrderHistoryPage from "@/pages/orders/OrdersPage.tsx"; // Mapped to orders/OrdersPage
-import OrderDetailPage from "@/pages/orders/OrderDetailPage.tsx"; // Mapped to orders/OrderDetailPage
+import OrderDetailPage from "./pages/orders/OrderDetailPage.tsx"; // Mapped to orders/OrderDetailPage
 import NotFoundPage from "./pages/NotFound.tsx"; // Mapped to NotFound.tsx
 
 const App = () => {
@@ -40,7 +41,7 @@ const App = () => {
         <Route path="/auth/register" element={<RegisterPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:id" element={<ProductDetailPage />} />
-        <Route path="/products/:id/design" element={<ProductDetailPage />} />
+        <Route path="/products/:id/design" element={<DesignEditorPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/contact" element={<ContactPage />} />
