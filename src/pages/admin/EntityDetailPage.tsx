@@ -32,7 +32,9 @@ const EntityDetailPage = () => {
   }, [entityId, refreshKey]);
   
   const handleRefresh = () => {
+    // Increment refreshKey to force re-fetch of entity and transactions
     setRefreshKey(prev => prev + 1);
+    toast({ title: "Refreshed", description: "Ledger data updated." });
   };
 
   if (!entity) {
