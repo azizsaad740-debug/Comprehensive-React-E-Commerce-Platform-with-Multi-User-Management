@@ -3,7 +3,8 @@
 import React from 'react';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, Phone, MapPin, Button } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Mail, Phone, MapPin } from 'lucide-react';
 import { useContentStore } from '@/stores/contentStore';
 
 const ContactPage: React.FC = () => {
