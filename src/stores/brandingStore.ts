@@ -1,28 +1,44 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { fetchSettings, updateSettings } from '@/integrations/supabase/settings';
 
 interface BrandingState {
   appName: string;
   slogan: string;
   logoUrl: string;
-  faviconUrl: string; // NEW: URL for the favicon image
-  updateBranding: (data: Partial<BrandingState>) => void;
+  faviconUrl: string;
+  updateBranding: (data: Partial<BrandingState>) => Promise<void>;
+  initialize: () => Promise<void>; // ADDED
 }
 
+const SETTINGS_KEY = 'branding';
+
+// Default values
+const DEFAULT_STATE: Omit<BrandingState, 'updateBranding' | 'initialize'> = {
+  appName: 'Misali Center',
+  slogan: 'Create unique, personalized products with our easy-to-use design tools.',
+  logoUrl: '/placeholder.svg',
+  faviconUrl: '',
+};
+
 export const useBrandingStore = create<BrandingState>()(
-  persist(
-    (set) => ({
-      appName: 'Misali Center',
-      slogan: 'Create unique, personalized products with our easy-to-use design tools.',
-      logoUrl: '/placeholder.svg', // Placeholder for a logo
-      faviconUrl: '', // Default to empty, triggering fallback logic
-      
-      updateBranding: (data) => {
-        set((state) => ({ ...state, ...data }));
-      },
-    }),
-    {
-      name: 'branding-storage',
-    }
-  )
+  (set, get) => ({
+    ...DEFAULT_STATE,
+    
+    initialize: async () => {
+      const data = await fetchSettings<typeof DEFAULT_STATE>(SETTINGS_KEY);
+      if (data) {
+        set(data);
+      } else {
+        // If no data exists, save the default state to Supabase
+        await updateSettings(SETTINGS_KEY, DEFAULT_STATE);
+      }
+    },
+
+    updateBranding: async (data) => {
+      const newState = { ...get(), ...data };
+      set(newState);
+      await updateSettings(SETTINGS_KEY, newState);
+    },
+  })
 );

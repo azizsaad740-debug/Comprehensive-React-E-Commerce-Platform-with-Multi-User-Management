@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { fetchSettings, updateSettings } from '@/integrations/supabase/settings';
 
 export interface HomepageSectionSettings {
   featuresSection: boolean;
@@ -20,9 +21,12 @@ interface UISettingsState {
   homepageSections: HomepageSectionSettings;
   headerVisibility: HeaderVisibilitySettings;
   
-  updateHomepageSections: (data: Partial<HomepageSectionSettings>) => void;
-  updateHeaderVisibility: (data: Partial<HeaderVisibilitySettings>) => void;
+  updateHomepageSections: (data: Partial<HomepageSectionSettings>) => Promise<void>;
+  updateHeaderVisibility: (data: Partial<HeaderVisibilitySettings>) => Promise<void>;
+  initialize: () => Promise<void>; // ADDED
 }
+
+const SETTINGS_KEY = 'ui_settings';
 
 const defaultHomepageSections: HomepageSectionSettings = {
   featuresSection: true,
@@ -39,26 +43,40 @@ const defaultHeaderVisibility: HeaderVisibilitySettings = {
   showSearchIcon: true,
 };
 
-export const useUISettingsStore = create<UISettingsState>()(
-  persist(
-    (set) => ({
-      homepageSections: defaultHomepageSections,
-      headerVisibility: defaultHeaderVisibility,
+const DEFAULT_STATE: Omit<UISettingsState, 'updateHomepageSections' | 'updateHeaderVisibility' | 'initialize'> = {
+  homepageSections: defaultHomepageSections,
+  headerVisibility: defaultHeaderVisibility,
+};
 
-      updateHomepageSections: (data) => {
-        set((state) => ({ 
-          homepageSections: { ...state.homepageSections, ...data } 
-        }));
-      },
-      
-      updateHeaderVisibility: (data) => {
-        set((state) => ({
-          headerVisibility: { ...state.headerVisibility, ...data }
-        }));
+export const useUISettingsStore = create<UISettingsState>()(
+  (set, get) => ({
+    ...DEFAULT_STATE,
+    
+    initialize: async () => {
+      const data = await fetchSettings<typeof DEFAULT_STATE>(SETTINGS_KEY);
+      if (data) {
+        set(data);
+      } else {
+        await updateSettings(SETTINGS_KEY, DEFAULT_STATE);
       }
-    }),
-    {
-      name: 'ui-settings-storage',
+    },
+
+    updateHomepageSections: async (data) => {
+      const newState = { 
+        ...get(), 
+        homepageSections: { ...get().homepageSections, ...data } 
+      };
+      set(newState);
+      await updateSettings(SETTINGS_KEY, newState);
+    },
+    
+    updateHeaderVisibility: async (data) => {
+      const newState = {
+        ...get(),
+        headerVisibility: { ...get().headerVisibility, ...data }
+      };
+      set(newState);
+      await updateSettings(SETTINGS_KEY, newState);
     }
-  )
+  })
 );
