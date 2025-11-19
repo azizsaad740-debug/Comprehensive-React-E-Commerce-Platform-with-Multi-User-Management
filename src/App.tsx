@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useParams } from "react-router-dom"; // ADDED useParams
 import Index from "./pages/Index.tsx";
 import LoginPage from "./pages/auth/LoginPage.tsx";
 import RegisterPage from "./pages/auth/RegisterPage.tsx";
@@ -15,7 +15,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute.tsx";
 import AdminLayout from "@/components/layout/AdminLayout.tsx";
 import AdminProductsPage from "@/pages/admin/ProductManagementPage.tsx"; // Mapped to ProductManagementPage
 import AdminOrdersPage from "@/pages/admin/OrderManagementPage.tsx"; // Mapped to OrderManagementPage
-import AdminUsersPage from "@/pages/admin/UserManagementPage.tsx"; // Mapped to UserManagementPage
+import UserManagementPage from "@/pages/admin/UserManagementPage.tsx"; // Mapped to UserManagementPage (FIXED ALIAS)
 import AdminPromoCodesPage from "@/pages/admin/PromoCodeManagementPage.tsx"; // Mapped to PromoCodeManagementPage
 import AdminThemeEditor from "@/pages/admin/SettingsPage.tsx"; // Mapped to SettingsPage
 import AdminPluginManagement from "@/pages/admin/PluginManagementPage.tsx"; // Mapped to PluginManagementPage
@@ -42,6 +42,16 @@ import AdminOrderDetailPage from "./pages/admin/AdminOrderDetailPage.tsx"; // NE
 import EntityDetailPage from "./pages/admin/EntityDetailPage.tsx"; // NEW IMPORT
 import FaqPage from "./pages/FaqPage.tsx"; // ADDED
 import ContentPage from "./pages/ContentPage.tsx"; // ADDED
+import VariantManagementPage from "./pages/admin/VariantManagementPage.tsx"; // ADDED MISSING IMPORT
+import MobileScannerPage from "./pages/admin/MobileScannerPage.tsx"; // ADDED MISSING IMPORT
+
+
+// Wrapper component to extract slug from URL parameters and pass it as a prop
+const ContentPageWrapper = () => {
+  const { slug } = useParams();
+  // Assuming ContentPageProps requires slug: string
+  return <ContentPage slug={slug || ''} />;
+};
 
 
 const App = () => {
@@ -60,7 +70,7 @@ const App = () => {
         <Route path="/checkout/confirmation" element={<OrderConfirmationPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/faq" element={<FaqPage />} />
-        <Route path="/:slug" element={<ContentPage />} />
+        <Route path="/:slug" element={<ContentPageWrapper />} /> {/* USED WRAPPER */}
         <Route path="/404" element={<NotFoundPage />} />
 
         {/* Authenticated User Routes */}
