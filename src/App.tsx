@@ -40,6 +40,8 @@ import AddressBookPage from "./pages/profile/AddressBookPage.tsx"; // NEW IMPORT
 import CommissionTrackingPage from "./pages/reseller/CommissionTrackingPage.tsx"; // NEW IMPORT
 import AdminOrderDetailPage from "./pages/admin/AdminOrderDetailPage.tsx"; // NEW IMPORT
 import EntityDetailPage from "./pages/admin/EntityDetailPage.tsx"; // NEW IMPORT
+import FaqPage from "./pages/FaqPage.tsx"; // ADDED
+import ContentPage from "./pages/ContentPage.tsx"; // ADDED
 
 
 const App = () => {
@@ -87,10 +89,10 @@ const App = () => {
           <Route path="/admin/pos/scan" element={<MobileScannerPage />} />
           <Route path="/admin/ledger" element={<LedgerPage />} />
           <Route path="/admin/ledger/:entityId" element={<EntityDetailPage />} />
-          <Route path="/admin/customization" element={<CustomizationManagementPage />} /> {/* ADDED */}
-          <Route path="/admin/content" element={<ContentManagementPage />} /> {/* ADDED */}
-          <Route path="/admin/data" element={<DataManagementPage />} /> {/* ADDED */}
-          <Route path="/admin/ai-bulk" element={<AIBulkOperationsPage />} /> {/* ADDED */}
+          <Route path="/admin/customization" element={<CustomizationManagementPage />} />
+          <Route path="/admin/content" element={<ContentManagementPage />} />
+          <Route path="/admin/data" element={<DataManagementPage />} />
+          <Route path="/admin/ai-bulk" element={<AIBulkOperationsPage />} />
         </Route>
 
         {/* Reseller Routes */}
