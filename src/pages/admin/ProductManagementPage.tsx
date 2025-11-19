@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ColumnDef } from "@tanstack/react-table";
 import { Product, ImageSizes } from '@/types';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Edit, Trash2, Eye, Settings, Image, PlusCircle, RefreshCw, Save } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getAllMockProducts, updateMockProduct, deleteMockProduct, createMockProduct } from '@/utils/productUtils';
+import { getAllMockProducts, updateMockProduct, deleteMockProduct, createMockProduct, getMockProductById } from '@/utils/productUtils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import ProductForm from '@/components/admin/ProductForm';
@@ -26,22 +26,30 @@ const ProductManagementPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Use state to hold products to allow re-rendering after updates
-  const [products, setProducts] = useState(getAllMockProducts());
-  
-  // State for Image Modal
+  const [products, setProducts] = useState<Product[]>([]);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  
-  // State for Edit Modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const refreshProducts = () => {
-    // Force a refresh of the mock data
-    setProducts(getAllMockProducts().map(p => ({ ...p })));
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch all products, including inactive ones for admin view
+      const fetchedProducts = await getAllMockProducts(true);
+      setProducts(fetchedProducts);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+      toast({ title: "Error", description: "Failed to load product data.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const handleOpenImageModal = (product: Product) => {
     setSelectedProduct(product);
@@ -49,7 +57,6 @@ const ProductManagementPage = () => {
   };
   
   const handleOpenEditModal = (product?: Product) => {
-    // If no product is passed, prepare for creation
     if (product) {
       setSelectedProduct(product);
     } else {
@@ -64,62 +71,69 @@ const ProductManagementPage = () => {
     setSelectedProduct(null);
   };
   
-  const handleSaveProduct = (productData: Partial<Product>) => {
+  const handleSaveProduct = async (productData: Partial<Product>) => {
     setIsSavingProduct(true);
     
-    setTimeout(() => {
+    try {
       let updatedProduct: Product | undefined;
       
       if (productData.id) {
         // Update existing product
-        updatedProduct = updateMockProduct(productData);
+        updatedProduct = await updateMockProduct(productData);
       } else {
         // Create new product
         const productToCreate = {
           ...productData,
-          // FIX: Initialize images with ImageSizes object
-          images: [generateMockImageSizes('/placeholder.svg')], 
-          variants: [], // Start with no variants
-          customizationOptions: productData.customizationOptions || { fonts: [], maxCharacters: 50, allowedColors: [] },
+          images: productData.images || [generateMockImageSizes('/placeholder.svg')], 
+          variants: [], 
+          customizationOptions: productData.customizationOptions || { fonts: [], maxCharacters: 50 },
           printPaths: productData.printPaths || 1,
           isActive: productData.isActive ?? true,
           tags: productData.tags || [],
         } as Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'variants'>;
         
-        updatedProduct = createMockProduct(productToCreate);
+        updatedProduct = await createMockProduct(productToCreate);
       }
       
       if (updatedProduct) {
-        refreshProducts();
+        await fetchProducts();
         toast({
           title: "Success",
           description: `Product ${updatedProduct.name} saved successfully.`,
         });
         handleCloseEditModal();
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to save product.",
-          variant: "destructive",
-        });
+        throw new Error("Failed to save product.");
       }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save product.",
+        variant: "destructive",
+      });
+    } finally {
       setIsSavingProduct(false);
-    }, 500);
+    }
   };
   
-  const handleDeleteProduct = (productId: string, productName: string) => {
+  const handleDeleteProduct = async (productId: string, productName: string) => {
     if (window.confirm(`Are you sure you want to delete the product: ${productName}? This action cannot be undone.`)) {
-      if (deleteMockProduct(productId)) {
-        refreshProducts();
-        toast({
-          title: "Product Deleted",
-          description: `${productName} has been permanently removed.`,
-          variant: "destructive",
-        });
-      } else {
+      try {
+        const success = await deleteMockProduct(productId);
+        if (success) {
+          await fetchProducts();
+          toast({
+            title: "Product Deleted",
+            description: `${productName} has been permanently removed.`,
+            variant: "destructive",
+          });
+        } else {
+          throw new Error("Deletion failed.");
+        }
+      } catch (error: any) {
         toast({
           title: "Error",
-          description: "Failed to delete product.",
+          description: error.message || "Failed to delete product.",
           variant: "destructive",
         });
       }
@@ -219,7 +233,17 @@ const ProductManagementPage = () => {
         );
       },
     },
-  ], [navigate]);
+  ], [navigate, fetchProducts]);
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold">Loading Products...</h1>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -247,7 +271,7 @@ const ProductManagementPage = () => {
           product={selectedProduct}
           isOpen={isImageModalOpen}
           onClose={() => setIsImageModalOpen(false)}
-          onProductUpdate={refreshProducts}
+          onProductUpdate={fetchProducts}
         />
       )}
       

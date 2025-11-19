@@ -9,48 +9,11 @@ import { DataTable } from '@/components/data-table/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, Edit, Trash2, PlusCircle, ArrowLeft } from 'lucide-react';
-import { getMockProductById, mockProducts } from '@/utils/productUtils';
+import { getMockProductById, getProductVariants, addOrUpdateProductVariant, deleteProductVariant } from '@/utils/productUtils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import VariantForm from '@/components/admin/VariantForm';
-import { v4 as uuidv4 } from 'uuid';
-
-// Mock function to simulate variant update/delete
-const mockUpdateVariant = (productId: string, variantData: Partial<ProductVariant>): ProductVariant | undefined => {
-  const product = mockProducts.find(p => p.id === productId);
-  if (!product) return undefined;
-
-  if (variantData.id) {
-    // Update existing variant
-    const index = product.variants.findIndex(v => v.id === variantData.id);
-    if (index !== -1) {
-      product.variants[index] = { ...product.variants[index], ...variantData } as ProductVariant;
-      return product.variants[index];
-    }
-  } else {
-    // Create new variant
-    const newVariant: ProductVariant = {
-      id: uuidv4(),
-      name: variantData.name || 'New Variant',
-      price: variantData.price || 0,
-      stockQuantity: variantData.stockQuantity || 0,
-      attributes: variantData.attributes || {},
-    };
-    product.variants.push(newVariant);
-    return newVariant;
-  }
-  return undefined;
-};
-
-const mockDeleteVariant = (productId: string, variantId: string): boolean => {
-  const product = mockProducts.find(p => p.id === productId);
-  if (!product) return false;
-  
-  const initialLength = product.variants.length;
-  product.variants = product.variants.filter(v => v.id !== variantId);
-  return product.variants.length < initialLength;
-};
 
 const VariantManagementPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -58,16 +21,22 @@ const VariantManagementPage = () => {
   const { toast } = useToast();
   
   const [product, setProduct] = useState<Product | null>(null);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingVariant, setEditingVariant] = useState<ProductVariant | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const refreshProduct = () => {
-    if (id) {
-      const fetchedProduct = getMockProductById(id);
+  const fetchProductAndVariants = async () => {
+    if (!id) return;
+    setIsLoading(true);
+    
+    try {
+      const fetchedProduct = await getMockProductById(id);
       if (fetchedProduct) {
-        // Create a deep copy to ensure state updates trigger re-renders correctly
-        setProduct(JSON.parse(JSON.stringify(fetchedProduct)));
+        setProduct(fetchedProduct);
+        const fetchedVariants = await getProductVariants(id);
+        setVariants(fetchedVariants);
       } else {
         toast({
           title: "Error",
@@ -76,22 +45,31 @@ const VariantManagementPage = () => {
         });
         navigate('/admin/products');
       }
+    } catch (error) {
+      console.error("Failed to fetch product/variants:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load product data.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    refreshProduct();
+    fetchProductAndVariants();
   }, [id]);
 
-  const handleSaveVariant = (variantData: Partial<ProductVariant>) => {
+  const handleSaveVariant = async (variantData: Partial<ProductVariant>) => {
     if (!product) return;
     setIsSaving(true);
 
-    setTimeout(() => {
-      const updatedVariant = mockUpdateVariant(product.id, variantData);
+    try {
+      const updatedVariant = await addOrUpdateProductVariant(product.id, variantData);
       
       if (updatedVariant) {
-        refreshProduct();
+        await fetchProductAndVariants(); // Refresh data
         toast({
           title: "Success",
           description: `Variant ${updatedVariant.name} saved successfully.`,
@@ -99,24 +77,32 @@ const VariantManagementPage = () => {
         setIsFormOpen(false);
         setEditingVariant(undefined);
       } else {
-        toast({
-          title: "Error",
-          description: "Failed to save variant.",
-          variant: "destructive",
-        });
+        throw new Error("Failed to save variant.");
       }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save variant.",
+        variant: "destructive",
+      });
+    } finally {
       setIsSaving(false);
-    }, 500);
+    }
   };
 
-  const handleDeleteVariant = (variantId: string, variantName: string) => {
+  const handleDeleteVariant = async (variantId: string, variantName: string) => {
     if (!product) return;
     if (window.confirm(`Are you sure you want to delete variant: ${variantName}?`)) {
-      if (mockDeleteVariant(product.id, variantId)) {
-        refreshProduct();
-        toast({ title: "Deleted", description: `Variant ${variantName} deleted.` });
-      } else {
-        toast({ title: "Error", description: "Failed to delete variant.", variant: "destructive" });
+      try {
+        const success = await deleteProductVariant(variantId);
+        if (success) {
+          await fetchProductAndVariants(); // Refresh data
+          toast({ title: "Deleted", description: `Variant ${variantName} deleted.` });
+        } else {
+          throw new Error("Deletion failed.");
+        }
+      } catch (error: any) {
+        toast({ title: "Error", description: error.message || "Failed to delete variant.", variant: "destructive" });
       }
     }
   };
@@ -212,14 +198,24 @@ const VariantManagementPage = () => {
         );
       },
     },
-  ], [product]);
+  ], [variants]);
 
 
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold">Loading Product Variants...</h1>
+        </div>
+      </AdminLayout>
+    );
+  }
+  
   if (!product) {
     return (
       <AdminLayout>
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold">Loading...</h1>
+          <h1 className="text-3xl font-bold">Product Not Found</h1>
         </div>
       </AdminLayout>
     );
@@ -248,12 +244,12 @@ const VariantManagementPage = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Product Variants ({product.variants.length})</CardTitle>
+            <CardTitle>Product Variants ({variants.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <DataTable 
               columns={columns} 
-              data={product.variants} 
+              data={variants} 
               filterColumnId="name"
               filterPlaceholder="Filter by variant name..."
             />

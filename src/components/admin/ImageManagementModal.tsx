@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Image, Wand2, Save, Trash2, RefreshCw, PlusCircle, Link } from 'lucide-react';
@@ -26,17 +26,21 @@ const getBaseUrl = (sizes: ImageSizes): string => {
 };
 
 const ImageManagementModal: React.FC<ImageManagementModalProps> = ({ product, isOpen, onClose, onProductUpdate }) => {
-  // currentImages now stores ImageSizes objects
   const [currentImages, setCurrentImages] = useState<ImageSizes[]>(product.images ?? []);
   const [isSaving, setIsSaving] = useState(false);
   const [manualUrl, setManualUrl] = useState('');
   const { toast } = useToast();
 
-  // Sync images when product prop changes (e.g., modal opens)
+  // Sync images when modal opens
   React.useEffect(() => {
-    const latestProduct = getMockProductById(product.id);
-    setCurrentImages(latestProduct?.images ?? []);
-  }, [product.id, product.images, isOpen]);
+    const syncImages = async () => {
+      const latestProduct = await getMockProductById(product.id);
+      setCurrentImages(latestProduct?.images ?? []);
+    };
+    if (isOpen) {
+      syncImages();
+    }
+  }, [product.id, isOpen]);
 
   const handleImageSelected = (imageUrl: string) => {
     // 1. Save the generated image as a new asset first (utility handles size generation)
@@ -63,23 +67,28 @@ const ImageManagementModal: React.FC<ImageManagementModalProps> = ({ product, is
     setCurrentImages(prev => prev.filter((_, i) => i !== index));
   };
   
-  const handleSaveImages = () => {
+  const handleSaveImages = async () => {
     setIsSaving(true);
     
     // Convert ImageSizes array back to an array of base URLs (large size) for the mock utility
     const baseUrlsToSave = currentImages.map(getBaseUrl);
     const imagesToSave = baseUrlsToSave.length > 0 ? baseUrlsToSave : ['/placeholder.svg'];
     
-    const updatedProduct = updateMockProductImages(product.id, imagesToSave);
-    
-    if (updatedProduct) {
-      onProductUpdate();
-      toast({ title: "Success", description: `Images for ${product.name} updated.` });
-    } else {
-      toast({ title: "Error", description: "Failed to update product images.", variant: "destructive" });
+    try {
+      const updatedProduct = await updateMockProductImages(product.id, imagesToSave);
+      
+      if (updatedProduct) {
+        onProductUpdate();
+        toast({ title: "Success", description: `Images for ${product.name} updated.` });
+      } else {
+        throw new Error("Update failed.");
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update product images.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+      onClose();
     }
-    setIsSaving(false);
-    onClose();
   };
 
   return (

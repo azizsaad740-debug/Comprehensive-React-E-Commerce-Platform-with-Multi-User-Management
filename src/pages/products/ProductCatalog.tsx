@@ -1,23 +1,23 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Star, Heart, ShoppingCart, Palette, MessageSquare, Info } from 'lucide-react';
+import { Star, Heart, ShoppingCart, Palette, MessageSquare, Info, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
 import { Product, ProductActionButton, ImageSizes } from '@/types';
-import { getAllMockProducts } from '@/utils/productUtils';
+import { getAllMockProducts, getMockProductById } from '@/utils/productUtils';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useContentStore } from '@/stores/contentStore';
 import { cn } from '@/lib/utils';
-import ProgressiveImage from '@/components/common/ProgressiveImage'; // NEW IMPORT
+import ProgressiveImage from '@/components/common/ProgressiveImage';
 
 // Helper to get query parameters
 const useQuery = () => {
@@ -38,12 +38,30 @@ function ProductCatalog() {
   const { currencySymbol } = useCheckoutSettingsStore();
   const { contactInfo } = useContentStore();
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   // State for More Info Dialog
   const [isMoreInfoOpen, setIsMoreInfoOpen] = useState(false);
   const [moreInfoContent, setMoreInfoContent] = useState('');
   const [moreInfoTitle, setMoreInfoTitle] = useState('');
+  
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedProducts = await getAllMockProducts(false); // Only active products
+      setProducts(fetchedProducts);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+      toast({ title: "Error", description: "Failed to load product catalog.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const mockProducts = getAllMockProducts();
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   // Update selectedCategory state if the URL changes
   React.useEffect(() => {
@@ -51,8 +69,7 @@ function ProductCatalog() {
   }, [urlCategory]);
 
   const filteredProducts = useMemo(() => {
-    let filtered = mockProducts.filter(product => 
-      product.isActive &&
+    let filtered = products.filter(product => 
       (searchTerm === '' || product.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (selectedCategory === 'all' || product.category.toLowerCase() === selectedCategory.toLowerCase())
     );
@@ -69,9 +86,9 @@ function ProductCatalog() {
     });
 
     return filtered;
-  }, [searchTerm, selectedCategory, sortBy, mockProducts]);
+  }, [searchTerm, selectedCategory, sortBy, products]);
 
-  const categories = ['all', ...Array.from(new Set(mockProducts.map(p => p.category)))];
+  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -84,6 +101,7 @@ function ProductCatalog() {
   };
 
   const handleAddToCart = (product: Product) => {
+    // For quick add, we assume the first variant and no customization
     addItem(product, product.variants[0]?.id, 1);
     toast({
       title: "Added to cart",
@@ -201,91 +219,97 @@ function ProductCatalog() {
             </Select>
           </div>
         </div>
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {filteredProducts.map((product) => {
+              const price = product.discountedPrice || product.basePrice;
+              const hasDiscount = product.discountedPrice && product.discountedPrice < product.basePrice;
+              const primaryButton = product.actionButtons.find(btn => btn === 'customize' || btn === 'quick_add');
+              
+              // Determine if we should center the price (only one button visible)
+              const singleButtonMode = product.actionButtons.length === 1;
+              
+              // Use the first image sizes object
+              const imageSizes = product.images[0] || { small: '/placeholder.svg', medium: '/placeholder.svg', large: '/placeholder.svg' };
 
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {filteredProducts.map((product) => {
-            const price = product.discountedPrice || product.basePrice;
-            const hasDiscount = product.discountedPrice && product.discountedPrice < product.basePrice;
-            const primaryButton = product.actionButtons.find(btn => btn === 'customize' || btn === 'quick_add');
-            
-            // Determine if we should center the price (only one button visible)
-            const singleButtonMode = product.actionButtons.length === 1;
-            
-            // Use the first image sizes object
-            const imageSizes = product.images[0] || { small: '/placeholder.svg', medium: '/placeholder.svg', large: '/placeholder.svg' };
-
-            return (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <div className="relative cursor-pointer" onClick={() => navigate(`/products/${product.id}`)}>
-                  <div className="aspect-square bg-gray-100">
-                    <ProgressiveImage 
-                      sizes={imageSizes}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  
-                  <div className="absolute top-2 left-2">
-                    {hasDiscount && (
-                      <Badge variant="destructive" className="text-xs">
-                        Sale
-                      </Badge>
-                    )}
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/80 hover:bg-white"
-                  >
-                    <Heart className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <CardHeader className="pb-3 p-3 md:p-6">
-                  <div className="flex items-center justify-between mb-1">
-                    <Badge variant="outline" className="text-xs">{product.category}</Badge>
-                  </div>
-                  <CardTitle className="text-base md:text-lg">{product.name}</CardTitle>
-                  <CardDescription className="text-xs hidden md:block">{product.description}</CardDescription>
-                </CardHeader>
-
-                <CardContent className="pt-0 p-3 md:p-6">
-                  <div className={cn(
-                    "flex items-center mb-3",
-                    singleButtonMode ? "justify-center" : "justify-between"
-                  )}>
-                    <div className="flex flex-col items-start space-y-0">
-                      <span className="text-base font-bold text-green-600">
-                        {currencySymbol}{price.toFixed(2)}
-                      </span>
-                      {hasDiscount && (
-                        <span className="text-xs text-gray-500 line-through">
-                          {currencySymbol}{product.basePrice.toFixed(2)}
-                        </span>
-                      )}
+              return (
+                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="relative cursor-pointer" onClick={() => navigate(`/products/${product.id}`)}>
+                    <div className="aspect-square bg-gray-100">
+                      <ProgressiveImage 
+                        sizes={imageSizes}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     
-                    {/* Primary action button (if only one button is configured, it will be the only element in the row) */}
-                    {!singleButtonMode && primaryButton && (
-                      <Button size="sm" className="h-8 text-xs" onClick={() => navigate(`/products/${product.id}`)}>
-                        {primaryButton === 'customize' ? 'Customize' : 'View Details'}
-                      </Button>
-                    )}
+                    <div className="absolute top-2 left-2">
+                      {hasDiscount && (
+                        <Badge variant="destructive" className="text-xs">
+                          Sale
+                        </Badge>
+                      )}
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 h-8 w-8 p-0 bg-white/80 hover:bg-white"
+                    >
+                      <Heart className="h-4 w-4" />
+                    </Button>
                   </div>
 
-                  {/* Dynamic Button Row */}
-                  <div className={cn(
-                    "space-y-2",
-                    product.actionButtons.length > 1 ? "grid grid-cols-2 gap-2" : "grid grid-cols-1 gap-2"
-                  )}>
-                    {product.actionButtons.map(btn => renderCardButton(product, btn))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                  <CardHeader className="pb-3 p-3 md:p-6">
+                    <div className="flex items-center justify-between mb-1">
+                      <Badge variant="outline" className="text-xs">{product.category}</Badge>
+                    </div>
+                    <CardTitle className="text-base md:text-lg">{product.name}</CardTitle>
+                    <CardDescription className="text-xs hidden md:block">{product.description}</CardDescription>
+                  </CardHeader>
+
+                  <CardContent className="pt-0 p-3 md:p-6">
+                    <div className={cn(
+                      "flex items-center mb-3",
+                      singleButtonMode ? "justify-center" : "justify-between"
+                    )}>
+                      <div className="flex flex-col items-start space-y-0">
+                        <span className="text-base font-bold text-green-600">
+                          {currencySymbol}{price.toFixed(2)}
+                        </span>
+                        {hasDiscount && (
+                          <span className="text-xs text-gray-500 line-through">
+                            {currencySymbol}{product.basePrice.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Primary action button (if only one button is configured, it will be the only element in the row) */}
+                      {!singleButtonMode && primaryButton && (
+                        <Button size="sm" className="h-8 text-xs" onClick={() => navigate(`/products/${product.id}`)}>
+                          {primaryButton === 'customize' ? 'Customize' : 'View Details'}
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Dynamic Button Row */}
+                    <div className={cn(
+                      "space-y-2",
+                      product.actionButtons.length > 1 ? "grid grid-cols-2 gap-2" : "grid grid-cols-1 gap-2"
+                    )}>
+                      {product.actionButtons.map(btn => renderCardButton(product, btn))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
       
       {/* More Info Dialog */}

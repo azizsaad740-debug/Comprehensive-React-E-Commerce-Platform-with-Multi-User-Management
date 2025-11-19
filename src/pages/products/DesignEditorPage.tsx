@@ -42,13 +42,14 @@ const DesignEditorPage = () => {
     setExistingDesign(design);
   };
 
-  useEffect(() => {
+  const fetchProductAndInitialize = async () => {
     if (!id) {
       navigate('/products');
       return;
     }
+    setIsLoading(true);
 
-    const fetchedProduct = getMockProductById(id);
+    const fetchedProduct = await getMockProductById(id);
     if (!fetchedProduct) {
       navigate('/products');
       toast({
@@ -112,7 +113,10 @@ const DesignEditorPage = () => {
     
     setInitialCustomization(loadedCustomization);
     setIsLoading(false);
-    
+  };
+
+  useEffect(() => {
+    fetchProductAndInitialize();
   }, [id, navigate, toast, designId, location.search]);
 
   if (isLoading || !product || !initialCustomization) {

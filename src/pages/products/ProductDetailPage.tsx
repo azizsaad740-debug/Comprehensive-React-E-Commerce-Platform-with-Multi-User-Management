@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Heart, ShoppingCart, ArrowLeft, Palette, MessageSquare, Info } from 'lucide-react';
+import { Star, Heart, ShoppingCart, ArrowLeft, Palette, MessageSquare, Info, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useToast } from '@/hooks/use-toast';
 import Layout from '@/components/layout/Layout';
@@ -17,7 +17,7 @@ import { Product, ProductActionButton, ImageSizes } from '@/types';
 import { getMockProductById } from '@/utils/productUtils';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import ProgressiveImage from '@/components/common/ProgressiveImage'; // NEW IMPORT
+import ProgressiveImage from '@/components/common/ProgressiveImage';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -35,35 +35,60 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isMoreInfoOpen, setIsMoreInfoOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (id) return;
-
-    const fetchedProduct = getMockProductById(id);
-    if (!fetchedProduct) {
+  const fetchProduct = async () => {
+    if (!id) {
       navigate('/products');
-      toast({
-        title: "Product Not Found",
-        description: `Product with ID ${id} does not exist.`,
-        variant: "destructive",
-      });
       return;
     }
+    setIsLoading(true);
 
-    setProduct(fetchedProduct);
-    setSelectedVariant(fetchedProduct.variants[0]);
-    
-    if (designId) {
-        navigate(`/products/${id}/design?designId=${designId}`, { replace: true });
+    try {
+      const fetchedProduct = await getMockProductById(id);
+      if (!fetchedProduct) {
+        navigate('/products');
+        toast({
+          title: "Product Not Found",
+          description: `Product with ID ${id} does not exist.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setProduct(fetchedProduct);
+      setSelectedVariant(fetchedProduct.variants[0]);
+      
+      if (designId) {
+          navigate(`/products/${id}/design?designId=${designId}`, { replace: true });
+      }
+    } catch (error) {
+      console.error("Failed to fetch product:", error);
+      toast({ title: "Error", description: "Failed to load product details.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
-    
+  };
+
+  useEffect(() => {
+    fetchProduct();
   }, [id, navigate, toast, designId]);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-[calc(100vh-128px)] flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!product) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-16 text-center">
-          <p>Loading product details...</p>
+          <h1 className="text-2xl font-bold">Product Not Found</h1>
         </div>
       </Layout>
     );
