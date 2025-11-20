@@ -187,25 +187,34 @@ export const useAuthStore = create<AuthState>()(
           updated_at: new Date().toISOString(),
         };
         
-        // Only allow role/commission updates if the current user is an admin/superuser
+        // --- ADMIN ROLE CHANGE LOGIC ---
+        // If the current user is an admin/superuser AND the data being updated includes a role change, apply it.
+        // Note: This assumes RLS allows the current user (admin/superuser) to update other profiles.
         if (get().hasRole(['admin', 'superuser']) && userData.role) {
             profileUpdateData.role = userData.role;
-            profileUpdateData.commission_rate = userData.commissionRate;
+            profileData.commission_rate = userData.commissionRate;
             profileUpdateData.reseller_id = userData.resellerId;
         }
+        // --- END ADMIN ROLE CHANGE LOGIC ---
 
         const { error: profileError } = await supabase
           .from('profiles')
+          // IMPORTANT: When updating a user from the Admin panel, the ID being updated is the one passed in userData.
+          // If updating self, it's user.id. If updating another user, we assume userData.id is present.
           .update(profileUpdateData)
-          .eq('id', user.id);
+          .eq('id', userData.id || user.id); // Use userData.id if provided (for admin updates)
 
         if (profileError) {
             set({ isLoading: false });
             throw new Error(profileError.message);
         }
 
-        // 5. Sync local store state
-        await get().syncUser(user.id);
+        // 5. Sync local store state only if updating self
+        if (userData.id === user.id || !userData.id) {
+            await get().syncUser(user.id);
+        } else {
+            set({ isLoading: false });
+        }
       },
 
       setLoading: (loading: boolean) => {
@@ -247,6 +256,12 @@ export const useAuthStore = create<AuthState>()(
               'add_to_cart',
               'view_orders',
               'create_order',
+              'update_profile'
+            ].includes(permission);
+          case 'counter':
+            return [
+              'view_dashboard', // POS dashboard
+              'pos_sale',
               'update_profile'
             ].includes(permission);
           default:

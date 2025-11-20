@@ -93,7 +93,8 @@ const UserManagementPage = () => {
     setIsSaving(true);
     
     try {
-        // We pass the entire userData object to authStore.updateUser, which handles the profile update.
+        // We pass the entire userData object, including the ID of the user being updated, 
+        // to authStore.updateUser, which handles the profile update.
         await updateUser(userData);
         
         toast({

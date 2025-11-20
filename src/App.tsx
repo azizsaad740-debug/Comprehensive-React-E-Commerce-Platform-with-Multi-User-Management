@@ -70,7 +70,7 @@ const App = () => {
       <Route path="/:slug" element={<ContentPageWrapper />} /> {/* USED WRAPPER */}
       <Route path="/404" element={<NotFoundPage />} />
 
-      {/* Authenticated User Routes */}
+      {/* Authenticated User Routes (Customer/Reseller/Counter) */}
       <Route element={<ProtectedRoute allowedRoles={['customer', 'reseller', 'admin', 'superuser', 'counter']} />}>
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/designs" element={<DesignLibraryPage />} />
@@ -78,8 +78,14 @@ const App = () => {
         <Route path="/orders" element={<OrderHistoryPage />} />
         <Route path="/orders/:id" element={<OrderDetailPage />} />
       </Route>
+      
+      {/* POS Operator Routes (Counter/Admin/Superuser) */}
+      <Route element={<ProtectedRoute allowedRoles={['admin', 'superuser', 'counter']} />}>
+        <Route path="/admin/pos" element={<POSPage />} />
+        <Route path="/admin/pos/scan" element={<MobileScannerPage />} />
+      </Route>
 
-      {/* Admin Routes */}
+      {/* Admin Routes (Admin/Superuser) */}
       <Route element={<ProtectedRoute allowedRoles={['admin', 'superuser']} />}>
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -91,9 +97,7 @@ const App = () => {
         <Route path="/admin/promocodes" element={<AdminPromoCodesPage />} />
         <Route path="/admin/theme" element={<AdminThemeEditor />} />
         <Route path="/admin/plugins" element={<AdminPluginManagement />} />
-        <Route path="/admin/pos" element={<POSPage />} />
         <Route path="/admin/pos-operators" element={<POSOperatorManagementPage />} />
-        <Route path="/admin/pos/scan" element={<MobileScannerPage />} />
         <Route path="/admin/ledger" element={<LedgerPage />} />
         <Route path="/admin/ledger/:entityId" element={<EntityDetailPage />} />
         <Route path="/admin/customization" element={<CustomizationManagementPage />} />
@@ -102,8 +106,8 @@ const App = () => {
         <Route path="/admin/ai-bulk" element={<AIBulkOperationsPage />} />
       </Route>
 
-      {/* Reseller Routes */}
-      <Route element={<ProtectedRoute allowedRoles={['reseller']} />}>
+      {/* Reseller Routes (Reseller/Admin/Superuser) */}
+      <Route element={<ProtectedRoute allowedRoles={['reseller', 'admin', 'superuser']} />}>
         <Route path="/reseller" element={<ResellerDashboard />} />
         <Route path="/reseller/dashboard" element={<ResellerDashboard />} />
         <Route path="/reseller/promocodes" element={<ResellerPromoCodesPage />} />
