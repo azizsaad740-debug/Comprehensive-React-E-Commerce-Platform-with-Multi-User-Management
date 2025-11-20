@@ -129,10 +129,8 @@ export const getAllMockProducts = async (includeInactive: boolean = false): Prom
   
   const products = (data as SupabaseProduct[]).map(toAppProduct);
   
-  // If the database is empty, seed it with mock data once
+  // If the database is empty, return local mock data for anon users to see something.
   if (products.length === 0) {
-      console.log("Database empty, seeding initial mock products...");
-      await Promise.all(initialMockProducts.map(p => createMockProduct(p)));
       return initialMockProducts;
   }
 
@@ -151,10 +149,12 @@ export const getMockProductById = async (id: string): Promise<Product | undefine
 
   if (error && error.code !== 'PGRST116') {
     console.error("Error fetching product:", error);
+    // Fallback to mock data if Supabase fails
     return initialMockProducts.find(p => p.id === id);
   }
   
-  return data ? toAppProduct(data as SupabaseProduct) : undefined;
+  // If data is null (PGRST116 or genuinely not found), check mock data
+  return data ? toAppProduct(data as SupabaseProduct) : initialMockProducts.find(p => p.id === id);
 };
 
 /**
@@ -390,7 +390,7 @@ export const deleteProductVariant = async (variantId: string): Promise<boolean> 
   return true;
 };
 
-// --- Mock functions that need to be updated to use the new Supabase functions ---
+// --- Mock functions that need to be updated to use the new async functions ---
 
 // NOTE: These functions are kept for compatibility with existing components 
 // but now call the async Supabase functions.
