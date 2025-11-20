@@ -104,6 +104,10 @@ export const useAuthStore = create<AuthState>()(
       register: async (email: string, password: string, name: string, resellerId?: string) => {
         set({ isLoading: true });
         
+        // Determine the redirect URL for email confirmation
+        // This should point back to the login page of the app.
+        const redirectToUrl = `${window.location.origin}/auth/login`;
+
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -113,7 +117,8 @@ export const useAuthStore = create<AuthState>()(
               last_name: name.split(' ').slice(1).join(' ') || '',
               role: 'customer', // Default role
               resellerId: resellerId || null,
-            }
+            },
+            emailRedirectTo: redirectToUrl, // Explicitly set redirect URL
           }
         });
 
@@ -122,9 +127,23 @@ export const useAuthStore = create<AuthState>()(
           throw new Error(error.message);
         }
         
-        // Note: Supabase automatically signs in after signup. syncUser will handle profile creation/sync.
+        // Note: Supabase automatically signs in after signup if email confirmation is disabled.
+        // If confirmation is enabled, the user will be redirected after clicking the link.
         if (data.user) {
-          await get().syncUser(data.user.id);
+          // If the user is created but not confirmed, we don't sync the user yet.
+          // We rely on the user clicking the confirmation link and then logging in.
+          // For now, we assume immediate sign-in for a smoother mock experience, 
+          // but we should inform the user about the confirmation email.
+          
+          // If email confirmation is required, the user object here might be unconfirmed.
+          // We rely on the login page to handle the final sign-in.
+          
+          // If the user is immediately signed in (e.g., confirmation disabled), sync the user.
+          if (data.session) {
+             await get().syncUser(data.user.id);
+          } else {
+             set({ isLoading: false });
+          }
         }
       },
 
@@ -192,7 +211,7 @@ export const useAuthStore = create<AuthState>()(
         // Note: This assumes RLS allows the current user (admin/superuser) to update other profiles.
         if (get().hasRole(['admin', 'superuser']) && userData.role) {
             profileUpdateData.role = userData.role;
-            profileData.commission_rate = userData.commissionRate;
+            profileUpdateData.commission_rate = userData.commissionRate;
             profileUpdateData.reseller_id = userData.resellerId;
         }
         // --- END ADMIN ROLE CHANGE LOGIC ---
