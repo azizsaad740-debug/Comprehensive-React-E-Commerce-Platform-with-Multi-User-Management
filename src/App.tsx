@@ -1,119 +1,131 @@
 import React from "react";
 import { Routes, Route, useParams } from "react-router-dom";
-import Index from "./pages/Index.tsx";
-import LoginPage from "./pages/auth/LoginPage.tsx";
-import RegisterPage from "./pages/auth/RegisterPage.tsx";
-import ProductsPage from "./pages/products/ProductCatalog.tsx"; // Mapped to ProductCatalog
-import ProductDetailPage from "./pages/products/ProductDetailPage.tsx"; // Mapped to products/ProductDetailPage
-import DesignEditorPage from "./pages/products/DesignEditorPage.tsx"; // Mapped to products/DesignEditorPage
-import CartPage from "./pages/cart/CartPage.tsx"; // Mapped to cart/CartPage
-import CheckoutPage from "./pages/checkout/CheckoutPage.tsx"; // Mapped to checkout/CheckoutPage
-import ContactPage from "./pages/ContactPage.tsx"; // Mapped to ContactPage
-import ProfilePage from "./pages/profile/ProfilePage.tsx";
-import AdminDashboard from "@/pages/admin/Dashboard.tsx";
+import LazyRoute from "./components/layout/LazyRoute";
 import ProtectedRoute from "@/components/auth/ProtectedRoute.tsx";
-import AdminProductsPage from "@/pages/admin/ProductManagementPage.tsx"; // Mapped to ProductManagementPage
-import AdminOrdersPage from "@/pages/admin/OrderManagementPage.tsx"; // Mapped to OrderManagementPage
-import UserManagementPage from "@/pages/admin/UserManagementPage.tsx"; // Mapped to UserManagementPage (FIXED ALIAS)
-import AdminPromoCodesPage from "@/pages/admin/PromoCodeManagementPage.tsx"; // Mapped to PromoCodeManagementPage
-import AdminThemeEditor from "@/pages/admin/SettingsPage.tsx"; // Mapped to SettingsPage
-import AdminPluginManagement from "@/pages/admin/PluginManagementPage.tsx"; // Mapped to PluginManagementPage
-import ResellerDashboard from "@/pages/reseller/ResellerDashboard.tsx";
-import ResellerPromoCodesPage from "@/pages/reseller/ResellerPromoCodePage.tsx"; // Mapped to ResellerPromoCodePage
-import ResellerCustomersPage from "@/pages/reseller/CustomerManagementPage.tsx"; // Mapped to CustomerManagementPage
-import POSPage from "@/pages/admin/POSPage.tsx";
-import DesignLibraryPage from "@/pages/profile/DesignLibraryPage.tsx";
-import LedgerPage from "@/pages/admin/LedgerManagementPage.tsx"; // Mapped to LedgerManagementPage
-import OrderHistoryPage from "@/pages/orders/OrdersPage.tsx"; // Mapped to orders/OrdersPage
-import OrderDetailPage from "./pages/orders/OrderDetailPage.tsx"; // Mapped to orders/OrderDetailPage
-import NotFoundPage from "./pages/NotFound.tsx"; // Mapped to NotFound.tsx
-import CustomizationManagementPage from "./pages/admin/CustomizationManagementPage.tsx"; // NEW IMPORT
-import ContentManagementPage from "./pages/admin/ContentManagementPage.tsx"; // NEW IMPORT
-import DataManagementPage from "./pages/admin/DataManagementPage.tsx"; // NEW IMPORT
-import AIBulkOperationsPage from "./pages/admin/AIBulkOperationsPage.tsx"; // NEW IMPORT
-import POSOperatorManagementPage from "./pages/admin/POSOperatorManagementPage.tsx"; // NEW IMPORT
-import OrderConfirmationPage from "./pages/checkout/OrderConfirmationPage.tsx"; // NEW IMPORT
-import AddressBookPage from "./pages/profile/AddressBookPage.tsx"; // NEW IMPORT
-import CommissionTrackingPage from "./pages/reseller/CommissionTrackingPage.tsx"; // NEW IMPORT
-import AdminOrderDetailPage from "./pages/admin/AdminOrderDetailPage.tsx"; // NEW IMPORT
-import EntityDetailPage from "./pages/admin/EntityDetailPage.tsx"; // NEW IMPORT
-import FaqPage from "./pages/FaqPage.tsx"; // ADDED
-import ContentPage from "./pages/ContentPage.tsx"; // ADDED
-import VariantManagementPage from "./pages/admin/VariantManagementPage.tsx"; // ADDED MISSING IMPORT
-import MobileScannerPage from "./pages/admin/MobileScannerPage.tsx"; // ADDED MISSING IMPORT
-import ResellerOrdersPage from "@/pages/reseller/ResellerOrdersPage.tsx"; // ADDED MISSING IMPORT
+import NotFoundPage from "./pages/NotFound.tsx";
 
+// --- Lazy Loaded Components ---
+const Index = () => import("./pages/Index.tsx");
+const LoginPage = () => import("./pages/auth/LoginPage.tsx");
+const RegisterPage = () => import("./pages/auth/RegisterPage.tsx");
+const ProductsPage = () => import("./pages/products/ProductCatalog.tsx");
+const ProductDetailPage = () => import("./pages/products/ProductDetailPage.tsx");
+const DesignEditorPage = () => import("./pages/products/DesignEditorPage.tsx");
+const CartPage = () => import("./pages/cart/CartPage.tsx");
+const CheckoutPage = () => import("./pages/checkout/CheckoutPage.tsx");
+const ContactPage = () => import("./pages/ContactPage.tsx");
+const ProfilePage = () => import("./pages/profile/ProfilePage.tsx");
+const DesignLibraryPage = () => import("./pages/profile/DesignLibraryPage.tsx");
+const AddressBookPage = () => import("./pages/profile/AddressBookPage.tsx");
+const OrderHistoryPage = () => import("./pages/orders/OrdersPage.tsx");
+const OrderDetailPage = () => import("./pages/orders/OrderDetailPage.tsx");
+const OrderConfirmationPage = () => import("./pages/checkout/OrderConfirmationPage.tsx");
+const FaqPage = () => import("./pages/FaqPage.tsx");
+const ContentPage = () => import("./pages/ContentPage.tsx");
 
-// Wrapper component to extract slug from URL parameters and pass it as a prop
+// Admin/Reseller Pages
+const AdminDashboard = () => import("@/pages/admin/Dashboard.tsx");
+const AdminProductsPage = () => import("@/pages/admin/ProductManagementPage.tsx");
+const VariantManagementPage = () => import("./pages/admin/VariantManagementPage.tsx");
+const AdminOrdersPage = () => import("@/pages/admin/OrderManagementPage.tsx");
+const AdminOrderDetailPage = () => import("./pages/admin/AdminOrderDetailPage.tsx");
+const UserManagementPage = () => import("@/pages/admin/UserManagementPage.tsx");
+const AdminPromoCodesPage = () => import("@/pages/admin/PromoCodeManagementPage.tsx");
+const AdminThemeEditor = () => import("@/pages/admin/SettingsPage.tsx");
+const AdminPluginManagement = () => import("@/pages/admin/PluginManagementPage.tsx");
+const POSPage = () => import("@/pages/admin/POSPage.tsx");
+const LedgerPage = () => import("@/pages/admin/LedgerManagementPage.tsx");
+const EntityDetailPage = () => import("./pages/admin/EntityDetailPage.tsx");
+const CustomizationManagementPage = () => import("./pages/admin/CustomizationManagementPage.tsx");
+const ContentManagementPage = () => import("./pages/admin/ContentManagementPage.tsx");
+const DataManagementPage = () => import("./pages/admin/DataManagementPage.tsx");
+const AIBulkOperationsPage = () => import("./pages/admin/AIBulkOperationsPage.tsx");
+const POSOperatorManagementPage = () => import("./pages/admin/POSOperatorManagementPage.tsx");
+const MobileScannerPage = () => import("./pages/admin/MobileScannerPage.tsx");
+
+const ResellerDashboard = () => import("@/pages/reseller/ResellerDashboard.tsx");
+const ResellerPromoCodesPage = () => import("@/pages/reseller/ResellerPromoCodePage.tsx");
+const ResellerCustomersPage = () => import("@/pages/reseller/CustomerManagementPage.tsx");
+const CommissionTrackingPage = () => import("./pages/reseller/CommissionTrackingPage.tsx");
+const ResellerOrdersPage = () => import("@/pages/reseller/ResellerOrdersPage.tsx");
+
+// --- Wrapper component to extract slug from URL parameters and pass it as a prop
 const ContentPageWrapper = () => {
   const { slug } = useParams();
-  // Assuming ContentPageProps requires slug: string
-  return <ContentPage slug={slug || ''} />;
+  return <LazyRoute factory={() => ContentPage().then(mod => ({ default: () => <mod.default slug={slug || ''} /> }))} />;
 };
+
+// --- New Admin Login Page ---
+const AdminLoginGate = () => import("./pages/admin/AdminLoginGate.tsx");
+const AdminLoginPage = () => import("./pages/admin/AdminLoginPage.tsx");
 
 
 const App = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route path="/" element={<Index />} />
-      <Route path="/auth/login" element={<LoginPage />} />
-      <Route path="/auth/register" element={<RegisterPage />} />
-      <Route path="/products" element={<ProductsPage />} />
-      <Route path="/products/:id" element={<ProductDetailPage />} />
-      <Route path="/products/:id/design" element={<DesignEditorPage />} />
-      <Route path="/cart" element={<CartPage />} />
-      <Route path="/checkout" element={<CheckoutPage />} />
-      <Route path="/checkout/confirmation" element={<OrderConfirmationPage />} />
-      <Route path="/contact" element={<ContactPage />} />
-      <Route path="/faq" element={<FaqPage />} />
-      <Route path="/:slug" element={<ContentPageWrapper />} /> {/* USED WRAPPER */}
+      <Route path="/" element={<LazyRoute factory={Index} />} />
+      <Route path="/auth/login" element={<LazyRoute factory={LoginPage} />} />
+      <Route path="/auth/register" element={<LazyRoute factory={RegisterPage} />} />
+      <Route path="/products" element={<LazyRoute factory={ProductsPage} />} />
+      <Route path="/products/:id" element={<LazyRoute factory={ProductDetailPage} />} />
+      <Route path="/products/:id/design" element={<LazyRoute factory={DesignEditorPage} />} />
+      <Route path="/cart" element={<LazyRoute factory={CartPage} />} />
+      <Route path="/checkout" element={<LazyRoute factory={CheckoutPage} />} />
+      <Route path="/checkout/confirmation" element={<LazyRoute factory={OrderConfirmationPage} />} />
+      <Route path="/contact" element={<LazyRoute factory={ContactPage} />} />
+      <Route path="/faq" element={<LazyRoute factory={FaqPage} />} />
+      <Route path="/:slug" element={<ContentPageWrapper />} />
       <Route path="/404" element={<NotFoundPage />} />
+
+      {/* Admin Access Gate */}
+      <Route path="/admincpanelaccess" element={<LazyRoute factory={AdminLoginGate} />} />
+      <Route path="/admincpanelaccess/login" element={<LazyRoute factory={AdminLoginPage} />} />
 
       {/* Authenticated User Routes (Customer/Reseller/Counter) */}
       <Route element={<ProtectedRoute allowedRoles={['customer', 'reseller', 'admin', 'superuser', 'counter']} />}>
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profile/designs" element={<DesignLibraryPage />} />
-        <Route path="/profile/addresses" element={<AddressBookPage />} />
-        <Route path="/orders" element={<OrderHistoryPage />} />
-        <Route path="/orders/:id" element={<OrderDetailPage />} />
+        <Route path="/profile" element={<LazyRoute factory={ProfilePage} />} />
+        <Route path="/profile/designs" element={<LazyRoute factory={DesignLibraryPage} />} />
+        <Route path="/profile/addresses" element={<LazyRoute factory={AddressBookPage} />} />
+        <Route path="/orders" element={<LazyRoute factory={OrderHistoryPage} />} />
+        <Route path="/orders/:id" element={<LazyRoute factory={OrderDetailPage} />} />
       </Route>
       
       {/* POS Operator Routes (Counter/Admin/Superuser) */}
       <Route element={<ProtectedRoute allowedRoles={['admin', 'superuser', 'counter']} />}>
-        <Route path="/admin/pos" element={<POSPage />} />
-        <Route path="/admin/pos/scan" element={<MobileScannerPage />} />
+        <Route path="/admin/pos" element={<LazyRoute factory={POSPage} />} />
+        <Route path="/admin/pos/scan" element={<LazyRoute factory={MobileScannerPage} />} />
       </Route>
 
-      {/* Admin Routes (Admin/Superuser) */}
+      {/* Admin Routes (Admin/Superuser) - Protected by the new login gate */}
       <Route element={<ProtectedRoute allowedRoles={['admin', 'superuser']} />}>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/products" element={<AdminProductsPage />} />
-        <Route path="/admin/products/:id/variants" element={<VariantManagementPage />} />
-        <Route path="/admin/orders" element={<AdminOrdersPage />} />
-        <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
-        <Route path="/admin/users" element={<UserManagementPage />} />
-        <Route path="/admin/promocodes" element={<AdminPromoCodesPage />} />
-        <Route path="/admin/theme" element={<AdminThemeEditor />} />
-        <Route path="/admin/plugins" element={<AdminPluginManagement />} />
-        <Route path="/admin/pos-operators" element={<POSOperatorManagementPage />} />
-        <Route path="/admin/ledger" element={<LedgerPage />} />
-        <Route path="/admin/ledger/:entityId" element={<EntityDetailPage />} />
-        <Route path="/admin/customization" element={<CustomizationManagementPage />} />
-        <Route path="/admin/content" element={<ContentManagementPage />} />
-        <Route path="/admin/data" element={<DataManagementPage />} />
-        <Route path="/admin/ai-bulk" element={<AIBulkOperationsPage />} />
+        <Route path="/admin" element={<LazyRoute factory={AdminDashboard} />} />
+        <Route path="/admin/dashboard" element={<LazyRoute factory={AdminDashboard} />} />
+        <Route path="/admin/products" element={<LazyRoute factory={AdminProductsPage} />} />
+        <Route path="/admin/products/:id/variants" element={<LazyRoute factory={VariantManagementPage} />} />
+        <Route path="/admin/orders" element={<LazyRoute factory={AdminOrdersPage} />} />
+        <Route path="/admin/orders/:id" element={<LazyRoute factory={AdminOrderDetailPage} />} />
+        <Route path="/admin/users" element={<LazyRoute factory={UserManagementPage} />} />
+        <Route path="/admin/promocodes" element={<LazyRoute factory={AdminPromoCodesPage} />} />
+        <Route path="/admin/theme" element={<LazyRoute factory={AdminThemeEditor} />} />
+        <Route path="/admin/plugins" element={<LazyRoute factory={AdminPluginManagement} />} />
+        <Route path="/admin/pos-operators" element={<LazyRoute factory={POSOperatorManagementPage} />} />
+        <Route path="/admin/ledger" element={<LazyRoute factory={LedgerPage} />} />
+        <Route path="/admin/ledger/:entityId" element={<LazyRoute factory={EntityDetailPage} />} />
+        <Route path="/admin/customization" element={<LazyRoute factory={CustomizationManagementPage} />} />
+        <Route path="/admin/content" element={<LazyRoute factory={ContentManagementPage} />} />
+        <Route path="/admin/data" element={<LazyRoute factory={DataManagementPage} />} />
+        <Route path="/admin/ai-bulk" element={<LazyRoute factory={AIBulkOperationsPage} />} />
       </Route>
 
       {/* Reseller Routes (Reseller/Admin/Superuser) */}
       <Route element={<ProtectedRoute allowedRoles={['reseller', 'admin', 'superuser']} />}>
-        <Route path="/reseller" element={<ResellerDashboard />} />
-        <Route path="/reseller/dashboard" element={<ResellerDashboard />} />
-        <Route path="/reseller/promocodes" element={<ResellerPromoCodesPage />} />
-        <Route path="/reseller/orders" element={<ResellerOrdersPage />} />
-        <Route path="/reseller/customers" element={<ResellerCustomersPage />} />
-        <Route path="/reseller/commissions" element={<CommissionTrackingPage />} />
+        <Route path="/reseller" element={<LazyRoute factory={ResellerDashboard} />} />
+        <Route path="/reseller/dashboard" element={<LazyRoute factory={ResellerDashboard} />} />
+        <Route path="/reseller/promocodes" element={<LazyRoute factory={ResellerPromoCodesPage} />} />
+        <Route path="/reseller/orders" element={<LazyRoute factory={ResellerOrdersPage} />} />
+        <Route path="/reseller/customers" element={<LazyRoute factory={ResellerCustomersPage} />} />
+        <Route path="/reseller/commissions" element={<LazyRoute factory={CommissionTrackingPage} />} />
       </Route>
       
       {/* Catch-all route */}
