@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ColumnDef } from "@tanstack/react-table";
 import { User } from '@/types';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -95,11 +95,16 @@ const columns: ColumnDef<User>[] = [
 const CustomerManagementPage = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const [customers, setCustomers] = useState<User[]>([]);
 
-  const customers = useMemo(() => {
-    if (!user || user.role !== 'reseller') return [];
-    // Filter customers referred by the current reseller (u2 in mock data)
-    return getCustomersByResellerId(user.id);
+  useEffect(() => {
+    const loadCustomers = async () => {
+      if (user && user.role === 'reseller') {
+        // Filter customers referred by the current reseller (u2 in mock data)
+        setCustomers(await getCustomersByResellerId(user.id));
+      }
+    };
+    loadCustomers();
   }, [user]);
 
   if (!user || user.role !== 'reseller') {

@@ -1,90 +1,49 @@
 import { User, Address, UserRole } from '@/types';
-import { getMockOrders } from './orderUtils'; // Import order utility
+import { getMockOrders } from './orderUtils';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/integrations/supabase/client';
 
-// Mock password storage is removed as we rely on Supabase Auth.
-export const mockPasswords: Record<string, string> = {
-  'u1': 'password', // Mock Admin User
-  'u2': 'password', // Mock Reseller User
-  'u3': 'password', // Mock Customer User
-  'u4': 'password', // Mock Counter User
-  'u5': 'password', // Mock Customer User
+// --- Supabase Type Definitions ---
+
+interface SupabaseProfile {
+  id: string;
+  first_name: string;
+  last_name: string | null;
+  email: string; // Joined from auth.users
+  role: UserRole;
+  phone: string | null;
+  whatsapp: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  commission_rate: number | null;
+  reseller_id: string | null;
+}
+
+// Helper to convert Supabase snake_case to application camelCase
+const toAppUser = (sp: SupabaseProfile): User => {
+  // NOTE: Supabase profiles table doesn't store 'isActive' directly, 
+  // but we assume active if the profile exists and the user is logged in.
+  // We use the 'is_active' column if it exists, otherwise default to true.
+  const isActive = (sp as any).is_active ?? true; 
+  
+  return {
+    id: sp.id,
+    email: sp.email,
+    name: `${sp.first_name} ${sp.last_name || ''}`.trim(),
+    role: sp.role,
+    isActive: isActive,
+    createdAt: new Date(sp.created_at),
+    updatedAt: new Date(sp.updated_at),
+    phone: sp.phone ?? undefined,
+    whatsapp: sp.whatsapp ?? undefined,
+    commissionRate: sp.commission_rate ?? undefined,
+    resellerId: sp.reseller_id ?? undefined,
+  };
 };
 
-// Mock user list is drastically reduced, keeping only a placeholder for the superuser ID
-// NOTE: In a real application, this list would be replaced by database queries.
-export const mockUsers: User[] = [
-  {
-    // This ID is a placeholder for the superuser profile created via SQL migration
-    id: '00000000-0000-0000-0000-000000000000', 
-    email: 'superuser@example.com', 
-    name: 'System Superuser', 
-    role: 'superuser', 
-    isActive: true, 
-    createdAt: new Date(), 
-    updatedAt: new Date(),
-  },
-  // Mock Admin User for testing
-  {
-    id: 'u1',
-    email: 'admin@example.com',
-    name: 'Alice Admin',
-    role: 'admin',
-    isActive: true,
-    createdAt: new Date(Date.now() - 86400000 * 50),
-    updatedAt: new Date(),
-    commissionRate: undefined,
-    resellerId: undefined,
-  },
-  // Mock Reseller User
-  {
-    id: 'u2',
-    email: 'reseller@example.com',
-    name: 'Bob Reseller',
-    role: 'reseller',
-    isActive: true,
-    createdAt: new Date(Date.now() - 86400000 * 40),
-    updatedAt: new Date(),
-    commissionRate: 15,
-    resellerId: undefined,
-  },
-  // Mock Customer User 1 (Referred by u2)
-  {
-    id: 'u3',
-    email: 'charlie@example.com',
-    name: 'Charlie Customer',
-    role: 'customer',
-    isActive: true,
-    createdAt: new Date(Date.now() - 86400000 * 30),
-    updatedAt: new Date(),
-    resellerId: 'u2',
-  },
-  // Mock Customer User 2
-  {
-    id: 'u5',
-    email: 'eve@example.com',
-    name: 'Eve Customer',
-    role: 'customer',
-    isActive: true,
-    createdAt: new Date(Date.now() - 86400000 * 10),
-    updatedAt: new Date(),
-  },
-  // Mock Counter User (for POS)
-  {
-    id: 'u4',
-    email: 'pos.counter@example.com',
-    name: 'POS Operator 1',
-    role: 'counter',
-    isActive: true,
-    createdAt: new Date(Date.now() - 86400000 * 30),
-    updatedAt: new Date(),
-  },
-];
-
-// Mock Address Store (in-memory) - Keeping this for non-auth related profile features
+// --- Mock Address Store (in-memory) - Kept temporarily until a Supabase table is created ---
 const mockAddresses: Record<string, Address[]> = {
-  // Keeping mock addresses for existing users (u3, u5) for now, but they won't be accessible 
-  // unless the user logs in with those IDs via Supabase.
   'u3': [
     {
       id: 'a1', fullName: 'Charlie Admin', phone: '555-1234', street: '123 Main St', city: 'Anytown', state: 'CA', zipCode: '90210', country: 'USA', isDefault: true,
@@ -100,75 +59,125 @@ const mockAddresses: Record<string, Address[]> = {
   ]
 };
 
-// Mock registration is removed as we rely on Supabase Auth.
-export const registerMockUser = (
-  email: string, 
-  password: string, 
-  name: string, 
-  role: UserRole = 'customer', 
-  resellerId?: string
-): User => {
-  throw new Error("Mock registration is disabled. Use Supabase Auth.");
-};
+// --- Supabase CRUD Functions ---
 
-export const getAllMockUsers = (): User[] => {
-  // Filter out the Super User from standard lists
-  return mockUsers.filter(user => user.role !== 'superuser');
-};
+const PROFILE_SELECT_FIELDS = `
+  id, first_name, last_name, email, role, phone, whatsapp, is_active, created_at, updated_at, commission_rate, reseller_id
+`;
 
-export const getMockUserById = (userId: string): User | undefined => {
-  return mockUsers.find(user => user.id === userId);
-};
+/**
+ * Fetches all user profiles (excluding superuser) from Supabase.
+ * NOTE: This relies on RLS allowing the current user (admin/superuser) to read all profiles.
+ */
+export const getAllMockUsers = async (): Promise<User[]> => {
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select(PROFILE_SELECT_FIELDS)
+    .neq('role', 'superuser')
+    .order('created_at', { ascending: false });
 
-// NOTE: These update/delete functions are now only used by Admin pages 
-// and should ideally be replaced by Supabase Admin API calls or RLS-protected profile updates.
-// We keep them for mock data consistency but they are functionally limited.
-export const updateMockUser = (updatedUserData: Partial<User>): User | undefined => {
-  const userIndex = mockUsers.findIndex(user => user.id === updatedUserData.id);
-  if (userIndex !== -1) {
-    const existingUser = mockUsers[userIndex];
-    
-    // Prevent updating the Super User's role or status via standard means
-    if (existingUser.role === 'superuser' && updatedUserData.role !== 'superuser') {
-      throw new Error("Cannot modify Superuser role via standard update.");
-    }
-    
-    const updatedUser: User = {
-      ...existingUser,
-      ...updatedUserData,
-      updatedAt: new Date(),
-      // Ensure role-specific fields are handled correctly
-      commissionRate: updatedUserData.role === 'reseller' ? Number(updatedUserData.commissionRate) : undefined,
-      resellerId: updatedUserData.role === 'customer' ? updatedUserData.resellerId : undefined,
-    } as User;
-    
-    mockUsers[userIndex] = updatedUser;
-    return updatedUser;
-  }
-  return undefined;
-};
-
-export const deleteMockUser = (userId: string): boolean => {
-  const userToDelete = mockUsers.find(user => user.id === userId);
-  if (userToDelete?.role === 'superuser') {
-    throw new Error("Cannot delete Superuser.");
+  if (error) {
+    console.error("Error fetching all users:", error);
+    // Return empty array on error, relying on Supabase for data
+    return [];
   }
   
-  const initialLength = mockUsers.length;
-  const index = mockUsers.findIndex(user => user.id === userId);
-  
-  if (index !== -1) {
-    mockUsers.splice(index, 1);
-  }
-  
-  return mockUsers.length < initialLength;
+  return (profiles as SupabaseProfile[]).map(toAppUser);
 };
 
-export const getCustomersByResellerId = (resellerId: string): User[] => {
-  // Since mockUsers is empty now, this will return an empty array unless 
-  // the user manually adds mock users back or logs in via Supabase.
-  const referredCustomers = mockUsers.filter(user => user.role === 'customer' && user.resellerId === resellerId);
-  const allOrders = getMockOrders();
+/**
+ * Fetches a single user profile by ID from Supabase.
+ */
+export const getMockUserById = async (userId: string): Promise<User | undefined> => {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select(PROFILE_SELECT_FIELDS)
+    .eq('id', userId)
+    .single();
+
+  if (error && error.code !== 'PGRST116') {
+    console.error("Error fetching user by ID:", error);
+    return undefined;
+  }
+  
+  return profile ? toAppUser(profile as SupabaseProfile) : undefined;
+};
+
+/**
+ * Updates an existing user profile in Supabase.
+ * NOTE: This function is primarily used by the Admin panel.
+ */
+export const updateMockUser = async (updatedUserData: Partial<User>): Promise<User | undefined> => {
+  if (!updatedUserData.id) return undefined;
+
+  const updateData: Record<string, any> = {
+    updated_at: new Date().toISOString(),
+  };
+  
+  if (updatedUserData.name !== undefined) {
+    updateData.first_name = updatedUserData.name.split(' ')[0];
+    updateData.last_name = updatedUserData.name.split(' ').slice(1).join(' ') || null;
+  }
+  if (updatedUserData.role !== undefined) updateData.role = updatedUserData.role;
+  if (updatedUserData.isActive !== undefined) updateData.is_active = updatedUserData.isActive;
+  if (updatedUserData.phone !== undefined) updateData.phone = updatedUserData.phone;
+  if (updatedUserData.whatsapp !== undefined) updateData.whatsapp = updatedUserData.whatsapp;
+  if (updatedUserData.commissionRate !== undefined) updateData.commission_rate = updatedUserData.commissionRate;
+  if (updatedUserData.resellerId !== undefined) updateData.reseller_id = updatedUserData.resellerId;
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(updateData)
+    .eq('id', updatedUserData.id)
+    .select(PROFILE_SELECT_FIELDS)
+    .single();
+
+  if (error) {
+    console.error("Error updating user profile:", error);
+    throw new Error(error.message);
+  }
+
+  return data ? toAppUser(data as SupabaseProfile) : undefined;
+};
+
+/**
+ * Deletes a user profile.
+ * NOTE: Deleting the associated auth.user record requires the Supabase Admin API (Service Role Key).
+ * This function only deletes the profile record.
+ */
+export const deleteMockUser = async (userId: string): Promise<boolean> => {
+  // In a real app, you'd call the Admin API to delete auth.user first.
+  // Here, we only delete the profile record.
+  const { error } = await supabase
+    .from('profiles')
+    .delete()
+    .eq('id', userId);
+
+  if (error) {
+    console.error("Error deleting user profile:", error);
+    throw new Error(error.message);
+  }
+  
+  return true;
+};
+
+/**
+ * Fetches customers referred by a specific reseller ID.
+ */
+export const getCustomersByResellerId = async (resellerId: string): Promise<User[]> => {
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select(PROFILE_SELECT_FIELDS)
+    .eq('reseller_id', resellerId)
+    .eq('role', 'customer');
+
+  if (error) {
+    console.error("Error fetching referred customers:", error);
+    return [];
+  }
+  
+  const referredCustomers = (profiles as SupabaseProfile[]).map(toAppUser);
+  const allOrders = getMockOrders(); // Still using mock orders utility for sales calculation
 
   return referredCustomers.map(customer => {
     const customerOrders = allOrders.filter(
@@ -183,6 +192,8 @@ export const getCustomersByResellerId = (resellerId: string): User[] => {
     };
   });
 };
+
+// --- Address Mock Functions (Kept for now) ---
 
 export const getAddressesByUserId = (userId: string): Address[] => {
   return mockAddresses[userId] || [];
@@ -220,7 +231,6 @@ export const addOrUpdateAddress = (userId: string, address: Partial<Address>): A
     mockAddresses[userId].push(newAddress);
   }
   
-  // Re-sort to ensure default is first, if needed, but simple push/update is fine for mock
   return newAddress;
 };
 

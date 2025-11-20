@@ -13,7 +13,7 @@ import { getAdminMonthlyRevenue, getMockOrders } from '@/utils/orderUtils';
 import { getAllMockUsers } from '@/utils/userUtils';
 import { getAllMockProducts } from '@/utils/productUtils';
 import { useCheckoutSettingsStore } from '@/stores/checkoutSettingsStore';
-import { Product } from '@/types';
+import { Product, User } from '@/types';
 
 const Dashboard = () => {
   const { user } = useAuthStore();
@@ -21,17 +21,19 @@ const Dashboard = () => {
   const { currencySymbol } = useCheckoutSettingsStore();
 
   const allOrders = getMockOrders();
-  const allUsers = getAllMockUsers();
   
-  // STATE for products
+  // STATE for users and products
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   
   useEffect(() => {
-    const loadProducts = async () => {
+    const loadData = async () => {
       // Fetch all products, including inactive ones for admin view
       setAllProducts(await getAllMockProducts(true));
+      // Fetch all users
+      setAllUsers(await getAllMockUsers());
     };
-    loadProducts();
+    loadData();
   }, []);
 
   // Calculate dynamic stats using the resolved allProducts state

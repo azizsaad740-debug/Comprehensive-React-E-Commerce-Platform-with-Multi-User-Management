@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen, RefreshCw, Save, X } from 'lucide-react';
+import { BookOpen, RefreshCw, Save, X, Loader2 } from 'lucide-react';
 import { LedgerEntity, LedgerEntityType } from '@/types';
 import { 
   getAllLedgerEntities, 
@@ -104,22 +104,35 @@ const LedgerManagementPage = () => {
   const [entities, setEntities] = useState<LedgerEntity[]>([]);
   const [selectedEntityId, setSelectedEntityId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isFetching, setIsFetching] = useState(true);
   
   const [isExternalFormOpen, setIsExternalFormOpen] = useState(false);
   const [isSavingExternal, setIsSavingExternal] = useState(false);
+
+  const fetchEntities = async () => {
+    setIsFetching(true);
+    try {
+      const allEntities = await getAllLedgerEntities();
+      setEntities(allEntities);
+      
+      // Select the first entity by default on desktop if none is selected
+      if (!isMobile && !selectedEntityId && allEntities.length > 0) {
+        setSelectedEntityId(allEntities[0].id);
+      }
+    } catch (error) {
+      console.error("Failed to fetch ledger entities:", error);
+      toast({ title: "Error", description: "Failed to load ledger entities.", variant: "destructive" });
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
   };
 
   useEffect(() => {
-    const allEntities = getAllLedgerEntities();
-    setEntities(allEntities);
-    
-    // Select the first entity by default on desktop
-    if (!isMobile && !selectedEntityId && allEntities.length > 0) {
-      setSelectedEntityId(allEntities[0].id);
-    }
+    fetchEntities();
   }, [refreshKey, isMobile]);
 
   const selectedEntity = useMemo(() => {
@@ -193,7 +206,7 @@ const LedgerManagementPage = () => {
             <BookOpen className="h-6 w-6 mr-3" />
             Ledger Management
           </h1>
-          <Button variant="outline" onClick={handleRefresh}>
+          <Button variant="outline" onClick={handleRefresh} disabled={isFetching}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh Data
           </Button>
@@ -206,13 +219,19 @@ const LedgerManagementPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
           {/* Left Column: Entity List (Full width on mobile) */}
           <div className={isMobile ? "lg:col-span-3" : "lg:col-span-1"}>
-            <EntityList 
-              entities={entities} 
-              selectedEntityId={selectedEntityId} 
-              onSelectEntity={handleSelectEntity}
-              onAddExternalEntity={handleOpenExternalForm}
-              onDeleteExternalEntity={handleDeleteExternalEntity}
-            />
+            {isFetching ? (
+              <Card className="h-full flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </Card>
+            ) : (
+              <EntityList 
+                entities={entities} 
+                selectedEntityId={selectedEntityId} 
+                onSelectEntity={handleSelectEntity}
+                onAddExternalEntity={handleOpenExternalForm}
+                onDeleteExternalEntity={handleDeleteExternalEntity}
+              />
+            )}
           </div>
 
           {/* Right Column: Ledger View (Hidden on mobile, shown in detail page) */}

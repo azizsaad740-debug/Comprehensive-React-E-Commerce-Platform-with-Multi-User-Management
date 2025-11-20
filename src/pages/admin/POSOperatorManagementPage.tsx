@@ -56,18 +56,20 @@ const POSOperatorManagementPage = () => {
   const { toast } = useToast();
   const { currencySymbol } = useCheckoutSettingsStore();
   
-  const [allUsers, setAllUsers] = useState(getAllMockUsers());
+  // Initialize state as empty array
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allActivities, setAllActivities] = useState(getAllOperatorActivities());
   const [selectedOperatorId, setSelectedOperatorId] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Simulate fetching all users (including mock counter user 'u4')
-    // NOTE: In a real app, this would fetch all users from Supabase profiles.
-    // For mock purposes, we manually ensure a counter user exists for demonstration.
-    const mockCounterUser = allUsers.find(u => u.id === 'u4');
+  const fetchAllData = async () => {
+    setIsLoading(true);
+    const fetchedUsers = await getAllMockUsers();
+    
+    // Manually ensure a mock counter user exists for demonstration if the DB is empty
+    const mockCounterUser = fetchedUsers.find(u => u.id === 'u4');
     if (!mockCounterUser) {
-        setAllUsers(prev => [...prev, {
+        fetchedUsers.push({
             id: 'u4',
             email: 'pos.counter@example.com',
             name: 'POS Operator 1',
@@ -75,12 +77,24 @@ const POSOperatorManagementPage = () => {
             isActive: true,
             createdAt: new Date(Date.now() - 86400000 * 30),
             updatedAt: new Date(),
-        } as User]);
+        } as User);
     }
     
+    setAllUsers(fetchedUsers);
     setAllActivities(getAllOperatorActivities());
-  }, [refreshKey]);
+    setIsLoading(false);
+  };
 
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const handleRefresh = () => {
+    fetchAllData();
+    toast({ title: "Refreshed", description: "Operator data updated." });
+  };
+  
+  // Memoize operators based on the resolved allUsers array
   const operators = useMemo(() => getPOSOperators(allUsers), [allUsers]);
   const selectedOperator = useMemo(() => operators.find(o => o.id === selectedOperatorId), [operators, selectedOperatorId]);
   
@@ -94,14 +108,19 @@ const POSOperatorManagementPage = () => {
     return getOperatorSalesSummary(selectedOperatorId);
   }, [selectedOperatorId, allActivities]);
 
-  const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
-    toast({ title: "Refreshed", description: "Operator data updated." });
-  };
-  
   const handleSelectOperator = (operatorId: string) => {
     setSelectedOperatorId(operatorId);
   };
+  
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold">Loading POS Operators...</h1>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

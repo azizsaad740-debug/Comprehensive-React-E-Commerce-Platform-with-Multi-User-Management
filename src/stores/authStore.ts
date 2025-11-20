@@ -16,7 +16,7 @@ const findAndLoadUser = async (supabaseUserId: string): Promise<User | null> => 
 
   if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means 'no rows found'
     console.error("Error fetching profile:", profileError);
-    // Fallback: If profile doesn't exist, we might need to create it (handled by trigger, but good to check)
+    // If profile doesn't exist, we proceed to check auth user data
   }
   
   // 2. Get the current Supabase user object (contains email)
@@ -24,14 +24,11 @@ const findAndLoadUser = async (supabaseUserId: string): Promise<User | null> => 
   
   if (!authUser) return null;
 
-  // 3. Determine the role. Check if the user is the hardcoded superuser ID.
+  // 3. Determine the role.
   let role: UserRole = profileData?.role || 'customer';
   
   // Hardcoded check for the initial superuser ID (must be manually created in Supabase Auth)
-  if (authUser.email === 'azizsaad740@gmail.com') {
-    role = 'superuser';
-  } else if (authUser.email === 'superuser@example.com') {
-    // Fallback for the old mock superuser ID if it exists
+  if (authUser.email === 'azizsaad740@gmail.com' || authUser.email === 'superuser@example.com') {
     role = 'superuser';
   }
 
@@ -170,7 +167,7 @@ export const useAuthStore = create<AuthState>()(
         if (userData.name) {
             authUpdateData.data = {
                 first_name: userData.name.split(' ')[0],
-                last_name: userData.name.split(' ').slice(1).join(' '),
+                last_name: userData.name.split(' ').slice(1).join(' ') || '',
             };
         }
         
@@ -185,7 +182,7 @@ export const useAuthStore = create<AuthState>()(
 
         const profileUpdateData: Record<string, any> = {
           first_name: userData.name?.split(' ')[0] || user.name.split(' ')[0],
-          last_name: userData.name?.split(' ').slice(1).join(' ') || user.name.split(' ').slice(1).join(' '),
+          last_name: userData.name?.split(' ').slice(1).join(' ') || user.name.split(' ').slice(1).join(' ') || null,
           phone: userData.phone,
           whatsapp: userData.whatsapp,
           updated_at: new Date().toISOString(),

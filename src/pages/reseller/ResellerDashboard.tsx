@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DollarSign, Users, ArrowRight, TrendingUp, Percent, Tag } from 'lucide-react';
@@ -13,6 +13,7 @@ import { getCustomersByResellerId } from '@/utils/userUtils';
 import { getPromoCodesByResellerId } from '@/utils/promoCodeUtils';
 import ResellerCodeDisplay from '@/components/reseller/ResellerCodeDisplay';
 import { getResellerMonthlySales, getResellerTotalReferredSales, getResellerCommissionRecords } from '@/utils/orderUtils';
+import { User } from '@/types';
 
 const ResellerDashboard = () => {
   const { user } = useAuthStore();
@@ -20,12 +21,19 @@ const ResellerDashboard = () => {
   
   const commissionRate = user?.commissionRate || 15;
   const resellerId = user?.id;
+  
+  const [referredCustomers, setReferredCustomers] = useState<User[]>([]);
+  
+  useEffect(() => {
+    const loadCustomers = async () => {
+      if (resellerId) {
+        setReferredCustomers(await getCustomersByResellerId(resellerId));
+      }
+    };
+    loadCustomers();
+  }, [resellerId]);
 
   // Calculate real-time (mocked) metrics
-  const referredCustomers = resellerId 
-    ? getCustomersByResellerId(resellerId) 
-    : [];
-    
   const activeCustomersCount = referredCustomers.length;
 
   // Calculate total referred sales dynamically from orders

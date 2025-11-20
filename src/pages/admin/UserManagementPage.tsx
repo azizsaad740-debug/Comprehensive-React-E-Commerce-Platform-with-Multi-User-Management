@@ -15,47 +15,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/stores/authStore';
 import { supabase } from '@/integrations/supabase/client';
 
-// NOTE: Since mockUsers is now minimal, we need a way to fetch all users from Supabase.
-// This is a simplified mock fetch for demonstration purposes.
-const fetchAllUsersFromSupabase = async (): Promise<User[]> => {
-    // NOTE: This requires the Supabase Admin API (Service Role Key) which is not exposed client-side.
-    // We are simulating this fetch using the client-side API, which is limited to RLS policies.
-    // For a real admin panel, this should be done via an Edge Function or server.
-    
-    // Mocking the list of users based on profiles table (which is RLS protected)
-    const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('*');
-        
-    if (profileError) {
-        console.error("Error fetching profiles:", profileError);
-        return [];
-    }
-    
-    // Since we can't fetch all auth.users, we rely on the profiles table data
-    return profiles.map(profile => {
-        const email = profile.email || 'N/A';
-        
-        let role = profile.role || 'customer';
-        if (email === 'azizsaad740@gmail.com' || email === 'superuser@example.com') {
-            role = 'superuser';
-        }
-        
-        return {
-            id: profile.id,
-            email: email,
-            name: profile.first_name || email.split('@')[0] || 'User',
-            role: role,
-            isActive: true, // Assuming active if profile exists
-            createdAt: new Date(profile.created_at || Date.now()),
-            updatedAt: new Date(profile.updated_at || Date.now()),
-            commissionRate: profile.commission_rate,
-            resellerId: profile.reseller_id,
-        } as User;
-    }).filter(u => u.role !== 'superuser'); // Filter out superuser from the list view
-};
-
-
 const UserManagementPage = () => {
   const { toast } = useToast();
   const { user: currentUser, hasRole, updateUser } = useAuthStore();
@@ -68,7 +27,8 @@ const UserManagementPage = () => {
 
   const refreshUsers = async () => {
     setIsFetching(true);
-    const fetchedUsers = await fetchAllUsersFromSupabase();
+    // Use the updated utility function which now fetches from Supabase
+    const fetchedUsers = await getAllMockUsers(); 
     setUsers(fetchedUsers);
     setIsFetching(false);
   };
@@ -115,16 +75,28 @@ const UserManagementPage = () => {
     }
   };
   
-  const handleDeleteUser = (userId: string, userName: string) => {
-    // NOTE: Deleting users requires Supabase Admin API (Service Role Key)
+  const handleDeleteUser = async (userId: string, userName: string) => {
     if (window.confirm(`Are you sure you want to delete the user: ${userName}? This action cannot be undone.`)) {
-      toast({
-        title: "Action Blocked",
-        description: "User deletion requires Supabase Admin privileges (Service Role Key). Action simulated.",
-        variant: "destructive",
-      });
-      // Simulate deletion success for UI consistency
-      setUsers(prev => prev.filter(u => u.id !== userId));
+      try {
+        // Use the updated utility function to delete the profile
+        const success = await deleteMockUser(userId);
+        
+        if (success) {
+          toast({
+            title: "Profile Deleted",
+            description: `User profile for ${userName} deleted. Note: Deleting the associated auth.user record requires Supabase Admin privileges.`,
+          });
+          refreshUsers();
+        } else {
+          throw new Error("Failed to delete user profile.");
+        }
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to delete user.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -207,8 +179,8 @@ const UserManagementPage = () => {
         <div className="p-4 mb-6 bg-yellow-100 border border-yellow-300 rounded-lg flex items-start space-x-3">
             <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-1" />
             <p className="text-sm text-yellow-800">
-                User data is fetched from Supabase Auth/Profiles. Role changes are handled via RLS-protected profile updates. 
-                For full user management (like deletion), a Supabase Service Role Key is required, which is not exposed client-side.
+                User data is fetched directly from Supabase Profiles. Role changes are handled via RLS-protected profile updates. 
+                For full user management (like deletion of auth.user), a Supabase Service Role Key is required, which is not exposed client-side.
             </p>
         </div>
 

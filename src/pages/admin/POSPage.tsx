@@ -53,23 +53,25 @@ const POSPage = () => {
   const { user: operator } = useAuthStore();
   const isMobile = useIsMobile();
   
-  const allUsers = getAllMockUsers().filter(u => u.role === 'customer' || u.role === 'reseller');
-  
+  const [allUsers, setAllUsers] = useState<UserType[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [refreshKey, setRefreshKey] = useState(0); // New state for manual refresh
   
-  const fetchProducts = async () => {
+  const fetchUsersAndProducts = async () => {
     try {
       // Fetch only active products for POS
       setAllProducts(await getAllMockProducts(false));
+      // Fetch users and filter them
+      const fetchedUsers = await getAllMockUsers();
+      setAllUsers(fetchedUsers.filter(u => u.role === 'customer' || u.role === 'reseller'));
     } catch (e) {
-      console.error("Failed to fetch products:", e);
-      toast({ title: "Error", description: "Failed to sync product inventory.", variant: "destructive" });
+      console.error("Failed to sync data:", e);
+      toast({ title: "Error", description: "Failed to sync user/product inventory.", variant: "destructive" });
     }
   };
   
   useEffect(() => {
-    fetchProducts();
+    fetchUsersAndProducts();
   }, [refreshKey]); // Depend on refreshKey
 
   const [selectedUserId, setSelectedUserId] = useState<string>(POS_GUEST_ID);
@@ -331,7 +333,7 @@ const POSPage = () => {
       setAppliedPromo({ code: null, amount: 0 });
       
       // 6. Refresh product data to reflect stock changes
-      await fetchProducts();
+      await fetchUsersAndProducts(); // <-- FIX: Use correct function name
 
     } catch (error) {
       toast({

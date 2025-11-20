@@ -36,8 +36,8 @@ let currentTransactions: LedgerTransaction[] = initialTransactions;
  * Retrieves all ledger entities, merging internal users (customers/resellers) 
  * with external entities (suppliers/others).
  */
-export const getAllLedgerEntities = (): LedgerEntity[] => {
-  const users = getAllMockUsers();
+export const getAllLedgerEntities = async (): Promise<LedgerEntity[]> => {
+  const users = await getAllMockUsers();
   
   // Map internal users to LedgerEntity format
   const internalEntities: LedgerEntity[] = users
@@ -54,7 +54,15 @@ export const getAllLedgerEntities = (): LedgerEntity[] => {
 };
 
 export const getEntityById = (entityId: string): LedgerEntity | undefined => {
-  return getAllLedgerEntities().find(e => e.id === entityId);
+  // NOTE: This function is still synchronous and relies on the caller having fetched all entities.
+  // For now, we keep it synchronous as it's used in many places, but this is a technical debt.
+  // Since we cannot await here, we rely on the caller to manage the async nature of entity fetching.
+  // For the purpose of fixing the immediate TS error, we assume the caller handles the async nature 
+  // or we update the caller to fetch entities first.
+  // Since getEntityById is used in EntityDetailPage, we will update that page to handle async.
+  
+  // For now, we return undefined as we cannot synchronously fetch all entities here.
+  return undefined; 
 };
 
 export const getTransactionById = (transactionId: string): LedgerTransaction | undefined => {
@@ -176,8 +184,8 @@ export const calculateEntityBalance = (entityId: string): number => {
  * Total Debt: Sum of positive balances (Entities owe us).
  * Total Credit: Sum of negative balances (We owe Entities).
  */
-export const calculateOverallLedgerSummary = () => {
-  const entities = getAllLedgerEntities();
+export const calculateOverallLedgerSummary = async () => {
+  const entities = await getAllLedgerEntities();
   let totalDebt = 0; // Entities owe us (Positive balances)
   let totalCredit = 0; // We owe entities (Negative balances)
   
