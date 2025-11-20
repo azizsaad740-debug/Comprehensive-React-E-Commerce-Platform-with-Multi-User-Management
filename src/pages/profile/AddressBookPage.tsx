@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, MapPin, Edit, Trash2, ArrowLeft } from 'lucide-react';
+import { PlusCircle, MapPin, Edit, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -103,7 +103,10 @@ const AddressBookPage = () => {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-16 text-center">
-          <p>Loading profile or redirecting...</p>
+          <div className="flex items-center justify-center space-x-2">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <p>Loading profile or redirecting...</p>
+          </div>
         </div>
       </Layout>
     );

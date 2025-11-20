@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { User as UserIcon, Mail, Phone, MessageSquare, Save, MapPin, Palette, Lock, Eye, EyeOff } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, MessageSquare, Save, MapPin, Palette, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { useAuthStore } from '@/stores/authStore';
 import { useToast } from '@/hooks/use-toast';
@@ -90,7 +90,10 @@ const ProfilePage = () => {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-16 text-center">
-          <p>Loading profile or redirecting...</p>
+          <div className="flex items-center justify-center space-x-2">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <p>Loading profile or redirecting...</p>
+          </div>
         </div>
       </Layout>
     );
