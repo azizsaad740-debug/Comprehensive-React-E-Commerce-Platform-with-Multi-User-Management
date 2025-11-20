@@ -82,6 +82,7 @@ export const useAuthStore = create<AuthState>()(
         if (user) {
           set({ user, isAuthenticated: true, isLoading: false });
         } else {
+          // If profile sync fails, keep authenticated state based on session, but clear user data
           set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },
@@ -97,15 +98,16 @@ export const useAuthStore = create<AuthState>()(
         }
         
         if (data.user) {
+          // Crucially, we wait for the sync here to ensure the user object is populated
           await get().syncUser(data.user.id);
+        } else {
+          set({ isLoading: false });
         }
       },
       
       register: async (email: string, password: string, name: string, resellerId?: string) => {
         set({ isLoading: true });
         
-        // Determine the redirect URL for email confirmation
-        // This should point back to the login page of the app.
         const redirectToUrl = `${window.location.origin}/auth/login`;
 
         const { data, error } = await supabase.auth.signUp({
@@ -115,10 +117,10 @@ export const useAuthStore = create<AuthState>()(
             data: {
               first_name: name.split(' ')[0] || name,
               last_name: name.split(' ').slice(1).join(' ') || '',
-              role: 'customer', // Default role
+              role: 'customer',
               resellerId: resellerId || null,
             },
-            emailRedirectTo: redirectToUrl, // Explicitly set redirect URL
+            emailRedirectTo: redirectToUrl,
           }
         });
 
@@ -127,23 +129,12 @@ export const useAuthStore = create<AuthState>()(
           throw new Error(error.message);
         }
         
-        // Note: Supabase automatically signs in after signup if email confirmation is disabled.
-        // If confirmation is enabled, the user will be redirected after clicking the link.
-        if (data.user) {
-          // If the user is created but not confirmed, we don't sync the user yet.
-          // We rely on the user clicking the confirmation link and then logging in.
-          // For now, we assume immediate sign-in for a smoother mock experience, 
-          // but we should inform the user about the confirmation email.
-          
-          // If email confirmation is required, the user object here might be unconfirmed.
-          // We rely on the login page to handle the final sign-in.
-          
-          // If the user is immediately signed in (e.g., confirmation disabled), sync the user.
-          if (data.session) {
+        if (data.user && data.session) {
+             // If immediately signed in, sync the user profile
              await get().syncUser(data.user.id);
-          } else {
+        } else {
+             // If email confirmation is required, we stop loading and rely on the user confirming later
              set({ isLoading: false });
-          }
         }
       },
 
@@ -151,7 +142,6 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         await supabase.auth.signOut();
         
-        // Clear local storage state explicitly upon successful logout
         localStorage.removeItem('auth-storage');
 
         set({
@@ -169,18 +159,14 @@ export const useAuthStore = create<AuthState>()(
         
         const authUpdateData: { password?: string, email?: string, data?: Record<string, any> } = {};
         
-        // 1. Handle Password Change
         if (newPassword) {
             authUpdateData.password = newPassword;
         }
         
-        // 2. Handle Email Change
         if (newEmail && newEmail !== user.email) {
-            // Supabase handles the email verification flow automatically
             authUpdateData.email = newEmail;
         }
 
-        // 3. Handle Name Change (via metadata update, though profile update is primary)
         if (userData.name) {
             authUpdateData.data = {
                 first_name: userData.name.split(' ')[0],
@@ -197,7 +183,6 @@ export const useAuthStore = create<AuthState>()(
             }
         }
 
-        // 4. Update public.profiles table (for name, role, contact info, etc.)
         const profileUpdateData: Record<string, any> = {
           first_name: userData.name?.split(' ')[0] || user.name.split(' ')[0],
           last_name: userData.name?.split(' ').slice(1).join(' ') || user.name.split(' ').slice(1).join(' '),
@@ -206,34 +191,24 @@ export const useAuthStore = create<AuthState>()(
           updated_at: new Date().toISOString(),
         };
         
-        // --- ADMIN ROLE CHANGE LOGIC ---
-        // If the current user is an admin/superuser AND the data being updated includes a role change, apply it.
-        // Note: This assumes RLS allows the current user (admin/superuser) to update other profiles.
         if (get().hasRole(['admin', 'superuser']) && userData.role) {
             profileUpdateData.role = userData.role;
             profileUpdateData.commission_rate = userData.commissionRate;
             profileUpdateData.reseller_id = userData.resellerId;
         }
-        // --- END ADMIN ROLE CHANGE LOGIC ---
 
         const { error: profileError } = await supabase
           .from('profiles')
-          // IMPORTANT: When updating a user from the Admin panel, the ID being updated is the one passed in userData.
-          // If updating self, it's user.id. If updating another user, we assume userData.id is present.
           .update(profileUpdateData)
-          .eq('id', userData.id || user.id); // Use userData.id if provided (for admin updates)
+          .eq('id', userData.id || user.id);
 
         if (profileError) {
             set({ isLoading: false });
             throw new Error(profileError.message);
         }
 
-        // 5. Sync local store state only if updating self
-        if (userData.id === user.id || !userData.id) {
-            await get().syncUser(user.id);
-        } else {
-            set({ isLoading: false });
-        }
+        // Sync local store state
+        await get().syncUser(userData.id || user.id);
       },
 
       setLoading: (loading: boolean) => {
@@ -250,15 +225,13 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (!user) return false;
 
-        // Superuser bypasses all specific role checks
         if (user.role === 'superuser') {
           return true;
         }
 
-        // Role-based permissions
         switch (user.role) {
           case 'admin':
-            return true; // Admin has all standard permissions
+            return true;
           case 'reseller':
             return [
               'view_dashboard',
@@ -279,7 +252,7 @@ export const useAuthStore = create<AuthState>()(
             ].includes(permission);
           case 'counter':
             return [
-              'view_dashboard', // POS dashboard
+              'view_dashboard',
               'pos_sale',
               'update_profile'
             ].includes(permission);

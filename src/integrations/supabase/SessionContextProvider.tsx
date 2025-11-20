@@ -27,7 +27,7 @@ interface SessionContextProviderProps {
 
 export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const { isAuthenticated, logout, setLoading } = useAuthStore();
+  const { isAuthenticated, logout, setLoading, syncUser } = useAuthStore(); // Destructure syncUser
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -37,26 +37,34 @@ export const SessionContextProvider: React.FC<SessionContextProviderProps> = ({ 
     
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setLoading(false);
+      if (session) {
+        // Initial load: sync user profile if a session exists
+        syncUser(session.user.id);
+      } else {
+        setLoading(false);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
-      setLoading(false);
-
+      
       if (event === 'SIGNED_IN' && currentSession) {
-        // Handle successful sign-in (AuthStore will handle user profile sync later)
-        console.log('Supabase SIGNED_IN event');
+        // Handle successful sign-in: Explicitly sync user profile
+        console.log('Supabase SIGNED_IN event, syncing user profile...');
+        syncUser(currentSession.user.id);
       } else if (event === 'SIGNED_OUT') {
         // Clear local auth state on sign out
         logout();
         toast({ title: "Logged Out", description: "You have been successfully logged out." });
         navigate('/auth/login');
+      } else if (event === 'INITIAL_SESSION' && !currentSession) {
+        // If initial session check finds no session, stop loading
+        setLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [setLoading, logout, navigate, toast]);
+  }, [setLoading, logout, navigate, toast, syncUser]); // Added syncUser to dependencies
 
   return (
     <SessionContext.Provider value={{ session }}>
