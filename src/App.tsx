@@ -41,6 +41,7 @@ import FaqPage from "./pages/FaqPage.tsx"; // ADDED
 import ContentPage from "./pages/ContentPage.tsx"; // ADDED
 import VariantManagementPage from "./pages/admin/VariantManagementPage.tsx"; // ADDED MISSING IMPORT
 import MobileScannerPage from "./pages/admin/MobileScannerPage.tsx"; // ADDED MISSING IMPORT
+import ResellerOrdersPage from "@/pages/reseller/ResellerOrdersPage.tsx"; // ADDED MISSING IMPORT
 
 
 // Wrapper component to extract slug from URL parameters and pass it as a prop
