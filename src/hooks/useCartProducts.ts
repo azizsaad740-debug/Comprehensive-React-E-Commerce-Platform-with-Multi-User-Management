@@ -18,6 +18,7 @@ export const useCartProducts = () => {
       const uniqueProductIds = Array.from(new Set(items.map(item => item.productId)));
       const newProductsMap = new Map(productsMap);
       let needsUpdate = false;
+      let allFetched = true;
 
       for (const id of uniqueProductIds) {
         // Only fetch if we don't already have the product details
@@ -26,6 +27,10 @@ export const useCartProducts = () => {
           if (product) {
             newProductsMap.set(id, product);
             needsUpdate = true;
+          } else {
+            // If a product is missing, we still consider it fetched (as null) but mark that we couldn't find it.
+            newProductsMap.set(id, null as unknown as Product); // Store null/placeholder to prevent re-fetching missing items
+            allFetched = false;
           }
         }
       }
@@ -33,6 +38,8 @@ export const useCartProducts = () => {
       if (needsUpdate) {
         setProductsMap(newProductsMap);
       }
+      
+      // Only set loading to false once we've attempted to fetch all unique items
       setIsLoading(false);
     };
 
