@@ -43,7 +43,7 @@ export const useThemeStore = create<ThemeState>()(
       if (data) {
         set(data);
       } else {
-        await updateSettings(SETTINGS_KEY, DEFAULT_STATE);
+        set(DEFAULT_STATE);
       }
     },
 

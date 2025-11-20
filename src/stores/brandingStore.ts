@@ -30,8 +30,8 @@ export const useBrandingStore = create<BrandingState>()(
       if (data) {
         set(data);
       } else {
-        // If no data exists, save the default state to Supabase
-        await updateSettings(SETTINGS_KEY, DEFAULT_STATE);
+        // Fallback to local default state if fetching fails (e.g., unauthenticated read or empty table)
+        set(DEFAULT_STATE);
       }
     },
 

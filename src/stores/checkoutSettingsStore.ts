@@ -49,7 +49,7 @@ export const useCheckoutSettingsStore = create<CheckoutSettingsState>()(
       if (data) {
         set(data);
       } else {
-        await updateSettings(SETTINGS_KEY, DEFAULT_STATE);
+        set(DEFAULT_STATE);
       }
     },
 
