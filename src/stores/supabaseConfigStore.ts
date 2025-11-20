@@ -10,8 +10,8 @@ interface SupabaseConfigState {
 }
 
 // Use the provided project details as the default configuration
-const DEFAULT_URL = 'https://wnlveqfnbaempwvymfak.supabase.co';
-const DEFAULT_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndubHZlcWZuYmFlbXB3dnltZmFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE5ODk0NzIsImV4cCI6MjA3NzU2NTQ3Mn0.yb9fairNg0lurOIZpkUFY4OMD_ddTGNMEgizCGS8ZVg';
+const DEFAULT_URL = 'https://bzjznezrzxuadnxbkfdj.supabase.co';
+const DEFAULT_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6anpuZXpyenh1YWRueGJrZmRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2NTEwMjEsImV4cCI6MjA3OTIyNzAyMX0.81aWPSLo9yoj8H2h1XlEivJ0inbBC2UIOGXzyJ593p0';
 
 export const useSupabaseConfigStore = create<SupabaseConfigState>()(
   persist(
