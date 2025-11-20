@@ -5,15 +5,18 @@ import { SessionContextProvider } from "./integrations/supabase/SessionContextPr
 import SettingsInitializer from "./components/layout/SettingsInitializer.tsx";
 import React from "react";
 import { ThemeProvider } from "./components/layout/ThemeProvider.tsx";
+import { BrowserRouter as Router } from "react-router-dom"; // Import Router
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <SettingsInitializer>
-      <SessionContextProvider>
-        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-          <App />
-        </ThemeProvider>
-      </SessionContextProvider>
+      <Router> {/* Move Router here */}
+        <SessionContextProvider>
+          <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+            <App />
+          </ThemeProvider>
+        </SessionContextProvider>
+      </Router>
     </SettingsInitializer>
   </React.StrictMode>
 );
